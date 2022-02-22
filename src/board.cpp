@@ -20,38 +20,46 @@
 */
 
 #include <iostream>
-#include "bit.h"
 #include "board.h"
-#include "nnue.h"
+#include "bit.h"
 
 
 using namespace std;
 
 
 
-int main(void)
+// displayBitboard
+//
+// Take a Bitboard and display it as a board representation on the standard
+// output.
+void displayBitboard(Bitboard bb)
 {
-    // Initialize the neural network weights
-    nnue_init("nn-eba324f53044.nnue");
+    cout << endl;
 
-    // define bitboard
-    Bitboard b = 0ULL;
-    displayBitboard(b);
+    // loop over board ranks
+    for (int rank = 0; rank < 8; rank++)
+    {
+        // loop over board files
+        for (int file = 0; file < 8; file++)
+        {
+            // convert file & rank into square index
+            int square = rank * 8 + file;
 
-    // setting some bits
-    setBit(b, e4);
-    toggleBit(b, c3);
-    displayBitboard(b);
+            // print ranks
+            if (!file)
+                cout << " " << 8 - rank << "  ";
 
-    // print bitboard
-    toggleBit(b, h1);
-    displayBitboard(b);
+            // print bit state (either 1 or 0)
+            cout << " " << (getBit(bb, square) ? "1" : ".");
+        }
 
-    // print bitboard
-    clearBit(b, c3);
-    displayBitboard(b);
+        // print new line every rank
+        cout << endl;
+    }
 
-    cout << "h1 = " << getBit(b, h1) << endl;
+    // print board files
+    cout << endl << "     a b c d e f g h" << endl << endl;
 
-    return 0;
+    // print bitboard as unsigned decimal number
+    cout << "     Bitboard: " << bb << endl << endl;
 }

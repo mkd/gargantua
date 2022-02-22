@@ -19,39 +19,30 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
-#include "bit.h"
-#include "board.h"
-#include "nnue.h"
+#ifndef BOARD_H
+#define BOARD_H
 
 
-using namespace std;
+// Bitboard data type = unsigned long long (64-bit number)
+#define Bitboard uint64_t
+
+
+// List of board squares
+enum {
+    a8, b8, c8, d8, e8, f8, g8, h8,
+    a7, b7, c7, d7, e7, f7, g7, h7,
+    a6, b6, c6, d6, e6, f6, g6, h6,
+    a5, b5, c5, d5, e5, f5, g5, h5,
+    a4, b4, c4, d4, e4, f4, g4, h4,
+    a3, b3, c3, d3, e3, f3, g3, h3,
+    a2, b2, c2, d2, e2, f2, g2, h2,
+    a1, b1, c1, d1, e1, f1, g1, h1
+};
 
 
 
-int main(void)
-{
-    // Initialize the neural network weights
-    nnue_init("nn-eba324f53044.nnue");
+void displayBitboard(Bitboard);
 
-    // define bitboard
-    Bitboard b = 0ULL;
-    displayBitboard(b);
 
-    // setting some bits
-    setBit(b, e4);
-    toggleBit(b, c3);
-    displayBitboard(b);
 
-    // print bitboard
-    toggleBit(b, h1);
-    displayBitboard(b);
-
-    // print bitboard
-    clearBit(b, c3);
-    displayBitboard(b);
-
-    cout << "h1 = " << getBit(b, h1) << endl;
-
-    return 0;
-}
+#endif  // BOARD_H
