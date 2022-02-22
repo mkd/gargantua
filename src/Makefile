@@ -86,7 +86,7 @@ DFLAGS  := -Wall -O0 -g -DDEBUG -std=c++17 $(DEFINES)
 all: $(APP)
 
 clean:
-	$(RM) $(APP) $(EXE) *.o *.obj
+	$(RM) $(APP) $(EXE) *.o *.obj *.dbo
 
 $(APP): $(OBJECTS)
 	$(CC) -o $@ $(OBJECTS)
