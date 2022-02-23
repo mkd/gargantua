@@ -24,13 +24,15 @@ APP = gargantua
 EXE = gargantua.exe
 
 
+
 # Compiler
 CC	:= g++
 WC	:= x86_64-w64-mingw32-g++
 
 
+
 ############################
-# SIMD flags
+# SIMD flags (for NNUE)
 #--------------
 # Disable/Add flags as needed
 ############################
@@ -45,6 +47,7 @@ ifeq ($(COMP),$(filter $(COMP),gcc clang win icpc))
 endif
 
 
+
 # Source and objects files
 SOURCES   := $(wildcard *.cpp)
 OBJECTS   := $(SOURCES:.cpp=.o)
@@ -53,17 +56,17 @@ WOBJECTS  := $(SOURCES:.cpp=.obj)
 DEPFILES  := $(SOURCES:.cpp=.d)
 
 
-# Suffixes
-.SUFFIXES:
-.SUFFIXES: .d .cpp .o .dbo .obj
 
 
 ### Compilation flags
-CXXFLAGS += -O3 -Ofast -Wall -Wcast-qual -std=c++17 -fno-exceptions -fno-rtti -m64 -mpopcnt -flto $(DEFINES)
-DEPENDFLAGS += -std=c++17
-DFLAGS  := -Wall -O0 -g -DDEBUG -std=c++17 $(DEFINES)
+CXXFLAGS := -Ofast -Wall -Wcast-qual -std=c++17 -fno-exceptions -fno-rtti -m64 -mpopcnt -flto $(DEFINES)
+DFLAGS   := -Wall -O0 -g -DDEBUG -std=c++17 $(DEFINES)
 
 
+
+# Suffixes
+.SUFFIXES:
+.SUFFIXES: .d .cpp .o .dbo .obj
 
 %.d: %.cpp
 	@echo ' Generating deps   $@' && $(CC) -MM $< | \
@@ -82,17 +85,44 @@ DFLAGS  := -Wall -O0 -g -DDEBUG -std=c++17 $(DEFINES)
 
 
 
+# Phony declarations
+.PHONY: clean doc help
+
+
+
 ### Build targets
 all: $(APP)
 
 clean:
-	$(RM) $(APP) $(EXE) *.o *.obj *.dbo
+	@echo -n 'Deleting object files: '
+	@rm -fr $(OBJECTS) $(DOBJECTS) $(WOBJECTS) $(DEPFILES)
+	@rm -fr gargantua gargantua.exe gargantua.dbg
+	@echo 'done.'
 
 $(APP): $(OBJECTS)
 	$(CC) -o $@ $(OBJECTS)
 
 debug: $(DOBJECTS)
-	$(CC) -o $(APP) $(DOBJECTS)
+	$(CC) -o $(APP).dbg $(DOBJECTS)
 
 exe: $(WOBJECTS)
 	$(WC) -o $(EXE) $(WOBJECTS)
+
+help:
+	@echo 'User targets:'; \
+	echo ''; \
+	echo ' all        - Default target.  Alias for "gargantua".'; \
+	echo ' gargantua  - Build the binary.'; \
+	echo ' exe        - Build the binary for Win64 architecture.'; \
+	echo ' debug      - Build the debug binary.'; \
+	echo ' clean      - Remove objects, dependency files and binaries.'; \
+	echo ''
+
+
+
+# Generate dependencies except for these targets
+NODEP_TARGETS := clean help
+
+ifeq ($(filter $(NODEP_TARGETS),$(MAKECMDGOALS)),)
+-include $(DEPFILES)
+endif
