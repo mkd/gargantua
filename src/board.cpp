@@ -20,6 +20,8 @@
 */
 
 #include <iostream>
+#include <string>
+#include <sstream>
 #include "board.h"
 #include "bit.h"
 
@@ -28,13 +30,30 @@ using namespace std;
 
 
 
-// displayBitboard
+// PawnAttacks is an global variable (extern in board.h) seen by
+// the entire program. Here it gets defined, so it can be used in
+// other parts of the code:
+Bitboard PawnAttacks[2][64];
+
+
+
+// printBitboard
 //
 // Take a Bitboard and display it as a board representation on the standard
 // output.
-void displayBitboard(Bitboard bb)
+void printBitboard(Bitboard bb)
 {
-    cout << endl;
+    cout << pretty(bb) << endl;
+}
+
+
+
+// pretty
+//
+// Take a Bitboard and return a string of how it should be printed.
+string pretty(Bitboard bb)
+{
+    stringstream ss;
 
     // loop over board ranks
     for (int rank = 0; rank < 8; rank++)
@@ -47,19 +66,67 @@ void displayBitboard(Bitboard bb)
 
             // print ranks
             if (!file)
-                cout << " " << 8 - rank << "  ";
+                ss << " " << 8 - rank << "  ";
 
             // print bit state (either 1 or 0)
-            cout << " " << (getBit(bb, square) ? "1" : ".");
+            ss << " " << (getBit(bb, square) ? "1" : ".");
         }
 
         // print new line every rank
-        cout << endl;
+        ss << endl;
     }
 
     // print board files
-    cout << endl << "     a b c d e f g h" << endl << endl;
+    ss << endl << "     a b c d e f g h" << endl << endl;
 
-    // print bitboard as unsigned decimal number
-    cout << "     Bitboard: " << bb << endl << endl;
+
+    return ss.str();
+}
+
+
+
+// maskPawnAttacks
+//
+// Generate bitboard with all pawn attacks.
+Bitboard maskPawnAttacks(int side, int square)
+{
+    // result attacks bitboard
+    Bitboard attacks = 0ULL;
+
+    // piece bitboard
+    Bitboard bb = 0ULL;
+    
+    // set piece on board
+    setBit(bb, square);
+    
+    // white pawns
+    if (side == White)
+    {
+        if ((bb >> 7) & NotFileA_Mask) attacks |= (bb >> 7);
+        if ((bb >> 9) & NotFileH_Mask) attacks |= (bb >> 9);
+    }
+    
+    // black pawns
+    else if (side == Black)
+    {
+        if ((bb << 7) & NotFileH_Mask) attacks |= (bb << 7);
+        if ((bb << 9) & NotFileA_Mask) attacks |= (bb << 9);    
+    }
+    
+    // return attack map
+    return attacks;
+}
+
+// initLeaperAttacks
+//
+// Init leaper pieces attacks.
+void initLeaperAttacks()
+{
+    // loop over 64 board squares
+    for (int square = 0; square < 64; square++)
+    {
+        // init pawn attacks
+        PawnAttacks[White][square] = maskPawnAttacks(White, square);
+        PawnAttacks[Black][square] = maskPawnAttacks(Black, square);
+    }
 }

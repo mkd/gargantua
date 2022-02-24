@@ -25,33 +25,29 @@
 #include "nnue.h"
 
 
+
 using namespace std;
 
 
 
+
+// The program's main application consists of two parts:
+// 1) inintialization of the necessary data structures
+// 2) UCI loop: interpreting commands from the user input and running them
+//
+// UCI protocol specs: http://wbec-ridderkerk.nl/html/UCIProtocol.html
 int main(void)
 {
-    // Initialize the neural network weights
+    // Initialize neural network
     nnue_init("nn-eba324f53044.nnue");
 
-    // define bitboard
-    Bitboard b = 0ULL;
-    displayBitboard(b);
-
-    // setting some bits
-    setBit(b, e4);
-    toggleBit(b, c3);
-    displayBitboard(b);
-
-    // print bitboard
-    toggleBit(b, h1);
-    displayBitboard(b);
-
-    // print bitboard
-    clearBit(b, c3);
-    displayBitboard(b);
-
-    cout << "h1 = " << getBit(b, h1) << endl;
+    // init leaper pieces attacks
+    initLeaperAttacks();
+    
+    // loop over 64 board squares
+    for (int square = 0; square < 64; square++)
+        printBitboard(PawnAttacks[White][square]);
+       
 
     return 0;
 }

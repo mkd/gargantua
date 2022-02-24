@@ -22,10 +22,11 @@
 ### Executable name
 APP = gargantua
 EXE = gargantua.exe
+DBG = gargantua.dbg
 
 
 
-# Compiler
+### Compiler
 CC	:= g++
 WC	:= x86_64-w64-mingw32-g++
 
@@ -48,13 +49,12 @@ endif
 
 
 
-# Source and objects files
+### Source and objects files
 SOURCES   := $(wildcard *.cpp)
 OBJECTS   := $(SOURCES:.cpp=.o)
 DOBJECTS  := $(SOURCES:.cpp=.dbo)
 WOBJECTS  := $(SOURCES:.cpp=.obj)
 DEPFILES  := $(SOURCES:.cpp=.d)
-
 
 
 
@@ -64,7 +64,7 @@ DFLAGS   := -Wall -O0 -g -DDEBUG -std=c++17 $(DEFINES)
 
 
 
-# Suffixes
+### Suffixes
 .SUFFIXES:
 .SUFFIXES: .d .cpp .o .dbo .obj
 
@@ -85,13 +85,14 @@ DFLAGS   := -Wall -O0 -g -DDEBUG -std=c++17 $(DEFINES)
 
 
 
-# Phony declarations
-.PHONY: clean doc help
+### Phony declarations
+.PHONY: clean help
 
 
 
 ### Build targets
 all: $(APP)
+
 
 clean:
 	@echo -n 'Deleting object files: '
@@ -99,14 +100,24 @@ clean:
 	@rm -fr gargantua gargantua.exe gargantua.dbg
 	@echo 'done.'
 
+
 $(APP): $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS)
+	@echo ' Linking           $@'
+	$(CC) -o $@ $(OBJECTS) $(LDFLAGS)
 
-debug: $(DOBJECTS)
-	$(CC) -o $(APP).dbg $(DOBJECTS)
 
-exe: $(WOBJECTS)
-	$(WC) -o $(EXE) $(WOBJECTS)
+$(DBG): $(DOBJECTS)
+	@echo ' Linking   [debug] $@'
+	$(CC) -o $@ $(DOBJECTS)
+
+
+$(EXE): $(WOBJECTS)
+	@echo ' Linking   [win64] $@'
+	$(WC) -o $@ $(WOBJECTS) $(LDFLAGS)
+
+
+exe: $(EXE)
+
 
 help:
 	@echo 'User targets:'; \
