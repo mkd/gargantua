@@ -19,47 +19,12 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BOARD_H
-#define BOARD_H
-
-
-// Board, piece and position data structures and functions: this file includes
-// the very definition of Bitboard (64-bit unsigned integer), the two sides
-// (White and Black), and different square and piece data structures and
-// functions.
-//
-// This file also include methods to operate with the board and printing it,
-// as well as manipulating the position (including pieces, squares, side to
-// to move, and other board/positional elements).
+#ifndef BITBOARD_H
+#define BITBOARD_H
 
 
 
-// Bitboard data type = unsigned long long (64-bit number)
-#define Bitboard uint64_t
-
-
-
-// Colors (and side to move): White, Black, NoColor
-enum Side { White, Black, NoColor };
-
-
-
-// List of board squares
-enum BoardSquares {
-    a8, b8, c8, d8, e8, f8, g8, h8,
-    a7, b7, c7, d7, e7, f7, g7, h7,
-    a6, b6, c6, d6, e6, f6, g6, h6,
-    a5, b5, c5, d5, e5, f5, g5, h5,
-    a4, b4, c4, d4, e4, f4, g4, h4,
-    a3, b3, c3, d3, e3, f3, g3, h3,
-    a2, b2, c2, d2, e2, f2, g2, h2,
-    a1, b1, c1, d1, e1, f1, g1, h1
-};
-
-
-
-// pawn attacks table [side][square]
-extern Bitboard PawnAttacks[2][64];
+#include "definitions.h"
 
 
 
@@ -100,4 +65,61 @@ void initLeaperAttacks();
 
 
 
-#endif  // BOARD_H
+
+// Bitboard and bitwise operations:
+//
+// They can be defined both as macros (using #define) or as static inline
+// functions. The difference is that, with macros, they are treated as pure
+// test replacements by the preprocessor, so no typechecking is involved and
+// it's more difficult to debug.
+//
+// However, static inline functions will only be *as fast* as macros when using
+// optimizations (i.e., -Ofast or -O3), because the compiler will replace the
+// function calls with inline code. So, remember to use optimizations!
+//
+// Below, there is a list of all the functions, plus how would they look like as 
+// macros, in the comments.
+
+
+
+// getBit
+//
+// #define getBit(b, pos) (b & (1ULL << pos))
+static inline int getBit(Bitboard &b, int pos)
+{
+    return ((b >> pos) & 1ULL);
+}
+
+
+
+// setBit
+//
+// #define setBit(b, pos) (b |= (1ULL << pos))
+static inline void setBit(Bitboard &b, int pos)
+{
+    b |= (1ULL << pos);
+}
+
+
+
+// clearBit
+//
+// #define clearBit(b, pos) (b &= ~(1ULL << pos))
+static inline void clearBit(Bitboard &b, int pos)
+{
+    b &= ~(1ULL << pos);
+}
+
+
+
+// toggleBit
+//
+// #define toggleBit(b, pos) (b ^= (1ULL << pos))
+static inline void toggleBit(Bitboard &b, int pos)
+{
+    b ^= (1ULL << pos);
+}
+
+
+
+#endif  // BITBOARD_H
