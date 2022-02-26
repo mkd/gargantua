@@ -45,7 +45,7 @@ int main(void)
     
     // loop over 64 board squares
     for (int square = 0; square < 64; square++)
-        printBitboard(KnightAttacks[square]);
+        printBitboard(KingAttacks[square]);
        
 
     return 0;

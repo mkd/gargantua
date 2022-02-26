@@ -45,6 +45,13 @@ Bitboard KnightAttacks[64];
 
 
 
+// KingAttacks is an global variable (extern in definitions.h) seen by
+// the entire program. Here it gets defined, so it can be used in
+// other parts of the code:
+Bitboard KingAttacks[64];
+
+
+
 // printBitboard
 //
 // Take a Bitboard and display it as a board representation on the standard
@@ -95,7 +102,7 @@ string pretty(Bitboard bb)
 
 // maskPawnAttacks
 //
-// Generate a bitboard with all the pawns' attacks.
+// Generate a bitboard with all Pawn attacks from a given square.
 Bitboard maskPawnAttacks(int side, int square)
 {
     // result attacks bitboard
@@ -129,18 +136,21 @@ Bitboard maskPawnAttacks(int side, int square)
 
 // maskKnightAttacks
 //
-// Generate a table of bitboards with all the knights' attacks.
+// Generate a bitboard with all Knight attacks from a given square.
 Bitboard maskKnightAttacks(int square)
 {
     // result attacks bitboard
     Bitboard attacks = 0ULL;
 
+
     // piece bitboard
     Bitboard bb = 0ULL;
-    
+
+
     // set piece on board
     setBit(bb, square);
-    
+
+
     // generate Knight attacks
     if ((bb >> 17) & NotFileH_Mask)  attacks |= (bb >> 17);
     if ((bb >> 15) & NotFileA_Mask)  attacks |= (bb >> 15);
@@ -151,10 +161,44 @@ Bitboard maskKnightAttacks(int square)
     if ((bb << 10) & NotFileAB_Mask) attacks |= (bb << 10);
     if ((bb << 6)  & NotFileHG_Mask) attacks |= (bb << 6);
 
+
     // return attack map
     return attacks;
 }
 
+
+
+// maskKingAttacks
+//
+// Generate a bitboard with all King attacks from a given square.
+Bitboard maskKingAttacks(int square)
+{
+    // result attacks bitboard
+    Bitboard attacks = 0ULL;
+
+
+    // piece bitboard
+    Bitboard bb = 0ULL;
+
+
+    // set piece on board
+    setBit(bb, square);
+
+
+    // generate Knight attacks
+    if (bb >> 8)                   attacks |= (bb >> 8);
+    if ((bb >> 9) & NotFileH_Mask) attacks |= (bb >> 9);
+    if ((bb >> 7) & NotFileA_Mask) attacks |= (bb >> 7);
+    if ((bb >> 1) & NotFileH_Mask) attacks |= (bb >> 1);
+    if (bb << 8)                   attacks |= (bb << 8);
+    if ((bb << 9) & NotFileA_Mask) attacks |= (bb << 9);
+    if ((bb << 7) & NotFileH_Mask) attacks |= (bb << 7);
+    if ((bb << 1) & NotFileA_Mask) attacks |= (bb << 1);
+
+
+    // return attack map
+    return attacks;
+}
 
 
 // initLeaperAttacks
@@ -171,5 +215,8 @@ void initLeaperAttacks()
 
         // init Knight attacks
         KnightAttacks[square] = maskKnightAttacks(square);
+
+        // init King attacks
+        KingAttacks[square] = maskKingAttacks(square);
     }
 }
