@@ -58,4 +58,9 @@ extern Bitboard KnightAttacks[64];
 
 
 
+// King attacks table [square]
+extern Bitboard KingAttacks[64];
+
+
+
 #endif  // DEFINITIONS_H

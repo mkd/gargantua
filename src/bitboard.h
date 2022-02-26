@@ -60,7 +60,6 @@ constexpr Bitboard NotFileAB_Mask = 18229723555195321596ULL;
 
 void printBitboard(Bitboard);
 std::string pretty(Bitboard);
-Bitboard maskPawnAttacks(int, int);
 void initLeaperAttacks();
 
 
