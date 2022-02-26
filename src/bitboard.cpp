@@ -22,18 +22,26 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include "board.h"
-#include "bit.h"
+#include "definitions.h"
+#include "bitboard.h"
+
 
 
 using namespace std;
 
 
 
-// PawnAttacks is an global variable (extern in board.h) seen by
+// PawnAttacks is an global variable (extern in definitions.h) seen by
 // the entire program. Here it gets defined, so it can be used in
 // other parts of the code:
 Bitboard PawnAttacks[2][64];
+
+
+
+// KnightAttacks is an global variable (extern in definitions.h) seen by
+// the entire program. Here it gets defined, so it can be used in
+// other parts of the code:
+Bitboard KnightAttacks[64];
 
 
 
@@ -87,7 +95,7 @@ string pretty(Bitboard bb)
 
 // maskPawnAttacks
 //
-// Generate bitboard with all pawn attacks.
+// Generate a bitboard with all the pawns' attacks.
 Bitboard maskPawnAttacks(int side, int square)
 {
     // result attacks bitboard
@@ -117,6 +125,38 @@ Bitboard maskPawnAttacks(int side, int square)
     return attacks;
 }
 
+
+
+// maskKnightAttacks
+//
+// Generate a table of bitboards with all the knights' attacks.
+Bitboard maskKnightAttacks(int square)
+{
+    // result attacks bitboard
+    Bitboard attacks = 0ULL;
+
+    // piece bitboard
+    Bitboard bb = 0ULL;
+    
+    // set piece on board
+    setBit(bb, square);
+    
+    // generate Knight attacks
+    if ((bb >> 17) & NotFileH_Mask)  attacks |= (bb >> 17);
+    if ((bb >> 15) & NotFileA_Mask)  attacks |= (bb >> 15);
+    if ((bb >> 10) & NotFileHG_Mask) attacks |= (bb >> 10);
+    if ((bb >> 6)  & NotFileAB_Mask) attacks |= (bb >> 6);
+    if ((bb << 17) & NotFileA_Mask)  attacks |= (bb << 17);
+    if ((bb << 15) & NotFileH_Mask)  attacks |= (bb << 15);
+    if ((bb << 10) & NotFileAB_Mask) attacks |= (bb << 10);
+    if ((bb << 6)  & NotFileHG_Mask) attacks |= (bb << 6);
+
+    // return attack map
+    return attacks;
+}
+
+
+
 // initLeaperAttacks
 //
 // Init leaper pieces attacks.
@@ -125,8 +165,11 @@ void initLeaperAttacks()
     // loop over 64 board squares
     for (int square = 0; square < 64; square++)
     {
-        // init pawn attacks
+        // init Pawn attacks
         PawnAttacks[White][square] = maskPawnAttacks(White, square);
         PawnAttacks[Black][square] = maskPawnAttacks(Black, square);
+
+        // init Knight attacks
+        KnightAttacks[square] = maskKnightAttacks(square);
     }
 }

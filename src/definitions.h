@@ -19,34 +19,43 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
-#include "bitboard.h"
-#include "nnue.h"
+#ifndef DEFINITIONS_H
+#define DEFINITIONS_H
 
 
 
-using namespace std;
+// Bitboard data type = unsigned long long (64-bit number)
+#define Bitboard uint64_t
 
 
 
+// Colors (and side to move): White, Black, NoColor
+enum Side { White, Black, NoColor };
 
-// The program's main application consists of two parts:
-// 1) inintialization of the necessary data structures
-// 2) UCI loop: interpreting commands from the user input and running them
-//
-// UCI protocol specs: http://wbec-ridderkerk.nl/html/UCIProtocol.html
-int main(void)
-{
-    // Initialize neural network
-    nnue_init("nn-eba324f53044.nnue");
 
-    // init leaper pieces attacks
-    initLeaperAttacks();
-    
-    // loop over 64 board squares
-    for (int square = 0; square < 64; square++)
-        printBitboard(KnightAttacks[square]);
-       
 
-    return 0;
-}
+// List of board squares
+enum BoardSquares {
+    a8, b8, c8, d8, e8, f8, g8, h8,
+    a7, b7, c7, d7, e7, f7, g7, h7,
+    a6, b6, c6, d6, e6, f6, g6, h6,
+    a5, b5, c5, d5, e5, f5, g5, h5,
+    a4, b4, c4, d4, e4, f4, g4, h4,
+    a3, b3, c3, d3, e3, f3, g3, h3,
+    a2, b2, c2, d2, e2, f2, g2, h2,
+    a1, b1, c1, d1, e1, f1, g1, h1
+};
+
+
+
+// Pawn attacks table [side][square]
+extern Bitboard PawnAttacks[2][64];
+
+
+
+// Knight attacks table [square]
+extern Bitboard KnightAttacks[64];
+
+
+
+#endif  // DEFINITIONS_H
