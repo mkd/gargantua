@@ -40,12 +40,14 @@ int main(void)
     // Initialize neural network
     nnue_init("nn-eba324f53044.nnue");
 
+
     // init leaper pieces attacks
     initLeaperAttacks();
-    
+
+
     // loop over 64 board squares
     for (int square = 0; square < 64; square++)
-        printBitboard(KingAttacks[square]);
+        printBitboard(maskBishopAttacks(square));
        
 
     return 0;
