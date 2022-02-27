@@ -31,23 +31,11 @@ using namespace std;
 
 
 
-// PawnAttacks is an global variable (extern in definitions.h) seen by
-// the entire program. Here it gets defined, so it can be used in
-// other parts of the code:
+// Piece attack tables are global variables (extern in definitions.h) seen by
+// the entire program. Here it gets defined, so it can be used in other parts
+// of the code:
 Bitboard PawnAttacks[2][64];
-
-
-
-// KnightAttacks is an global variable (extern in definitions.h) seen by
-// the entire program. Here it gets defined, so it can be used in
-// other parts of the code:
 Bitboard KnightAttacks[64];
-
-
-
-// KingAttacks is an global variable (extern in definitions.h) seen by
-// the entire program. Here it gets defined, so it can be used in
-// other parts of the code:
 Bitboard KingAttacks[64];
 
 
@@ -195,6 +183,76 @@ Bitboard maskKingAttacks(int square)
     if ((bb << 7) & NotFileH_Mask) attacks |= (bb << 7);
     if ((bb << 1) & NotFileA_Mask) attacks |= (bb << 1);
 
+
+    // return attack map
+    return attacks;
+}
+
+
+
+// maskBishopAttacks
+//
+// Generate a Bitboard with the occupancy bits of a bishop at a given square.
+Bitboard maskBishopAttacks(int square)
+{
+    // result attacks bitboard
+    Bitboard attacks = 0ULL;
+   
+
+    // rank and file, plus target ranks and files (of the diagonals)
+    int r, f;
+    int tr = square / 8;
+    int tf = square % 8;
+   
+
+    // mask relevant Bishop occupancy bits
+    for (r = tr + 1, f = tf + 1; r <= 6 && f <= 6; r++, f++)
+        attacks |= (1ULL << (r * 8 + f));
+
+    for (r = tr - 1, f = tf + 1; r >= 1 && f <= 6; r--, f++)
+        attacks |= (1ULL << (r * 8 + f));
+
+    for (r = tr + 1, f = tf - 1; r <= 6 && f >= 1; r++, f--)
+        attacks |= (1ULL << (r * 8 + f));
+
+    for (r = tr - 1, f = tf - 1; r >= 1 && f >= 1; r--, f--)
+        attacks |= (1ULL << (r * 8 + f));
+
+    
+    // return attack map
+    return attacks;
+}
+
+
+
+// maskRookAttacks
+//
+// Generate a Bitboard with the occupancy bits of a rook at a given square.
+Bitboard maskRookAttacks(int square)
+{
+    // result attacks bitboard
+    Bitboard attacks = 0ULL;
+   
+
+    // rank and file, plus target ranks and files (of the diagonals)
+    int r, f;
+    int tr = square / 8;
+    int tf = square % 8;
+   
+
+    // mask relevant Rook occupancy bits
+    for (r = tr + 1; r <= 6; r++)
+        attacks |= (1ULL << (r * 8 + tf));
+
+    for (r = tr - 1; r >= 1; r--)
+        attacks |= (1ULL << (r * 8 + tf));
+
+    for (f = tf + 1; f <= 6; f++)
+        attacks |= (1ULL << (tr * 8 + f));
+
+    for (f = tf - 1; f >= 1; f--)
+        attacks |= (1ULL << (tr * 8 + f));
+   
 
     // return attack map
     return attacks;
