@@ -44,11 +44,27 @@ int main(void)
     initLeaperAttacks();
 
 
-    // test performance of countBits()
-    printBitboard(DarkSquares);
+    // init occupancy bitboard
+    Bitboard block = 0ULL;
+    setBit(block, e7);
+    setBit(block, d2);
+    setBit(block, d1);
+    setBit(block, b4);
+    setBit(block, g4);
+    printBitboard(block);
+    string s;
+
+    cout << "   Index: " << ls1b(block) << "   Coordinate: " << SquareToCoordinates[ls1b(block)] << endl;
     for (long i = 0; i < 999999999; i++)
-        countBits(DarkSquares);
-    cout << "No. of bits = " << countBits(DarkSquares) << endl;
+    {
+        s = SquareToCoordinates[24];
+    }
+    
+    // test bitboard
+    Bitboard test = 0ULL;
+    setBit(test, ls1b(block));
+    
+    printBitboard(test);
     
     
     return 0;
