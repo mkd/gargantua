@@ -58,10 +58,12 @@ constexpr Bitboard NotFileAB_Mask = 18229723555195321596ULL;
 
 
 
+
+// Functions for initializing, printing and manipulating Bitboard data
+// structures and information:
 void printBitboard(Bitboard);
 std::string pretty(Bitboard);
-Bitboard maskBishopAttacks(int);
-Bitboard maskRookAttacks(int);
+Bitboard genRookAttacks(int, Bitboard);
 void initLeaperAttacks();
 
 

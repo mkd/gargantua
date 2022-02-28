@@ -45,9 +45,17 @@ int main(void)
     initLeaperAttacks();
 
 
-    // loop over 64 board squares
-    for (int square = 0; square < 64; square++)
-        printBitboard(maskBishopAttacks(square));
+    // init occupancy bitboard
+    Bitboard block = 0ULL;
+    setBit(block, d7);
+    setBit(block, d2);
+    setBit(block, d1);
+    setBit(block, b4);
+    setBit(block, g4);
+    printBitboard(block);
+    
+    
+    printBitboard(genRookAttacks(d4, block));
        
 
     return 0;
