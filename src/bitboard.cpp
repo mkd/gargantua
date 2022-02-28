@@ -259,6 +259,110 @@ Bitboard maskRookAttacks(int square)
 }
 
 
+
+// genBishopAttacks
+//
+// Generate a Bitboard with the Bishop attacks given a position and a set of
+// blocking pieces.
+Bitboard genBishopAttacks(int square, Bitboard block)
+{
+    // result attacks bitboard
+    Bitboard attacks = 0ULL;
+
+    
+    // rank and file, plus target ranks and files (of the diagonals)
+    int r, f;
+    int tr = square / 8;
+    int tf = square % 8;
+   
+
+    // generate Bishop atacks
+    for (r = tr + 1, f = tf + 1; r <= 7 && f <= 7; r++, f++)
+    {
+        attacks |= (1ULL << (r * 8 + f));
+        if ((1ULL << (r * 8 + f)) & block)
+            break;
+    }
+    
+    for (r = tr - 1, f = tf + 1; r >= 0 && f <= 7; r--, f++)
+    {
+        attacks |= (1ULL << (r * 8 + f));
+        if ((1ULL << (r * 8 + f)) & block)
+            break;
+    }
+    
+    for (r = tr + 1, f = tf - 1; r <= 7 && f >= 0; r++, f--)
+    {
+        attacks |= (1ULL << (r * 8 + f));
+        if ((1ULL << (r * 8 + f)) & block)
+            break;
+    }
+    
+    for (r = tr - 1, f = tf - 1; r >= 0 && f >= 0; r--, f--)
+    {
+        attacks |= (1ULL << (r * 8 + f));
+        if ((1ULL << (r * 8 + f)) & block)
+            break;
+    }
+
+
+    // return attack map
+    return attacks;
+}
+
+
+// genRookAttacks
+//
+// Generate a Bitboard with the Rishop attacks given a position and a set of
+// blocking pieces.
+Bitboard genRookAttacks(int square, Bitboard block)
+{
+    // result attacks bitboard
+    Bitboard attacks = 0ULL;
+   
+
+    // rank and file, plus target ranks and files (of the diagonals)
+    int r, f;
+    int tr = square / 8;
+    int tf = square % 8;
+   
+
+    // generate rook attacks
+    for (r = tr + 1; r <= 7; r++)
+    {
+        attacks |= (1ULL << (r * 8 + tf));
+        if ((1ULL << (r * 8 + tf)) & block)
+            break;
+    }
+    
+    for (r = tr - 1; r >= 0; r--)
+    {
+        attacks |= (1ULL << (r * 8 + tf));
+        if ((1ULL << (r * 8 + tf)) & block)
+            break;
+    }
+    
+    for (f = tf + 1; f <= 7; f++)
+    {
+        attacks |= (1ULL << (tr * 8 + f));
+        if ((1ULL << (tr * 8 + f)) & block)
+            break;
+    }
+    
+    for (f = tf - 1; f >= 0; f--)
+    {
+        attacks |= (1ULL << (tr * 8 + f));
+        if ((1ULL << (tr * 8 + f)) & block)
+            break;
+    }
+   
+
+    // return attack map
+    return attacks;
+}
+
+
+
 // initLeaperAttacks
 //
 // Init leaper pieces attacks.
