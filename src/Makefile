@@ -76,7 +76,8 @@ DFLAGS   := -Wall -O0 -g -DDEBUG -std=c++17 $(DEFINES)
 	@echo ' Compiling         $@' && $(CC) $(CXXFLAGS) -c $< -o $@
 
 %.dbo: %.cpp
-	@echo ' Compiling [debug] $@' && $(CC) $(DFLAGS) -c $< -o $@
+#	@echo ' Compiling [debug] $@' && $(CC) $(DFLAGS) -c $< -o $@
+	$(CC) $(DFLAGS) -c $< -o $@
 
 %.obj: %.cpp
 	@echo ' Compiling [win64] $@' && $(WC) $(CXXFLAGS) -c $< -o $@ -lm
@@ -108,7 +109,9 @@ $(APP): $(OBJECTS)
 
 $(DBG): $(DOBJECTS)
 	@echo ' Linking   [debug] $@'
-	$(CC) -o $@ $(DOBJECTS)
+	$(CC) -o $@ $(DOBJECTS) $(LDFLAGS)
+
+debug: $(DBG)
 
 
 $(EXE): $(WOBJECTS)

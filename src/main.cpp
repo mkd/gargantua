@@ -29,7 +29,6 @@ using namespace std;
 
 
 
-
 // The program's main application consists of two parts:
 // 1) inintialization of the necessary data structures
 // 2) UCI loop: interpreting commands from the user input and running them
@@ -45,18 +44,12 @@ int main(void)
     initLeaperAttacks();
 
 
-    // init occupancy bitboard
-    Bitboard block = 0ULL;
-    setBit(block, d7);
-    setBit(block, d2);
-    setBit(block, d1);
-    setBit(block, b4);
-    setBit(block, g4);
-    printBitboard(block);
+    // test performance of countBits()
+    printBitboard(DarkSquares);
+    for (long i = 0; i < 999999999; i++)
+        countBits(DarkSquares);
+    cout << "No. of bits = " << countBits(DarkSquares) << endl;
     
     
-    printBitboard(genRookAttacks(d4, block));
-       
-
     return 0;
 }
