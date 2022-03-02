@@ -44,28 +44,12 @@ int main(void)
     initLeaperAttacks();
 
 
-    // init occupancy bitboard
-    Bitboard block = 0ULL;
-    setBit(block, e7);
-    setBit(block, d2);
-    setBit(block, d1);
-    setBit(block, b4);
-    setBit(block, g4);
-    printBitboard(block);
-    string s;
+    Bitboard b = DarkSquares;
+    int p;
+    for (long i = 0; i < 9999999999; i++)
+        p = ls1b(b);
 
-    cout << "   Index: " << ls1b(block) << "   Coordinate: " << SquareToCoordinates[ls1b(block)] << endl;
-    for (long i = 0; i < 999999999; i++)
-    {
-        s = SquareToCoordinates[24];
-    }
-    
-    // test bitboard
-    Bitboard test = 0ULL;
-    setBit(test, ls1b(block));
-    
-    printBitboard(test);
-    
-    
+   
+    // terminate program
     return 0;
 }

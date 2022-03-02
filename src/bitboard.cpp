@@ -363,6 +363,34 @@ Bitboard genRookAttacks(int square, Bitboard block)
 
 
 
+// set occupancies
+Bitboard setOccupancy(int index, int bitMask, Bitboard attackMask)
+{
+    // occupancy map
+    Bitboard occupancy = 0ULL;
+
+    
+    // loop over the range of bits within attack mask
+    for (int count = 0; count < bitMask; count++)
+    {
+        // get LS1B index of attacks mask
+        int square = ls1b(attackMask);
+
+        // pop LS1B in attack map
+        clearBit(attackMask, square);
+        
+        // make sure occupancy is on board and populate occupancy map
+        if (index & (1 << count))
+            occupancy |= (1ULL << square);
+    }
+   
+
+    // return occupancy map
+    return occupancy;
+}
+
+
+
 // initLeaperAttacks
 //
 // Init leaper pieces attacks.

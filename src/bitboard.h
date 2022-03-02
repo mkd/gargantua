@@ -63,7 +63,8 @@ constexpr Bitboard NotFileAB_Mask = 18229723555195321596ULL;
 // structures and information:
 void printBitboard(Bitboard);
 std::string pretty(Bitboard);
-Bitboard genRookAttacks(int, Bitboard);
+Bitboard maskBishopAttacks(int);
+Bitboard setOccupancy(int, int, Bitboard);
 void initLeaperAttacks();
 
 
@@ -88,7 +89,7 @@ void initLeaperAttacks();
 // getBit
 //
 // #define getBit(b, pos) (b & (1ULL << pos))
-static inline int getBit(Bitboard &b, int pos)
+static inline int getBit(Bitboard b, int pos)
 {
     return ((b >> pos) & 1ULL);
 }
