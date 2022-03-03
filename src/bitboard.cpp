@@ -27,10 +27,6 @@
 
 
 
-using namespace std;
-
-
-
 // Piece attack tables are global variables (extern in definitions.h) seen by
 // the entire program. Here it gets defined, so it can be used in other parts
 // of the code:
@@ -40,13 +36,18 @@ Bitboard KingAttacks[64];
 
 
 
+// Pseudo-random number generator seed
+uint32_t rng32_state = 1804289383;
+
+
+
 // printBitboard
 //
 // Take a Bitboard and display it as a board representation on the standard
 // output.
 void printBitboard(Bitboard bb)
 {
-    cout << pretty(bb) << endl;
+    std::cout << pretty(bb) << std::endl;
 }
 
 
@@ -54,9 +55,9 @@ void printBitboard(Bitboard bb)
 // pretty
 //
 // Take a Bitboard and return a string of how it should be printed.
-string pretty(Bitboard bb)
+std::string pretty(Bitboard bb)
 {
-    stringstream ss;
+    std::stringstream ss;
 
     // loop over board ranks
     for (int rank = 0; rank < 8; rank++)
@@ -76,11 +77,11 @@ string pretty(Bitboard bb)
         }
 
         // print new line every rank
-        ss << endl;
+        ss << std::endl;
     }
 
     // print board files
-    ss << endl << "     a b c d e f g h" << endl << endl;
+    ss << std::endl << "     a b c d e f g h" << std::endl << std::endl;
 
 
     return ss.str();
@@ -410,3 +411,6 @@ void initLeaperAttacks()
         KingAttacks[square] = maskKingAttacks(square);
     }
 }
+
+
+

@@ -81,4 +81,9 @@ extern Bitboard KingAttacks[64];
 
 
 
+// Pseudo-random number generator seed
+extern unsigned int rng32_state;
+
+
+
 #endif  // DEFINITIONS_H

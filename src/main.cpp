@@ -20,12 +20,13 @@
 */
 
 #include <iostream>
+
+#include <stdio.h>
+
 #include "bitboard.h"
 #include "nnue.h"
 
 
-
-using namespace std;
 
 
 
@@ -44,10 +45,12 @@ int main(void)
     initLeaperAttacks();
 
 
-    Bitboard b = DarkSquares;
-    int p;
-    for (long i = 0; i < 9999999999; i++)
-        p = ls1b(b);
+    std::cout << rng32() << std::endl;
+    std::cout << rng32() << std::endl;
+    std::cout << rng32() << std::endl;
+    std::cout << rng32() << std::endl;
+    std::cout << rng32() << std::endl;
+
 
    
     // terminate program
