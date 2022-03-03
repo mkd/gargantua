@@ -37,6 +37,11 @@ enum Side { White, Black, NoColor };
 
 
 
+// Bishop and Rook
+enum Slider { Rook, Bishop };
+
+
+
 // List of board squares
 enum BoardSquares {
     a8, b8, c8, d8, e8, f8, g8, h8,
@@ -78,6 +83,14 @@ extern Bitboard KnightAttacks[64];
 
 // King attacks table [square]
 extern Bitboard KingAttacks[64];
+
+
+
+// Slider masks and attack tables
+extern Bitboard BishopMasks[64];
+extern Bitboard RookMasks[64];
+extern Bitboard BishopAttacks[64][512];
+extern Bitboard RookAttacks[64][4096];
 
 
 

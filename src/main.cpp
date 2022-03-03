@@ -39,11 +39,32 @@ int main(void)
     std::cout << std::endl;
 
 
-    // init leaper pieces attacks
+    // init piece moves and data structures
     initLeaperAttacks();
+    initSliderAttacks(Bishop);
+    initSliderAttacks(Rook);
 
-
-    printBitboard(genMagicNumber());
+    
+    // define test bitboard
+    Bitboard occupancy = 0ULL;
+    
+    // set blocker pieces on board
+    setBit(occupancy, c5);
+    setBit(occupancy, f2);
+    setBit(occupancy, g7);
+    setBit(occupancy, b2);
+    setBit(occupancy, g5);
+    setBit(occupancy, e2);
+    setBit(occupancy, e7);
+    
+    // print occupancies
+    printBitboard(occupancy);
+    
+    // print rook attacks
+    printBitboard(getRookAttacks(e5, occupancy));
+    
+    // print bishop attacks
+    printBitboard(getBishopAttacks(d4, occupancy));
 
 
    
