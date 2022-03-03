@@ -36,6 +36,14 @@ Bitboard KingAttacks[64];
 
 
 
+// Slider masks and attack tables
+Bitboard BishopMasks[64];
+Bitboard RookMasks[64];
+Bitboard BishopAttacks[64][512];
+Bitboard RookAttacks[64][4096];
+
+
+
 // Pseudo-random number generator seed
 uint32_t rng32_state = 1804289383;
 
@@ -415,10 +423,58 @@ void initLeaperAttacks()
 
 
 
-// genMagicNumber
+// initSliderAttacks
 //
-// Generate a magic number candidate for slider pieces.
-uint64_t genMagicNumber()
+// init slider piece's attack tables
+void initSliderAttacks(Slider bishop)
 {
-    return (uint64_t) (rng64() & rng64() & rng64());
+    // loop over the 64 board squares
+    for (int square = 0; square < 64; square++)
+    {
+        // init Bishop & Rook masks
+        BishopMasks[square] = maskBishopAttacks(square);
+        RookMasks[square] = maskRookAttacks(square);
+        
+        // init current mask
+        Bitboard AttackMask = Bishop ? BishopMasks[square] : RookMasks[square];
+        
+        // init relevant occupancy bit count
+        int RelevantBitsCount = countBits(AttackMask);
+        
+        // init occupancy indices
+        int OccupancyIndices = (1 << RelevantBitsCount);
+        
+        // loop over occupancy indices
+        for (int index = 0; index < OccupancyIndices; index++)
+        {
+            // bishop
+            if (Bishop)
+            {
+                // init current occupancy variation
+                Bitboard occupancy = setOccupancy(index, RelevantBitsCount, AttackMask);
+                
+                // init magic index
+                int MagicIndex = (occupancy * BishopMagicNumbers[square]) >> (64 - BishopRelevantBits[square]);
+                
+                // init bishop attacks
+                BishopAttacks[square][MagicIndex] = genBishopAttacks(square, occupancy);
+            }
+            
+            // rook
+            else
+            {
+                // init current occupancy variation
+                Bitboard occupancy = setOccupancy(index, RelevantBitsCount, AttackMask);
+                
+                // init magic index
+                int MagicIndex = (occupancy * RookMagicNumbers[square]) >> (64 - RookRelevantBits[square]);
+                
+                // init rook attacks
+                RookAttacks[square][MagicIndex] = genRookAttacks(square, occupancy);
+            }
+        }
+    }
 }
+
+
+

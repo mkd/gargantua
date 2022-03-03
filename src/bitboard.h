@@ -229,9 +229,10 @@ constexpr Bitboard BishopMagicNumbers[64] =
 void printBitboard(Bitboard);
 std::string pretty(Bitboard);
 Bitboard maskBishopAttacks(int);
+Bitboard maskRookAttacks(int);
 Bitboard setOccupancy(int, int, Bitboard);
 void initLeaperAttacks();
-uint64_t genMagicNumber();
+void initSliderAttacks(Slider);
 
 
 
@@ -390,5 +391,36 @@ static inline unsigned int ls1b(Bitboard bb)
 }
 
 
+// getBishopAttacks
+//
+// Generate a Bitboard with the pseudo-legal Bishop attacks.
+static inline Bitboard getBishopAttacks(int square, Bitboard occupancy)
+{
+    // get bishop attacks assuming current board occupancy
+    occupancy &= BishopMasks[square];
+    occupancy *= BishopMagicNumbers[square];
+    occupancy >>= 64 - BishopRelevantBits[square];
+   
+
+    // return bishop attacks
+    return BishopAttacks[square][occupancy];
+}
+
+
+
+// getRookAttacks
+//
+// Generate a Bitboard with the pseudo-legal Rook attacks.
+static inline Bitboard getRookAttacks(int square, Bitboard occupancy)
+{
+    // get rook attacks assuming current board occupancy
+    occupancy &= RookMasks[square];
+    occupancy *= RookMagicNumbers[square];
+    occupancy >>= 64 - RookRelevantBits[square];
+   
+
+    // return rook attacks
+    return RookAttacks[square][occupancy];
+}
 
 #endif  // BITBOARD_H
