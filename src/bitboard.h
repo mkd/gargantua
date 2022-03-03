@@ -89,6 +89,7 @@ std::string pretty(Bitboard);
 Bitboard maskBishopAttacks(int);
 Bitboard setOccupancy(int, int, Bitboard);
 void initLeaperAttacks();
+uint64_t genMagicNumber();
 
 
 
@@ -113,6 +114,28 @@ static inline uint32_t rng32()
 
     // return random number
     return number;
+}
+
+
+
+// rng64
+//
+// Generate a 64-bit pseudo-random number.
+static inline uint64_t rng64()
+{
+    // define 4 random numbers
+    uint64_t n1, n2, n3, n4;
+   
+
+    // init random numbers slicing 16 bits from MS1B side
+    n1 = (uint64_t)(rng32() & 0xFFFF);
+    n2 = (uint64_t)(rng32() & 0xFFFF);
+    n3 = (uint64_t)(rng32() & 0xFFFF);
+    n4 = (uint64_t)(rng32() & 0xFFFF);
+   
+
+    // return random number
+    return (uint64_t) (n1 | (n2 << 16) | (n3 << 32) | (n4 << 48));
 }
 
 
