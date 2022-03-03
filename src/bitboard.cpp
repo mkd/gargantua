@@ -81,7 +81,8 @@ std::string pretty(Bitboard bb)
     }
 
     // print board files
-    ss << std::endl << "     a b c d e f g h" << std::endl << std::endl;
+    ss << std::endl << "     a b c d e f g h" << std::endl;
+    ss << std::endl << " " << bb << "ULL" <<  std::endl;
 
 
     return ss.str();
@@ -414,3 +415,10 @@ void initLeaperAttacks()
 
 
 
+// genMagicNumber
+//
+// Generate a magic number candidate for slider pieces.
+uint64_t genMagicNumber()
+{
+    return (uint64_t) (rng64() & rng64() & rng64());
+}

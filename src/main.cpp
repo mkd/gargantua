@@ -20,9 +20,6 @@
 */
 
 #include <iostream>
-
-#include <stdio.h>
-
 #include "bitboard.h"
 #include "nnue.h"
 
@@ -39,17 +36,14 @@ int main(void)
 {
     // Initialize neural network
     nnue_init("nn-eba324f53044.nnue");
+    std::cout << std::endl;
 
 
     // init leaper pieces attacks
     initLeaperAttacks();
 
 
-    std::cout << rng32() << std::endl;
-    std::cout << rng32() << std::endl;
-    std::cout << rng32() << std::endl;
-    std::cout << rng32() << std::endl;
-    std::cout << rng32() << std::endl;
+    printBitboard(genMagicNumber());
 
 
    
