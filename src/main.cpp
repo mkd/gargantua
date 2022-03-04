@@ -20,6 +20,8 @@
 */
 
 #include <iostream>
+#include <bit>
+#include <bitset>
 #include "bitboard.h"
 #include "nnue.h"
 
@@ -56,18 +58,17 @@ int main(void)
     setBit(occupancy, g5);
     setBit(occupancy, e2);
     setBit(occupancy, e7);
-    Bitboard b = ~(0ULL);
+    Bitboard b = DarkSquares;
 
     
     // print rook attacks
     printBitboard(b);
-    for (uint64_t i = 0; i < 999999999; i++)
+    int j = 0;
+    for (uint64_t i = 0; i < 9999999999; i++)
     {
-        clearBit(b, e4);
-        clearBit(b, d4);
-        clearBit(b, e5);
-        clearBit(b, d5);
+        j = countBits(b);
     }
+    std::cout << "count = " << j << std::endl;
     printBitboard(b);
 
    

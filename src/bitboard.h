@@ -298,23 +298,7 @@ static inline void toggleBit(Bitboard &b, int pos)
 // @see http://graphics.stanford.edu/~seander/bithacks.html
 static inline int countBits(Bitboard bb)
 {
-    static const Bitboard  M1 = 0x5555555555555555;  // 1 zero,  1 one ...
-    static const Bitboard  M2 = 0x3333333333333333;  // 2 zeros,  2 ones ...
-    static const Bitboard  M4 = 0x0f0f0f0f0f0f0f0f;  // 4 zeros,  4 ones ...
-    static const Bitboard  M8 = 0x00ff00ff00ff00ff;  // 8 zeros,  8 ones ...
-    static const Bitboard M16 = 0x0000ffff0000ffff;  // 16 zeros, 16 ones ...
-    static const Bitboard M32 = 0x00000000ffffffff;  // 32 zeros, 32 ones
-
-
-    bb = (bb & M1 ) + ((bb >>  1) & M1 );   //put count of each  2 bits into those  2 bits
-    bb = (bb & M2 ) + ((bb >>  2) & M2 );   //put count of each  4 bits into those  4 bits
-    bb = (bb & M4 ) + ((bb >>  4) & M4 );   //put count of each  8 bits into those  8 bits
-    bb = (bb & M8 ) + ((bb >>  8) & M8 );   //put count of each 16 bits into those 16 bits
-    bb = (bb & M16) + ((bb >> 16) & M16);   //put count of each 32 bits into those 32 bits
-    bb = (bb & M32) + ((bb >> 32) & M32);   //put count of each 64 bits into those 64 bits
-
-
-    return (int)bb;
+    return __builtin_popcountll(bb);
 }
 
 
