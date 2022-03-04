@@ -35,7 +35,7 @@
 int main(void)
 {
     // Initialize neural network
-    nnue_init("nn-eba324f53044.nnue");
+    //nnue_init("nn-eba324f53044.nnue");
     std::cout << std::endl;
 
 
@@ -56,16 +56,19 @@ int main(void)
     setBit(occupancy, g5);
     setBit(occupancy, e2);
     setBit(occupancy, e7);
-    
-    // print occupancies
-    printBitboard(occupancy);
+    Bitboard b = ~(0ULL);
+
     
     // print rook attacks
-    printBitboard(getRookAttacks(e5, occupancy));
-    
-    // print bishop attacks
-    printBitboard(getBishopAttacks(d4, occupancy));
-
+    printBitboard(b);
+    for (uint64_t i = 0; i < 999999999; i++)
+    {
+        clearBit(b, e4);
+        clearBit(b, d4);
+        clearBit(b, e5);
+        clearBit(b, d5);
+    }
+    printBitboard(b);
 
    
     // terminate program
