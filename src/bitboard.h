@@ -57,7 +57,8 @@ constexpr Bitboard NotFileHG_Mask = 4557430888798830399ULL;
 constexpr Bitboard NotFileAB_Mask = 18229723555195321596ULL;
 
 
-// bishop relevant occupancy bit count for every square on board
+
+// Bishop relevant occupancy bit count for every square on the board
 constexpr int BishopRelevantBits[64] = {
     6, 5, 5, 5, 5, 5, 5, 6, 
     5, 5, 5, 5, 5, 5, 5, 5, 
@@ -69,7 +70,7 @@ constexpr int BishopRelevantBits[64] = {
     6, 5, 5, 5, 5, 5, 5, 6
 };
 
-// rook relevant occupancy bit count for every square on board
+// Rook relevant occupancy bit count for every square on the board
 constexpr int RookRelevantBits[64] = {
     12, 11, 11, 11, 11, 11, 11, 12, 
     11, 10, 10, 10, 10, 10, 10, 11, 
@@ -83,7 +84,7 @@ constexpr int RookRelevantBits[64] = {
 
 
 
-// rook magic numbers
+// Rook magic numbers
 constexpr Bitboard RookMagicNumbers[64] =
 {
     0x8a80104000800020ULL,
@@ -153,7 +154,7 @@ constexpr Bitboard RookMagicNumbers[64] =
 };
 
 
-// bishop magic numbers
+// Bishop magic numbers
 constexpr Bitboard BishopMagicNumbers[64] =
 {
     0x40040844404084ULL,
@@ -227,59 +228,11 @@ constexpr Bitboard BishopMagicNumbers[64] =
 // Functions for initializing, printing and manipulating Bitboard data
 // structures and information:
 void printBitboard(Bitboard);
-std::string pretty(Bitboard);
 Bitboard maskBishopAttacks(int);
 Bitboard maskRookAttacks(int);
 Bitboard setOccupancy(int, int, Bitboard);
 void initLeaperAttacks();
 void initSliderAttacks(Slider);
-
-
-
-// rng32
-//
-// Generate a 32-bit pseudo-random number.
-static inline uint32_t rng32()
-{
-    // get current state
-    uint32_t number = rng32_state;
-   
-
-    // XOR shift algorithm
-    number ^= number << 13;
-    number ^= number >> 17;
-    number ^= number << 5;
-   
-
-    // update random number state
-    rng32_state = number;
-   
-
-    // return random number
-    return number;
-}
-
-
-
-// rng64
-//
-// Generate a 64-bit pseudo-random number.
-static inline uint64_t rng64()
-{
-    // define 4 random numbers
-    uint64_t n1, n2, n3, n4;
-   
-
-    // init random numbers slicing 16 bits from MS1B side
-    n1 = (uint64_t)(rng32() & 0xFFFF);
-    n2 = (uint64_t)(rng32() & 0xFFFF);
-    n3 = (uint64_t)(rng32() & 0xFFFF);
-    n4 = (uint64_t)(rng32() & 0xFFFF);
-   
-
-    // return random number
-    return (uint64_t) (n1 | (n2 << 16) | (n3 << 32) | (n4 << 48));
-}
 
 
 
@@ -296,7 +249,6 @@ static inline uint64_t rng64()
 //
 // Below, there is a list of all the functions, plus how would they look like as 
 // macros, in the comments.
-
 
 
 // getBit
@@ -422,5 +374,61 @@ static inline Bitboard getRookAttacks(int square, Bitboard occupancy)
     // return rook attacks
     return RookAttacks[square][occupancy];
 }
+
+
+
+// Pseudo-random number generators (32-bit and 64-bit).
+//
+// The functions rng32() and rng64() are a portable implementation of the 
+// XORSHIFT algorithm to generate a sequence of pseudo-random numbers that
+// is always the same for the same starting seed (state).
+
+
+// rng32
+//
+// Generate a 32-bit pseudo-random number.
+static inline uint32_t rng32()
+{
+    // get current state
+    uint32_t number = rng32_state;
+   
+
+    // XOR shift algorithm
+    number ^= number << 13;
+    number ^= number >> 17;
+    number ^= number << 5;
+   
+
+    // update random number state
+    rng32_state = number;
+   
+
+    // return random number
+    return number;
+}
+
+
+
+// rng64
+//
+// Generate a 64-bit pseudo-random number.
+static inline uint64_t rng64()
+{
+    // define 4 random numbers
+    uint64_t n1, n2, n3, n4;
+   
+
+    // init random numbers slicing 16 bits from MS1B side
+    n1 = (uint64_t)(rng32() & 0xFFFF);
+    n2 = (uint64_t)(rng32() & 0xFFFF);
+    n3 = (uint64_t)(rng32() & 0xFFFF);
+    n4 = (uint64_t)(rng32() & 0xFFFF);
+   
+
+    // return random number
+    return (uint64_t) (n1 | (n2 << 16) | (n3 << 32) | (n4 << 48));
+}
+
+
 
 #endif  // BITBOARD_H

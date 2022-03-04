@@ -20,10 +20,13 @@
 */
 
 #include <iostream>
-#include <string>
-#include <sstream>
+#include <iomanip>
 #include "definitions.h"
 #include "bitboard.h"
+
+
+
+using namespace std;
 
 
 
@@ -49,83 +52,39 @@ uint32_t rng32_state = 1804289383;
 
 
 
-// printBitboard
-//
-// Take a Bitboard and display it as a board representation on the standard
-// output.
-void printBitboard(Bitboard bb)
-{
-    std::cout << pretty(bb) << std::endl;
-}
-
-
-
-// pretty
-//
-// Take a Bitboard and return a string of how it should be printed.
-std::string pretty(Bitboard bb)
-{
-    std::stringstream ss;
-
-    // loop over board ranks
-    for (int rank = 0; rank < 8; rank++)
-    {
-        // loop over board files
-        for (int file = 0; file < 8; file++)
-        {
-            // convert file & rank into square index
-            int square = rank * 8 + file;
-
-            // print ranks
-            if (!file)
-                ss << " " << 8 - rank << "  ";
-
-            // print bit state (either 1 or 0)
-            ss << " " << (getBit(bb, square) ? "1" : ".");
-        }
-
-        // print new line every rank
-        ss << std::endl;
-    }
-
-    // print board files
-    ss << std::endl << "     a b c d e f g h" << std::endl;
-    ss << std::endl << " " << bb << "ULL" <<  std::endl;
-
-
-    return ss.str();
-}
-
-
-
 // maskPawnAttacks
 //
-// Generate a bitboard with all Pawn attacks from a given square.
+// Generate a Bitboard with all Pawn attacks from a given square.
 Bitboard maskPawnAttacks(int side, int square)
 {
     // result attacks bitboard
     Bitboard attacks = 0ULL;
 
+
     // piece bitboard
     Bitboard bb = 0ULL;
-    
+
+
     // set piece on board
     setBit(bb, square);
-    
+
+
     // white pawns
     if (side == White)
     {
         if ((bb >> 7) & NotFileA_Mask) attacks |= (bb >> 7);
         if ((bb >> 9) & NotFileH_Mask) attacks |= (bb >> 9);
     }
-    
+
+
     // black pawns
     else if (side == Black)
     {
         if ((bb << 7) & NotFileH_Mask) attacks |= (bb << 7);
         if ((bb << 9) & NotFileA_Mask) attacks |= (bb << 9);    
     }
-    
+
+
     // return attack map
     return attacks;
 }
@@ -134,7 +93,7 @@ Bitboard maskPawnAttacks(int side, int square)
 
 // maskKnightAttacks
 //
-// Generate a bitboard with all Knight attacks from a given square.
+// Generate a Bitboard with all Knight attacks from a given square.
 Bitboard maskKnightAttacks(int square)
 {
     // result attacks bitboard
@@ -168,7 +127,7 @@ Bitboard maskKnightAttacks(int square)
 
 // maskKingAttacks
 //
-// Generate a bitboard with all King attacks from a given square.
+// Generate a Bitboard with all King attacks from a given square.
 Bitboard maskKingAttacks(int square)
 {
     // result attacks bitboard
@@ -207,13 +166,13 @@ Bitboard maskBishopAttacks(int square)
 {
     // result attacks bitboard
     Bitboard attacks = 0ULL;
-   
+
 
     // rank and file, plus target ranks and files (of the diagonals)
     int r, f;
     int tr = square / 8;
     int tf = square % 8;
-   
+
 
     // mask relevant Bishop occupancy bits
     for (r = tr + 1, f = tf + 1; r <= 6 && f <= 6; r++, f++)
@@ -228,7 +187,7 @@ Bitboard maskBishopAttacks(int square)
     for (r = tr - 1, f = tf - 1; r >= 1 && f >= 1; r--, f--)
         attacks |= (1ULL << (r * 8 + f));
 
-    
+
     // return attack map
     return attacks;
 }
@@ -242,13 +201,13 @@ Bitboard maskRookAttacks(int square)
 {
     // result attacks bitboard
     Bitboard attacks = 0ULL;
-   
+
 
     // rank and file, plus target ranks and files (of the diagonals)
     int r, f;
     int tr = square / 8;
     int tf = square % 8;
-   
+
 
     // mask relevant Rook occupancy bits
     for (r = tr + 1; r <= 6; r++)
@@ -262,7 +221,7 @@ Bitboard maskRookAttacks(int square)
 
     for (f = tf - 1; f >= 1; f--)
         attacks |= (1ULL << (tr * 8 + f));
-   
+
 
     // return attack map
     return attacks;
@@ -279,12 +238,12 @@ Bitboard genBishopAttacks(int square, Bitboard block)
     // result attacks bitboard
     Bitboard attacks = 0ULL;
 
-    
+
     // rank and file, plus target ranks and files (of the diagonals)
     int r, f;
     int tr = square / 8;
     int tf = square % 8;
-   
+
 
     // generate Bishop atacks
     for (r = tr + 1, f = tf + 1; r <= 7 && f <= 7; r++, f++)
@@ -323,19 +282,19 @@ Bitboard genBishopAttacks(int square, Bitboard block)
 
 // genRookAttacks
 //
-// Generate a Bitboard with the Rishop attacks given a position and a set of
+// Generate a Bitboard with the Rook attacks given a position and a set of
 // blocking pieces.
 Bitboard genRookAttacks(int square, Bitboard block)
 {
     // result attacks bitboard
     Bitboard attacks = 0ULL;
-   
+  
 
     // rank and file, plus target ranks and files (of the diagonals)
     int r, f;
     int tr = square / 8;
     int tf = square % 8;
-   
+  
 
     // generate rook attacks
     for (r = tr + 1; r <= 7; r++)
@@ -365,7 +324,7 @@ Bitboard genRookAttacks(int square, Bitboard block)
         if ((1ULL << (tr * 8 + f)) & block)
             break;
     }
-   
+  
 
     // return attack map
     return attacks;
@@ -373,7 +332,9 @@ Bitboard genRookAttacks(int square, Bitboard block)
 
 
 
-// set occupancies
+// setOccupancy
+//
+// Set the occupancy bits based on the pieces on the board.
 Bitboard setOccupancy(int index, int bitMask, Bitboard attackMask)
 {
     // occupancy map
@@ -403,7 +364,7 @@ Bitboard setOccupancy(int index, int bitMask, Bitboard attackMask)
 
 // initLeaperAttacks
 //
-// Init leaper pieces attacks.
+// Initialize the leaper pieces' attacks.
 void initLeaperAttacks()
 {
     // loop over 64 board squares
@@ -425,8 +386,8 @@ void initLeaperAttacks()
 
 // initSliderAttacks
 //
-// init slider piece's attack tables
-void initSliderAttacks(Slider bishop)
+// Initialize the slider pieces' attacks.
+void initSliderAttacks(Slider isBishop)
 {
     // loop over the 64 board squares
     for (int square = 0; square < 64; square++)
@@ -434,21 +395,25 @@ void initSliderAttacks(Slider bishop)
         // init Bishop & Rook masks
         BishopMasks[square] = maskBishopAttacks(square);
         RookMasks[square] = maskRookAttacks(square);
+
         
         // init current mask
-        Bitboard AttackMask = Bishop ? BishopMasks[square] : RookMasks[square];
+        Bitboard AttackMask = isBishop ? BishopMasks[square] : RookMasks[square];
+
         
         // init relevant occupancy bit count
         int RelevantBitsCount = countBits(AttackMask);
+
         
         // init occupancy indices
         int OccupancyIndices = (1 << RelevantBitsCount);
+
         
         // loop over occupancy indices
         for (int index = 0; index < OccupancyIndices; index++)
         {
-            // bishop
-            if (Bishop)
+            // Bishop
+            if (isBishop)
             {
                 // init current occupancy variation
                 Bitboard occupancy = setOccupancy(index, RelevantBitsCount, AttackMask);
@@ -459,8 +424,9 @@ void initSliderAttacks(Slider bishop)
                 // init bishop attacks
                 BishopAttacks[square][MagicIndex] = genBishopAttacks(square, occupancy);
             }
+
             
-            // rook
+            // Rook
             else
             {
                 // init current occupancy variation
@@ -478,3 +444,41 @@ void initSliderAttacks(Slider bishop)
 
 
 
+// printBitboard
+//
+// Take a Bitboard and display it as a board representation on the standard
+// output.
+void printBitboard(Bitboard bb)
+{
+    cout << "    +----+----+----+----+----+----+----+----+" << endl;
+
+
+    // loop over board ranks
+    for (int rank = 0; rank < 8; rank++)
+    {
+        cout << setw(3) << 8 - rank <<  " |";
+
+
+        // loop over board files
+        for (int file = 0; file < 8; file++)
+        {
+            // convert file & rank into square index
+            int square = rank * 8 + file;
+
+            // print bit state (either 1 or 0)
+            cout << " " << (getBit(bb, square) ? " 1 " : " . ") << "|";
+        }
+
+
+        // print new line every rank
+        cout << endl << "    +----+----+----+----+----+----+----+----+" << endl;
+    }
+
+
+    // print board files
+    cout << "      a    b    c    d    e    f    g    h" << endl << endl;
+
+
+    // print Bitboard details
+    cout << endl << "Bitboard: " << bb << "ULL" << endl << endl;
+}
