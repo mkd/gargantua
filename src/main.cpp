@@ -64,7 +64,7 @@ int main(void)
     // print rook attacks
     printBitboard(b);
     int j = 0;
-    for (uint64_t i = 0; i < 9999999999; i++)
+    for (uint64_t i = 0; i < 999999999; i++)
     {
         j = countBits(b);
     }
