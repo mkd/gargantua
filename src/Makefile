@@ -1,6 +1,5 @@
-# This file is part of Gargantua, a UCI chess engine derived from Chess0 which
-# uses NNUE for evaluation. This engine has been inspired by BBC-1.4 (by Code
-# Monkey King), Blunder (by Christian Dean) and Stockfish.
+# This file is part of Gargantua, a UCI chess engine with NNUE evaluation
+# derived from Chess0, and inspired by Code Monkey King's bbc-1.4.
 #	 
 # Copyright (C) 2022 Claudio M. Camacho
 #
