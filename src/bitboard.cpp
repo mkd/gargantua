@@ -20,34 +20,12 @@
 
 #include <iostream>
 #include <iomanip>
-#include "definitions.h"
+
 #include "bitboard.h"
 
 
 
 using namespace std;
-
-
-
-// Piece attack tables are global variables (extern in definitions.h) seen by
-// the entire program. Here it gets defined, so it can be used in other parts
-// of the code:
-Bitboard PawnAttacks[2][64];
-Bitboard KnightAttacks[64];
-Bitboard KingAttacks[64];
-
-
-
-// Slider masks and attack tables
-Bitboard BishopMasks[64];
-Bitboard RookMasks[64];
-Bitboard BishopAttacks[64][512];
-Bitboard RookAttacks[64][4096];
-
-
-
-// Pseudo-random number generator seed
-uint32_t rng32_state = 1804289383;
 
 
 

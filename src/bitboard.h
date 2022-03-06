@@ -21,44 +21,120 @@
 #ifndef BITBOARD_H
 #define BITBOARD_H
 
+#include <array>
 
 
-#include "definitions.h"
+
+// Bitboard data type = unsigned long long (64-bit number)
+#define Bitboard uint64_t
+
+
+
+// Colors (and side to move)
+enum Side { White, Black, Both, NoColor };
+
+
+
+// Bishop and Rook
+enum Slider { Rook, Bishop };
+
+
+
+// Pieces
+enum Pieces { P, N, B, R, Q, K, p, n, b, r, q, k };
+
+
+
+// List of board squares
+enum BoardSquares {
+    a8, b8, c8, d8, e8, f8, g8, h8,
+    a7, b7, c7, d7, e7, f7, g7, h7,
+    a6, b6, c6, d6, e6, f6, g6, h6,
+    a5, b5, c5, d5, e5, f5, g5, h5,
+    a4, b4, c4, d4, e4, f4, g4, h4,
+    a3, b3, c3, d3, e3, f3, g3, h3,
+    a2, b2, c2, d2, e2, f2, g2, h2,
+    a1, b1, c1, d1, e1, f1, g1, h1,
+    NoSq
+};
+
+
+
+// Convert a square index (0..63) to a coordinate string:
+static const std::array<std::string, 64> SquareToCoordinates
+{
+    "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+    "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+    "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+    "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+    "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+    "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+    "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+};
 
 
 
 // board square masks, including different files, ranks and square groups
-constexpr Bitboard AllSquares    = ~Bitboard(0);
-constexpr Bitboard DarkSquares   = 0xAA55AA55AA55AA55ULL;
-constexpr Bitboard LightSquares  = ~(0xAA55AA55AA55AA55ULL);
+static constexpr Bitboard AllSquares    = ~Bitboard(0);
+static constexpr Bitboard DarkSquares   = 0xAA55AA55AA55AA55ULL;
+static constexpr Bitboard LightSquares  = ~(0xAA55AA55AA55AA55ULL);
 
-constexpr Bitboard FileA_Mask = 0x0101010101010101ULL;
-constexpr Bitboard FileB_Mask = FileA_Mask << 1;
-constexpr Bitboard FileC_Mask = FileA_Mask << 2;
-constexpr Bitboard FileD_Mask = FileA_Mask << 3;
-constexpr Bitboard FileE_Mask = FileA_Mask << 4;
-constexpr Bitboard FileF_Mask = FileA_Mask << 5;
-constexpr Bitboard FileG_Mask = FileA_Mask << 6;
-constexpr Bitboard FileH_Mask = FileA_Mask << 7;
+static constexpr Bitboard FileA_Mask = 0x0101010101010101ULL;
+static constexpr Bitboard FileB_Mask = FileA_Mask << 1;
+static constexpr Bitboard FileC_Mask = FileA_Mask << 2;
+static constexpr Bitboard FileD_Mask = FileA_Mask << 3;
+static constexpr Bitboard FileE_Mask = FileA_Mask << 4;
+static constexpr Bitboard FileF_Mask = FileA_Mask << 5;
+static constexpr Bitboard FileG_Mask = FileA_Mask << 6;
+static constexpr Bitboard FileH_Mask = FileA_Mask << 7;
 
-constexpr Bitboard Rank1_Mask = 0xFF;
-constexpr Bitboard Rank2_Mask = Rank1_Mask << (8 * 1);
-constexpr Bitboard Rank3_Mask = Rank1_Mask << (8 * 2);
-constexpr Bitboard Rank4_Mask = Rank1_Mask << (8 * 3);
-constexpr Bitboard Rank5_Mask = Rank1_Mask << (8 * 4);
-constexpr Bitboard Rank6_Mask = Rank1_Mask << (8 * 5);
-constexpr Bitboard Rank7_Mask = Rank1_Mask << (8 * 6);
-constexpr Bitboard Rank8_Mask = Rank1_Mask << (8 * 7);
+static constexpr Bitboard Rank1_Mask = 0xFF;
+static constexpr Bitboard Rank2_Mask = Rank1_Mask << (8 * 1);
+static constexpr Bitboard Rank3_Mask = Rank1_Mask << (8 * 2);
+static constexpr Bitboard Rank4_Mask = Rank1_Mask << (8 * 3);
+static constexpr Bitboard Rank5_Mask = Rank1_Mask << (8 * 4);
+static constexpr Bitboard Rank6_Mask = Rank1_Mask << (8 * 5);
+static constexpr Bitboard Rank7_Mask = Rank1_Mask << (8 * 6);
+static constexpr Bitboard Rank8_Mask = Rank1_Mask << (8 * 7);
 
-constexpr Bitboard NotFileA_Mask  = 18374403900871474942ULL;
-constexpr Bitboard NotFileH_Mask  = 9187201950435737471ULL;
-constexpr Bitboard NotFileHG_Mask = 4557430888798830399ULL;
-constexpr Bitboard NotFileAB_Mask = 18229723555195321596ULL;
+static constexpr Bitboard NotFileA_Mask  = 18374403900871474942ULL;
+static constexpr Bitboard NotFileH_Mask  = 9187201950435737471ULL;
+static constexpr Bitboard NotFileHG_Mask = 4557430888798830399ULL;
+static constexpr Bitboard NotFileAB_Mask = 18229723555195321596ULL;
+
+
+
+// Pawn attacks table [side][square]
+static Bitboard PawnAttacks[2][64];
+
+
+
+// Knight attacks table [square]
+static Bitboard KnightAttacks[64];
+
+
+
+// King attacks table [square]
+static Bitboard KingAttacks[64];
+
+
+
+// Slider masks and attack tables
+static Bitboard BishopMasks[64];
+static Bitboard RookMasks[64];
+static Bitboard BishopAttacks[64][512];
+static Bitboard RookAttacks[64][4096];
+
+
+
+// Pseudo-random number generator seed
+static uint32_t rng32_state = 1804289383;
 
 
 
 // Bishop relevant occupancy bit count for every square on the board
-constexpr int BishopRelevantBits[64] = {
+static constexpr int BishopRelevantBits[64] = {
     6, 5, 5, 5, 5, 5, 5, 6, 
     5, 5, 5, 5, 5, 5, 5, 5, 
     5, 5, 7, 7, 7, 7, 5, 5, 
@@ -70,7 +146,7 @@ constexpr int BishopRelevantBits[64] = {
 };
 
 // Rook relevant occupancy bit count for every square on the board
-constexpr int RookRelevantBits[64] = {
+static constexpr int RookRelevantBits[64] = {
     12, 11, 11, 11, 11, 11, 11, 12, 
     11, 10, 10, 10, 10, 10, 10, 11, 
     11, 10, 10, 10, 10, 10, 10, 11, 
