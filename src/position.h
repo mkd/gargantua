@@ -21,6 +21,69 @@
 #ifndef POSITION_H
 #define POSITION_H
 
+#include <map>
+
+
+
+// ASCII pieces
+static const std::array<std::string, 12> PieceString
+{
+    "P", "N", "B", "R", "Q", "K",
+    "p", "n", "b", "r", "q", "k",
+};
+
+
+
+// Convert ASCII character pieces to encoded constants
+static std::map<unsigned char, int> PieceConst = {
+    {'P', P},
+    {'N', N},
+    {'B', B},
+    {'R', R},
+    {'Q', Q},
+    {'K', K},
+    {'p', p},
+    {'n', n},
+    {'b', b},
+    {'r', r},
+    {'q', q},
+    {'k', k}
+};
+
+
+
+// A position is defined by the following elements:
+//
+// 1. A set of 12 bitboards with all the piece occupancies
+// 2. The side to move
+// 3. The enpassant capture square
+// 4. The castling rights
+Bitboard bitboards[12];
+Bitboard occupancies[3];
+int sideToMove = -1;
+int epsq = NoSq; 
+int castle;
+
+
+
+// Castling rights binary encoding
+/*
+    bin  dec
+    
+   0001    1  White King can castle to the king side
+   0010    2  White King can castle to the queen side
+   0100    4  Black King can castle to the king side
+   1000    8  Black King can castle to the queen side
+
+
+   Examples:
+
+   1111       both sides an castle both directions
+   1001       black king => queen side
+              white king => king side
+*/
+enum CastlingRights { wk = 1, wq = 2, bk = 4, bq = 8 };
+
 
 
 

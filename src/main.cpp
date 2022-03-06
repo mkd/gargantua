@@ -19,10 +19,10 @@
 */
 
 #include <iostream>
-#include <bit>
-#include <bitset>
+
 #include "bitboard.h"
 #include "nnue.h"
+#include "position.h"
 
 
 
@@ -46,29 +46,15 @@ int main(void)
     initSliderAttacks(Rook);
 
     
-    // define test bitboard
-    Bitboard occupancy = 0ULL;
+    // set white pawn on 32
+    setBit(bitboards[P], e2);
     
-    // set blocker pieces on board
-    setBit(occupancy, c5);
-    setBit(occupancy, f2);
-    setBit(occupancy, g7);
-    setBit(occupancy, b2);
-    setBit(occupancy, g5);
-    setBit(occupancy, e2);
-    setBit(occupancy, e7);
-    Bitboard b = DarkSquares;
-
+    // print white pawn bitboard
+    printBitboard(bitboards[P]);
     
-    // print rook attacks
-    printBitboard(b);
-    int j = 0;
-    for (uint64_t i = 0; i < 999999999; i++)
-    {
-        j = countBits(b);
-    }
-    std::cout << "count = " << j << std::endl;
-    printBitboard(b);
+    // print piece
+    std::cout << "piece: " << PieceString[P] << std::endl;
+    std::cout << "piece: " << PieceString[PieceConst['K']] << std::endl;
 
    
     // terminate program
