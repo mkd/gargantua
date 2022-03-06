@@ -44,73 +44,14 @@ int main(void)
     initSliderAttacks(Bishop);
     initSliderAttacks(Rook);
 
-   
-    // set white pawns
-    setBit(bitboards[P], a2);
-    setBit(bitboards[P], b2);
-    setBit(bitboards[P], c2);
-    setBit(bitboards[P], d2);
-    setBit(bitboards[P], e2);
-    setBit(bitboards[P], f2);
-    setBit(bitboards[P], g2);
-    setBit(bitboards[P], h2);
-    
-    // set white knights
-    setBit(bitboards[N], b1);
-    setBit(bitboards[N], g1);
-    
-    // set white bishops
-    setBit(bitboards[B], c1);
-    setBit(bitboards[B], f1);
-    
-    // set white rooks
-    setBit(bitboards[R], a1);
-    setBit(bitboards[R], h1);
-    
-    // set white queen & king
-    setBit(bitboards[Q], d1);
-    setBit(bitboards[K], e1);
-    
-    // set white pawns
-    setBit(bitboards[p], a7);
-    setBit(bitboards[p], b7);
-    setBit(bitboards[p], c7);
-    setBit(bitboards[p], d7);
-    setBit(bitboards[p], e7);
-    setBit(bitboards[p], f7);
-    setBit(bitboards[p], g7);
-    setBit(bitboards[p], h7);
-    
-    // set white knights
-    setBit(bitboards[n], b8);
-    setBit(bitboards[n], g8);
-    
-    // set white bishops
-    setBit(bitboards[b], c8);
-    setBit(bitboards[b], f8);
-    
-    // set white rooks
-    setBit(bitboards[r], a8);
-    setBit(bitboards[r], h8);
-    
-    // set white queen & king
-    setBit(bitboards[q], d8);
-    setBit(bitboards[k], e8);
-    
-    // init side
-    sideToMove = Black;
-    
-    // init enpassant
-    epsq = e3;
-    
-    // init castling
-    castle |= wk;
-    castle |= wq;
-    castle |= bk;
-    castle |= bq;
-    
-    // print chess board
+
+
+    // test
+    setPosition("r1bq1bnr/pp2pkpp/2nP4/2p5/P4pP1/R4N2/1PPP1P1P/1NBQKB1R b K g3");
     printBoard();
+    setPosition("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10 ");
+    printBoard();
+
    
     // terminate program
     return 0;

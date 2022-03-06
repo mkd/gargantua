@@ -45,7 +45,6 @@ void printBoard()
     {
         cout << setw(3) << 8 - rank <<  " |";
 
-
         // loop over board files
         for (int file = 0; file < 8; file++)
         {
@@ -78,7 +77,6 @@ void printBoard()
             cout << ((color == White) ? " " : "*") << " |";
         }
 
-
         // print new line every rank
         cout << endl << "    +----+----+----+----+----+----+----+----+" << endl;
     }
@@ -86,7 +84,6 @@ void printBoard()
 
     // print board files
     cout << "      a    b    c    d    e    f    g    h" << endl << endl;
-
 
 
     // print board status

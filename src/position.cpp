@@ -18,7 +18,13 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
+#include <sstream>
+#include <cstring>
+#include <map>
+
 #include "bitboard.h"
+#include "position.h"
 
 
 
@@ -33,3 +39,182 @@ Bitboard occupancies[3];
 int sideToMove = White;
 int epsq = NoSq; 
 int castle;
+
+
+
+// resetBoard
+//
+// Reset the board variables, set the pieces back to start position, etc.
+void resetBoard()
+{
+    // reset board position and occupancies
+    memset(bitboards, 0ULL, sizeof(bitboards));
+    memset(occupancies, 0ULL, sizeof(occupancies));
+
+    
+    // reset game state variables
+    sideToMove = White;
+    epsq       = NoSq;
+    castle     = 0;
+   
+
+    // reset repetition index
+    //repetition_index = 0;
+    
+    // reset fifty move rule counter
+    //fifty = 0;
+    
+    // reset repetition table
+    //memset(repetition_table, 0ULL, sizeof(repetition_table));
+}
+
+
+
+// setPosition
+//
+// Initialize the position with the given FEN string.
+// This function is not very robust - make sure that input FENs are correct,
+// this is assumed to be the responsibility of the GUI.
+//
+// @see https://github.com/official-stockfish/Stockfish/blob/master/src/position.cpp
+void setPosition(const std::string &fenStr)
+{
+/*
+    A FEN string defines a particular position using only the ASCII character set.
+
+    A FEN string contains six fields separated by a space. The fields are:
+
+    1) Piece placement (from white's perspective). Each rank is described, starting
+       with rank 8 and ending with rank 1. Within each rank, the contents of each
+       square are described from file A through file H. Following the Standard
+       Algebraic Notation (SAN), each piece is identified by a single letter taken
+       from the standard English names. White pieces are designated using upper-case
+       letters ("PNBRQK") whilst Black uses lowercase ("pnbrqk"). Blank squares are
+       noted using digits 1 through 8 (the number of blank squares), and "/"
+       separates ranks.
+
+    2) Active color. "w" means white moves next, "b" means black.
+
+    3) Castling availability. If neither side can castle, this is "-". Otherwise,
+       this has one or more letters: "K" (White can castle kingside), "Q" (White
+       can castle queenside), "k" (Black can castle kingside), and/or "q" (Black
+       can castle queenside).
+
+    4) En passant target square (in algebraic notation). If there's no en passant
+       target square, this is "-". If a pawn has just made a 2-square move, this
+       is the position "behind" the pawn. Following X-FEN standard, this is recorded only
+       if there is a pawn in position to make an en passant capture, and if there really
+       is a pawn that might have advanced two squares.
+
+    5) Halfmove clock. This is the number of halfmoves since the last pawn advance
+       or capture. This is used to determine if a draw can be claimed under the
+       fifty-move rule.
+
+    6) Fullmove number. The number of the full move. It starts at 1, and is
+       incremented after Black's move.
+*/
+
+    unsigned char col, row, token;
+    int sq = a8;
+    std::map<unsigned char, int>::iterator it;
+    std::istringstream ss(fenStr);
+    ss >> std::noskipws;
+
+
+    // reset board status
+    resetBoard();
+
+
+    // 1. Piece placement
+    int rank = 0, file = 0;
+    while ((ss >> token) && !isspace(token))
+    {
+        if (isdigit(token))
+        {
+            file += (token - '0');
+            sq += (token - '0');
+        }
+        else if (token == '/')
+        {
+            rank++;
+            file = 0;
+            sq = rank * 8 + file;
+        }
+        else if ((it = PieceConst.find(token)) != PieceConst.end())
+        {
+            sq = rank * 8 + file;
+            setBit(bitboards[PieceConst[token]], sq);
+            sq++;
+            file++;
+        }
+    }
+
+
+    // 2. Active color
+    ss >> token;
+    sideToMove = (token == 'w' ? White : Black);
+    ss >> token;
+
+
+    // 3. Castling availability. Compatible with 3 standards: Normal FEN standard,
+    // Shredder-FEN that uses the letters of the columns on which the rooks began
+    // the game instead of KQkq and also X-FEN standard that, in case of Chess960,
+    // if an inner rook is associated with the castling right, the castling tag is
+    // replaced by the file letter of the involved rook, as for the Shredder-FEN.
+    while ((ss >> token) && !isspace(token))
+    {
+        switch (token)
+        {
+            case 'K': castle |= wk; break;
+            case 'Q': castle |= wq; break;
+            case 'k': castle |= bk; break;
+            case 'q': castle |= bq; break;
+            case '-': break;
+        }
+    }
+
+
+    // 4. En passant square.
+    // Ignore if square is invalid or not on side to move relative rank 6.
+    if (   ((ss >> col) && (col >= 'a' && col <= 'h'))
+        && ((ss >> row) && (row == (sideToMove == White ? '6' : '3'))))
+    {
+        // parse enpassant file & rank
+        int file = col - 'a';
+        int rank = 8 - (row - '0');
+
+        // set enpassant only if sideToMove matches enpanssant square
+        if (   ((sideToMove == White) && (rank == 2))
+            || ((sideToMove == Black) && (rank == 5)))
+        {
+            epsq = rank * 8 + file;
+        }
+    }
+    else
+    {
+        epsq = NoSq;
+    }
+
+
+    // 5-6. Halfmove clock and fullmove number
+    //ss >> std::skipws >> fifty >> gamePly;
+
+
+    // populate white occupancy bitboard
+    for (int piece = P; piece <= K; piece++)
+        occupancies[White] |= bitboards[piece];
+   
+
+    // populate white occupancy bitboard
+    for (int piece = p; piece <= k; piece++)
+        occupancies[Black] |= bitboards[piece];
+   
+
+    // init all occupancies
+    occupancies[Both] |= occupancies[White];
+    occupancies[Both] |= occupancies[Black];
+   
+
+    // init hash key
+    //hash_key = generate_hash_key();
+}

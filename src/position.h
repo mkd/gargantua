@@ -86,6 +86,11 @@ enum CastlingRights { wk = 1, wq = 2, bk = 4, bq = 8 };
 
 
 
+void resetBoard();
+void setPosition(const std::string &);
+
+
+
 
 
 #endif  //  POSITIION_H
