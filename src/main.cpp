@@ -26,8 +26,6 @@
 
 
 
-
-
 // The program's main application consists of two parts:
 // 1) inintialization of the necessary data structures
 // 2) UCI loop: interpreting commands from the user input and running them
@@ -45,7 +43,7 @@ int main(void)
     initSliderAttacks(Bishop);
     initSliderAttacks(Rook);
 
-    
+   
     // set white pawn on 32
     setBit(bitboards[P], e2);
     
@@ -55,7 +53,6 @@ int main(void)
     // print piece
     std::cout << "piece: " << PieceString[P] << std::endl;
     std::cout << "piece: " << PieceString[PieceConst['K']] << std::endl;
-
    
     // terminate program
     return 0;

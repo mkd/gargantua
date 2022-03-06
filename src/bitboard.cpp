@@ -29,6 +29,25 @@ using namespace std;
 
 
 
+// Leapers' attack tables [color][square]
+Bitboard PawnAttacks[2][64];
+Bitboard KnightAttacks[64];
+Bitboard KingAttacks[64];
+
+
+// Slider masks and attack tables
+Bitboard BishopMasks[64];
+Bitboard RookMasks[64];
+Bitboard BishopAttacks[64][512];
+Bitboard RookAttacks[64][4096];
+
+
+
+// Pseudo-random number generator seed
+uint32_t rng32_state = 1804289383;
+
+
+
 // maskPawnAttacks
 //
 // Generate a Bitboard with all Pawn attacks from a given square.
