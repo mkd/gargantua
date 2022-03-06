@@ -20,9 +20,10 @@
 
 #include <iostream>
 
-#include "bitboard.h"
 #include "nnue.h"
+#include "bitboard.h"
 #include "position.h"
+#include "io.h"
 
 
 
@@ -44,7 +45,7 @@ int main(void)
     initSliderAttacks(Rook);
 
    
-    // set white pawn on 32
+    // set white pawns
     setBit(bitboards[P], a2);
     setBit(bitboards[P], b2);
     setBit(bitboards[P], c2);
@@ -54,13 +55,62 @@ int main(void)
     setBit(bitboards[P], g2);
     setBit(bitboards[P], h2);
     
-    // print white pawn bitboard
-    printBitboard(bitboards[P]);
-
+    // set white knights
+    setBit(bitboards[N], b1);
+    setBit(bitboards[N], g1);
     
-    // print piece
-    std::cout << "piece: " << PieceString[P] << std::endl;
-    std::cout << "piece: " << PieceString[PieceConst['K']] << std::endl;
+    // set white bishops
+    setBit(bitboards[B], c1);
+    setBit(bitboards[B], f1);
+    
+    // set white rooks
+    setBit(bitboards[R], a1);
+    setBit(bitboards[R], h1);
+    
+    // set white queen & king
+    setBit(bitboards[Q], d1);
+    setBit(bitboards[K], e1);
+    
+    // set white pawns
+    setBit(bitboards[p], a7);
+    setBit(bitboards[p], b7);
+    setBit(bitboards[p], c7);
+    setBit(bitboards[p], d7);
+    setBit(bitboards[p], e7);
+    setBit(bitboards[p], f7);
+    setBit(bitboards[p], g7);
+    setBit(bitboards[p], h7);
+    
+    // set white knights
+    setBit(bitboards[n], b8);
+    setBit(bitboards[n], g8);
+    
+    // set white bishops
+    setBit(bitboards[b], c8);
+    setBit(bitboards[b], f8);
+    
+    // set white rooks
+    setBit(bitboards[r], a8);
+    setBit(bitboards[r], h8);
+    
+    // set white queen & king
+    setBit(bitboards[q], d8);
+    setBit(bitboards[k], e8);
+    
+    // init side
+    sideToMove = Black;
+    
+    // init enpassant
+    epsq = e3;
+    
+    // init castling
+    castle |= wk;
+    castle |= wq;
+    castle |= bk;
+    castle |= bq;
+    
+    // print chess board
+    printBoard();
    
     // terminate program
     return 0;

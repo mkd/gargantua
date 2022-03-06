@@ -18,18 +18,13 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bitboard.h"
+#ifndef IO_H
+#define IO_H
 
 
 
-// A position is defined by the following elements:
-//
-// 1. A set of 12 bitboards with all the piece occupancies
-// 2. The side to move
-// 3. The enpassant capture square
-// 4. The castling rights
-Bitboard bitboards[12];
-Bitboard occupancies[3];
-int sideToMove = White;
-int epsq = NoSq; 
-int castle;
+void printBoard();
+
+
+
+#endif  //  IO_H

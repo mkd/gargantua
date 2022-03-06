@@ -26,7 +26,7 @@
 
 
 // ASCII pieces
-static const std::array<std::string, 12> PieceString
+static const std::array<std::string, 12> PieceStr
 {
     "P", "N", "B", "R", "Q", "K",
     "p", "n", "b", "r", "q", "k",
@@ -58,11 +58,11 @@ static std::map<unsigned char, int> PieceConst = {
 // 2. The side to move
 // 3. The enpassant capture square
 // 4. The castling rights
-static Bitboard bitboards[12];
-static Bitboard occupancies[3];
-static int sideToMove = -1;
-static int epsq = NoSq; 
-static int castle;
+extern Bitboard bitboards[12];
+extern Bitboard occupancies[3];
+extern int sideToMove;
+extern int epsq;
+extern int castle;
 
 
 
