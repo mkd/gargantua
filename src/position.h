@@ -58,11 +58,11 @@ static std::map<unsigned char, int> PieceConst = {
 // 2. The side to move
 // 3. The enpassant capture square
 // 4. The castling rights
-Bitboard bitboards[12];
-Bitboard occupancies[3];
-int sideToMove = -1;
-int epsq = NoSq; 
-int castle;
+static Bitboard bitboards[12];
+static Bitboard occupancies[3];
+static int sideToMove = -1;
+static int epsq = NoSq; 
+static int castle;
 
 
 

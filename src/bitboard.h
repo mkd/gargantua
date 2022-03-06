@@ -152,7 +152,7 @@ static constexpr int RookRelevantBits[64] = {
 
 
 // Rook magic numbers
-constexpr Bitboard RookMagicNumbers[64] =
+static constexpr Bitboard RookMagicNumbers[64] =
 {
     0x8a80104000800020ULL,
     0x140002000100040ULL,
@@ -222,7 +222,7 @@ constexpr Bitboard RookMagicNumbers[64] =
 
 
 // Bishop magic numbers
-constexpr Bitboard BishopMagicNumbers[64] =
+static constexpr Bitboard BishopMagicNumbers[64] =
 {
     0x40040844404084ULL,
     0x2004208a004208ULL,
