@@ -45,10 +45,18 @@ int main(void)
 
    
     // set white pawn on 32
+    setBit(bitboards[P], a2);
+    setBit(bitboards[P], b2);
+    setBit(bitboards[P], c2);
+    setBit(bitboards[P], d2);
     setBit(bitboards[P], e2);
+    setBit(bitboards[P], f2);
+    setBit(bitboards[P], g2);
+    setBit(bitboards[P], h2);
     
     // print white pawn bitboard
     printBitboard(bitboards[P]);
+
     
     // print piece
     std::cout << "piece: " << PieceString[P] << std::endl;
