@@ -105,31 +105,23 @@ static constexpr Bitboard NotFileAB_Mask = 18229723555195321596ULL;
 
 
 
-// Pawn attacks table [side][square]
-static Bitboard PawnAttacks[2][64];
-
-
-
-// Knight attacks table [square]
-static Bitboard KnightAttacks[64];
-
-
-
-// King attacks table [square]
-static Bitboard KingAttacks[64];
+// Leapers' attack tables [color][square]
+extern Bitboard PawnAttacks[2][64];
+extern Bitboard KnightAttacks[64];
+extern Bitboard KingAttacks[64];
 
 
 
 // Slider masks and attack tables
-static Bitboard BishopMasks[64];
-static Bitboard RookMasks[64];
-static Bitboard BishopAttacks[64][512];
-static Bitboard RookAttacks[64][4096];
+extern Bitboard BishopMasks[64];
+extern Bitboard RookMasks[64];
+extern Bitboard BishopAttacks[64][512];
+extern Bitboard RookAttacks[64][4096];
 
 
 
 // Pseudo-random number generator seed
-static uint32_t rng32_state = 1804289383;
+extern uint32_t rng32_state;
 
 
 
