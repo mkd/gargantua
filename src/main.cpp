@@ -23,7 +23,6 @@
 #include "nnue.h"
 #include "bitboard.h"
 #include "position.h"
-#include "io.h"
 
 
 
@@ -46,11 +45,12 @@ int main(void)
 
 
 
-    // test
-    setPosition("r1bq1bnr/pp2pkpp/2nP4/2p5/P4pP1/R4N2/1PPP1P1P/1NBQKB1R b K g3");
+
+    setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -");
     printBoard();
-    setPosition("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10 ");
+    flip = true;
     printBoard();
+
 
    
     // terminate program

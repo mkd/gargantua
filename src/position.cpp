@@ -19,12 +19,16 @@
 */
 
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <cstring>
 #include <map>
 
 #include "bitboard.h"
 #include "position.h"
+
+
+using namespace std;
 
 
 
@@ -42,6 +46,12 @@ int castle;
 
 
 
+// Flag to indicate whether the board should be displayed from White's
+// perspective (false) or Black's perspective (true).
+bool flip = false;
+
+
+
 // resetBoard
 //
 // Reset the board variables, set the pieces back to start position, etc.
@@ -56,6 +66,7 @@ void resetBoard()
     sideToMove = White;
     epsq       = NoSq;
     castle     = 0;
+    flip       = false;
    
 
     // reset repetition index
@@ -73,11 +84,12 @@ void resetBoard()
 // setPosition
 //
 // Initialize the position with the given FEN string.
+//
 // This function is not very robust - make sure that input FENs are correct,
 // this is assumed to be the responsibility of the GUI.
 //
 // @see https://github.com/official-stockfish/Stockfish/blob/master/src/position.cpp
-void setPosition(const std::string &fenStr)
+void setPosition(const string &fenStr)
 {
 /*
     A FEN string defines a particular position using only the ASCII character set.
@@ -116,9 +128,9 @@ void setPosition(const std::string &fenStr)
 
     unsigned char col, row, token;
     int sq = a8;
-    std::map<unsigned char, int>::iterator it;
-    std::istringstream ss(fenStr);
-    ss >> std::noskipws;
+    map<unsigned char, int>::iterator it;
+    istringstream ss(fenStr);
+    ss >> noskipws;
 
 
     // reset board status
@@ -150,17 +162,13 @@ void setPosition(const std::string &fenStr)
     }
 
 
-    // 2. Active color
+    // 2. Side to move
     ss >> token;
     sideToMove = (token == 'w' ? White : Black);
     ss >> token;
 
 
-    // 3. Castling availability. Compatible with 3 standards: Normal FEN standard,
-    // Shredder-FEN that uses the letters of the columns on which the rooks began
-    // the game instead of KQkq and also X-FEN standard that, in case of Chess960,
-    // if an inner rook is associated with the castling right, the castling tag is
-    // replaced by the file letter of the involved rook, as for the Shredder-FEN.
+    // 3. Castling availability
     while ((ss >> token) && !isspace(token))
     {
         switch (token)
@@ -174,7 +182,7 @@ void setPosition(const std::string &fenStr)
     }
 
 
-    // 4. En passant square.
+    // 4. Enpassant square
     // Ignore if square is invalid or not on side to move relative rank 6.
     if (   ((ss >> col) && (col >= 'a' && col <= 'h'))
         && ((ss >> row) && (row == (sideToMove == White ? '6' : '3'))))
@@ -197,7 +205,7 @@ void setPosition(const std::string &fenStr)
 
 
     // 5-6. Halfmove clock and fullmove number
-    //ss >> std::skipws >> fifty >> gamePly;
+    //ss >> skipws >> fifty >> gamePly;
 
 
     // populate white occupancy bitboard
@@ -217,4 +225,86 @@ void setPosition(const std::string &fenStr)
 
     // init hash key
     //hash_key = generate_hash_key();
+}
+
+
+
+// printBoard
+//
+// Convert the internal representation of the board into a human-readable string
+// (capable of being shown and represented as a Board in ASCII) and show it on
+// the screen.
+void printBoard()
+{
+    cout << endl << endl;
+    cout << "    +----+----+----+----+----+----+----+----+" << endl;
+
+
+    // loop over board squares
+    for (int rank = 0; rank < 8; rank++)
+    {
+        // show board from Black's perspective
+        if (flip)
+            cout << setw(3) << rank + 1 <<  " |";
+        // show board form White's perspectivwe
+        else
+            cout << setw(3) << 8 - rank <<  " |";
+
+
+        // loop over board files
+        for (int file = 0; file < 8; file++)
+        {
+            // convert file & rank into square index:
+            // flip takes care of the board's perspective (Black or White)
+            int square = NoSq;
+            if (flip)
+                square = ((7 - rank) * 8) + (7 - file);
+            else
+                square = (rank * 8) + file;
+
+
+            // loop over all piece bitboards
+            int piece = -1;
+            Side color = NoColor;
+            for (int bb_piece = P; bb_piece <= k; bb_piece++)
+            {
+                if (getBit(bitboards[bb_piece], square))
+                    piece = bb_piece;
+
+                switch (piece)
+                {
+                    case p: 
+                    case n: 
+                    case b: 
+                    case r: 
+                    case q: 
+                    case k: color = Black;
+                            break;
+                    default: color = White;
+                }
+            }
+
+
+            // print bit state (either 1 or 0)
+            cout << " " << ((piece == -1) ? " " : PieceStr[piece]);
+            cout << ((color == White) ? " " : "*") << " |";
+        }
+
+
+        // print new line every rank
+        cout << endl << "    +----+----+----+----+----+----+----+----+" << endl;
+    }
+
+
+    // print board files
+    cout << "      a    b    c    d    e    f    g    h" << endl << endl;
+
+
+    // print board status
+    cout << "Side on move:   " << ((sideToMove == White) ? "White" : "Black") << endl;
+    cout << "Enpassant sq:   " << ((epsq != NoSq) ? SquareToCoordinates[epsq] : "-") << endl;
+    cout << "Castling:       " << ((castle & wk) ? "K" : "-") <<
+                                  ((castle & wq) ? "Q" : "-") <<
+                                  ((castle & bk) ? "k" : "-") <<
+                                  ((castle & bq) ? "q" : "-") << endl << endl;
 }

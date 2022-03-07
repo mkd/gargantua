@@ -66,6 +66,12 @@ extern int castle;
 
 
 
+// Flag to indicate whether the board should be displayed from White's
+// perspective (false) or Black's perspective (true).
+extern bool flip;
+
+
+
 // Castling rights binary encoding
 /*
     bin  dec
@@ -87,6 +93,7 @@ enum CastlingRights { wk = 1, wq = 2, bk = 4, bq = 8 };
 
 
 void resetBoard();
+void printBoard();
 void setPosition(const std::string &);
 
 
