@@ -543,4 +543,4 @@ static inline uint64_t rng64()
 
 
 
-#endif  // BITBOARD_H
+#endif  //  BITBOARD_H

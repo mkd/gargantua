@@ -23,6 +23,7 @@
 #include "nnue.h"
 #include "bitboard.h"
 #include "position.h"
+#include "movgen.h"
 
 
 
@@ -45,18 +46,21 @@ int main(void)
 
 
 
-    // init occupancy bitboard
-    Bitboard occupancy = 0ULL;
+    // parse custom FEN string
+    setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
     
-    // set occupancy
-    setBit(occupancy, b6);
-    setBit(occupancy, d6);
-    setBit(occupancy, f6);
-    setBit(occupancy, b4);
-    
-    // get queen attacks
-    printBitboard(getQueenAttacks(d4, occupancy));
+    printBoard();
 
+    int side = Black;
+    bool isit = false;
+
+    for (long i = 0; i < 9999999; i++)
+    {
+        for (int square = 0; square < 64; square++)
+        {
+            isit = isSquareAttacked(square, side);
+        }
+    }
    
     // terminate program
     return 0;
