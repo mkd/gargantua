@@ -45,12 +45,17 @@ int main(void)
 
 
 
-
-    setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -");
-    printBoard();
-    flip = true;
-    printBoard();
-
+    // init occupancy bitboard
+    Bitboard occupancy = 0ULL;
+    
+    // set occupancy
+    setBit(occupancy, b6);
+    setBit(occupancy, d6);
+    setBit(occupancy, f6);
+    setBit(occupancy, b4);
+    
+    // get queen attacks
+    printBitboard(getQueenAttacks(d4, occupancy));
 
    
     // terminate program

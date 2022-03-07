@@ -455,6 +455,40 @@ static inline Bitboard getRookAttacks(int square, Bitboard occupancy)
 
 
 
+// getQueenAttacks
+//
+// Generate a Bitboard with the pseudo-legal Queen attacks.
+static inline Bitboard getQueenAttacks(int square, Bitboard occupancy)
+{
+    // init Queen attacks Bitboard
+    Bitboard QueenAttacks = 0ULL;
+   
+
+    // init Bishop and Rook occupancies
+    Bitboard BishopOccupancy = occupancy;
+    Bitboard RookOccupancy = occupancy;
+
+    
+    // get Bishop and Rook attacks assuming current board occupancy
+    BishopOccupancy &= BishopMasks[square];
+    BishopOccupancy *= BishopMagicNumbers[square];
+    BishopOccupancy >>= 64 - BishopRelevantBits[square];
+
+    QueenAttacks = BishopAttacks[square][BishopOccupancy];
+    
+    RookOccupancy &= RookMasks[square];
+    RookOccupancy *= RookMagicNumbers[square];
+    RookOccupancy >>= 64 - RookRelevantBits[square];
+    
+    QueenAttacks |= RookAttacks[square][RookOccupancy];
+
+    
+    // return Queen attacks
+    return QueenAttacks;
+}
+
+
+
 // Pseudo-random number generators (32-bit and 64-bit).
 //
 // The functions rng32() and rng64() are a portable implementation of the 
