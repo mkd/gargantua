@@ -23,3 +23,47 @@
 
 
 
+// genMoves
+//
+// Generate all pseudo-legal moves for the current position.
+//
+// TODO: compare performance vs. inline
+void genMoves()
+{
+    // define source & target squares
+    int fromSq, toSq;
+
+    
+    // current piece's Bitboard copy & it's attacks
+    Bitboard bb, attacks;
+
+    
+    // loop over all the Bitboards (current position)
+    for (int piece = P; piece <= k; piece++)
+    {
+        // init piece bitboard copy
+        bb = bitboards[piece];
+        
+        // generate white pawns & white king castling moves
+        if (sideToMove == White)
+        {
+        
+        }
+        
+        // generate black pawns & black king castling moves
+        else
+        {
+        
+        }
+        
+        // genarate knight moves
+        
+        // generate bishop moves
+        
+        // generate rook moves
+        
+        // generate queen moves
+        
+        // generate king moves
+    }
+}

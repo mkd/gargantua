@@ -26,6 +26,11 @@
 
 
 
+// Functionality to generate all pseudo-legal moves for the current position.
+void genMoves();
+
+
+
 // isSquareAttacked
 //
 // True if the given square is attacked by any piece an opponent's piece.
