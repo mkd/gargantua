@@ -20,10 +20,15 @@
 
 #include <iostream>
 
+#include <chrono>
+
 #include "nnue.h"
 #include "bitboard.h"
 #include "position.h"
 #include "movgen.h"
+
+
+using namespace std;
 
 
 
@@ -40,27 +45,27 @@ int main(void)
 
 
     // init piece moves and data structures
+    initBitmaps();
     initLeaperAttacks();
     initSliderAttacks(Bishop);
     initSliderAttacks(Rook);
 
-
-
-    // parse custom FEN string
-    setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-    
+    //setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPpP/R3K2R b KQkq a3 0 1 ");
+    //setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ");
+    /*setPosition("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 b kq - 0 1");
     printBoard();
+    auto start = chrono::high_resolution_clock::now();
+    generateMoves();
+    auto finish = chrono::high_resolution_clock::now();
+    cout << chrono::duration_cast<chrono::nanoseconds>(finish-start).count() << "ns\n";
 
-    int side = Black;
-    bool isit = false;
+    auto start1 = chrono::high_resolution_clock::now();
+    generateMoves2();
+    auto finish1 = chrono::high_resolution_clock::now();
+    cout << chrono::duration_cast<chrono::nanoseconds>(finish1-start1).count() << "ns\n";
+    */
 
-    for (long i = 0; i < 9999999; i++)
-    {
-        for (int square = 0; square < 64; square++)
-        {
-            isit = isSquareAttacked(square, side);
-        }
-    }
+
    
     // terminate program
     return 0;

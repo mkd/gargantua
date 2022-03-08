@@ -27,7 +27,8 @@
 
 
 // Functionality to generate all pseudo-legal moves for the current position.
-void genMoves();
+void generateMoves();
+void generateMoves2();
 
 
 
