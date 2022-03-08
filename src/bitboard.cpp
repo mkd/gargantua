@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <cstring>
 
 #include "bitboard.h"
 
@@ -29,7 +30,15 @@ using namespace std;
 
 
 
-// Leapers' attack tables [color][square]
+// A map to transform each square number into a Bitboard with only 1 bit set.
+// The NoSq square is at index [64] and is an empty Bitboard.
+Bitboard SqBB[65];
+
+
+
+// Leapers' attack (and move) tables [color][square]
+Bitboard PawnPushes[2][64];
+Bitboard PawnDoublePushes[2][64];
 Bitboard PawnAttacks[2][64];
 Bitboard KnightAttacks[64];
 Bitboard KingAttacks[64];
@@ -48,16 +57,93 @@ uint32_t rng32_state = 1804289383;
 
 
 
+
+// genPawnPush
+//
+// Generate a Bitboard with the push of a pawn at a given square.
+Bitboard genPawnPush(int side, int square)
+{
+    // result pushes Bitboard
+    Bitboard push = 0ULL;
+
+
+    // piece Bitboard
+    Bitboard bb = 0ULL;
+
+
+    // set piece on board
+    setBit(bb, square);
+
+
+    // white pawns
+    if (side == White)
+    {
+        push |= (bb >> 8);
+    }
+
+
+    // black pawns
+    else if (side == Black)
+    {
+        push |= (bb << 8);
+    }
+
+
+    // return push map
+    return push;
+}
+
+
+
+// genPawnDoublePush
+//
+// Generate a Bitboard with the double push of a pawn at a given square.
+Bitboard genPawnDoublePush(int side, int square)
+{
+    // result pushes Bitboard
+    Bitboard push = 0ULL;
+
+
+    // piece Bitboard
+    Bitboard bb = 0ULL;
+
+
+    // set piece on board
+    setBit(bb, square);
+
+
+    // white pawns
+    if (side == White)
+    {
+        if (bb & Rank2_Mask)
+            push |= (bb >> 16);
+    }
+
+
+    // black pawns
+    else if (side == Black)
+    {
+        if (bb & Rank7_Mask)
+            push |= (bb << 16);
+    }
+
+
+    // return push map
+    return push;
+}
+
+
+
 // maskPawnAttacks
 //
 // Generate a Bitboard with all Pawn attacks from a given square.
 Bitboard maskPawnAttacks(int side, int square)
 {
-    // result attacks bitboard
+    // result attacks Bitboard
     Bitboard attacks = 0ULL;
 
 
-    // piece bitboard
+    // piece Bitboard
     Bitboard bb = 0ULL;
 
 
@@ -344,7 +430,7 @@ Bitboard setOccupancy(int index, int bitMask, Bitboard attackMask)
         int square = ls1b(attackMask);
 
         // pop LS1B in attack map
-        clearBit(attackMask, square);
+        attackMask ^= SqBB[square];
         
         // make sure occupancy is on board and populate occupancy map
         if (index & (1 << count))
@@ -358,15 +444,32 @@ Bitboard setOccupancy(int index, int bitMask, Bitboard attackMask)
 
 
 
+// initBitsets
+//
+// Initialize different bitset tables for faster lookup.
+void initBitmaps()
+{
+    // populate SqBB
+    memset(SqBB, 0ULL, sizeof(SqBB));
+    for (int square = 0; square < 64; square++)
+        setBit(SqBB[square], square);
+}
+
+
+
 // initLeaperAttacks
 //
 // Initialize the leaper pieces' attacks.
 void initLeaperAttacks()
 {
-    // loop over 64 board squares
+    // loop over the 64 board squares
     for (int square = 0; square < 64; square++)
     {
-        // init Pawn attacks
+        // init Pawn pushes and attacks
+        PawnPushes[White][square] = genPawnPush(White, square);
+        PawnPushes[Black][square] = genPawnPush(Black, square);
+        PawnDoublePushes[White][square] = genPawnDoublePush(White, square);
+        PawnDoublePushes[Black][square] = genPawnDoublePush(Black, square);
         PawnAttacks[White][square] = maskPawnAttacks(White, square);
         PawnAttacks[Black][square] = maskPawnAttacks(Black, square);
 

@@ -25,6 +25,10 @@
 
 
 
+#define STARTPOS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+
+
 // ASCII pieces
 static const std::array<std::string, 12> PieceStr
 {

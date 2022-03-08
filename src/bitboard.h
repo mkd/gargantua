@@ -91,14 +91,14 @@ static constexpr Bitboard FileF_Mask = FileA_Mask << 5;
 static constexpr Bitboard FileG_Mask = FileA_Mask << 6;
 static constexpr Bitboard FileH_Mask = FileA_Mask << 7;
 
-static constexpr Bitboard Rank1_Mask = 0xFF;
-static constexpr Bitboard Rank2_Mask = Rank1_Mask << (8 * 1);
-static constexpr Bitboard Rank3_Mask = Rank1_Mask << (8 * 2);
-static constexpr Bitboard Rank4_Mask = Rank1_Mask << (8 * 3);
-static constexpr Bitboard Rank5_Mask = Rank1_Mask << (8 * 4);
-static constexpr Bitboard Rank6_Mask = Rank1_Mask << (8 * 5);
-static constexpr Bitboard Rank7_Mask = Rank1_Mask << (8 * 6);
-static constexpr Bitboard Rank8_Mask = Rank1_Mask << (8 * 7);
+static constexpr Bitboard Rank8_Mask = 0xFF;
+static constexpr Bitboard Rank7_Mask = Rank8_Mask << (8 * 1);
+static constexpr Bitboard Rank6_Mask = Rank8_Mask << (8 * 2);
+static constexpr Bitboard Rank5_Mask = Rank8_Mask << (8 * 3);
+static constexpr Bitboard Rank4_Mask = Rank8_Mask << (8 * 4);
+static constexpr Bitboard Rank3_Mask = Rank8_Mask << (8 * 5);
+static constexpr Bitboard Rank2_Mask = Rank8_Mask << (8 * 6);
+static constexpr Bitboard Rank1_Mask = Rank8_Mask << (8 * 7);
 
 static constexpr Bitboard NotFileA_Mask  = 18374403900871474942ULL;
 static constexpr Bitboard NotFileH_Mask  = 9187201950435737471ULL;
@@ -107,7 +107,15 @@ static constexpr Bitboard NotFileAB_Mask = 18229723555195321596ULL;
 
 
 
+// A map to transform each square number into a Bitboard with only 1 bit set.
+// The NoSq square is at index [64] and is an empty Bitboard.
+extern Bitboard SqBB[65];
+
+
+
 // Leapers' attack tables [color][square]
+extern Bitboard PawnPushes[2][64];
+extern Bitboard PawnDoublePushes[2][64];
 extern Bitboard PawnAttacks[2][64];
 extern Bitboard KnightAttacks[64];
 extern Bitboard KingAttacks[64];
@@ -297,9 +305,12 @@ static constexpr Bitboard BishopMagicNumbers[64] =
 // Functions for initializing, printing and manipulating Bitboard data
 // structures and information:
 void printBitboard(Bitboard);
+Bitboard genPawnPush(int, int);
+Bitboard genPawnDoublePush(int, int);
 Bitboard maskBishopAttacks(int);
 Bitboard maskRookAttacks(int);
 Bitboard setOccupancy(int, int, Bitboard);
+void initBitmaps();
 void initLeaperAttacks();
 void initSliderAttacks(Slider);
 
@@ -340,10 +351,13 @@ static inline void setBit(Bitboard &b, int pos)
 
 
 
-// clearBit
+// popBit
 //
-// #define clearBit(b, pos) (b &= ~(1ULL << pos))
-static inline void clearBit(Bitboard &b, int pos)
+// #define popBit(b, pos) (b &= ~(1ULL << pos))
+//
+// NOTE: for speed, use ^= SqBB[pos] inline within the code. Calling this
+//       function by address is much slower.
+static inline void popBit(Bitboard &b, int pos)
 {
     b &= ~(1ULL << pos);
 }
