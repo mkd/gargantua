@@ -301,10 +301,10 @@ void printBoard()
 
 
     // print board status
-    cout << "Side on move:   " << ((sideToMove == White) ? "White" : "Black") << endl;
-    cout << "Enpassant sq:   " << ((epsq != NoSq) ? SquareToCoordinates[epsq] : "-") << endl;
-    cout << "Castling:       " << ((castle & wk) ? "K" : "-") <<
-                                  ((castle & wq) ? "Q" : "-") <<
-                                  ((castle & bk) ? "k" : "-") <<
-                                  ((castle & bq) ? "q" : "-") << endl << endl;
+    cout << "      Side on move:   " << ((sideToMove == White) ? "White" : "Black") << endl;
+    cout << "      Enpassant sq:   " << ((epsq != NoSq) ? SquareToCoordinates[epsq] : "-") << endl;
+    cout << "      Castling:       " << ((castle & wk) ? "K" : "-") <<
+                                        ((castle & wq) ? "Q" : "-") <<
+                                        ((castle & bk) ? "k" : "-") <<
+                                        ((castle & bq) ? "q" : "-") << endl << endl;
 }
