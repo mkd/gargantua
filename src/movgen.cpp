@@ -22,6 +22,7 @@
 
 #include "bitboard.h"
 #include "position.h"
+#include "movgen.h"
 
 
 using namespace std;
@@ -136,6 +137,35 @@ void generateMoves()
                     popBit(bb, fromSq);
                 }
             }
+
+
+            // castling moves
+            if (piece == K)
+            {
+                // king side castling is available
+                if (castle & wk)
+                {
+                    // make sure square between king and king's rook are empty
+                    if (!getBit(occupancies[Both], f1) && !getBit(occupancies[Both], g1))
+                    {
+                        // make sure king and the f1 squares are not under attacks
+                        if (!isSquareAttacked(e1, Black) && !isSquareAttacked(f1, Black))
+                            printf("castling move: e1g1\n");
+                    }
+                }
+                
+                // queen side castling is available
+                if (castle & wq)
+                {
+                    // make sure square between king and queen's rook are empty
+                    if (!getBit(occupancies[Both], d1) && !getBit(occupancies[Both], c1) && !getBit(occupancies[Both], b1))
+                    {
+                        // make sure king and the d1 squares are not under attacks
+                        if (!isSquareAttacked(e1, Black) && !isSquareAttacked(d1, Black))
+                            printf("castling move: e1c1\n");
+                    }
+                }
+            }
         }
         
         // generate black pawns & black king castling moves
@@ -225,6 +255,35 @@ void generateMoves()
                     popBit(bb, fromSq);
                 }
             }
+
+
+            // castling moves
+            if (piece == k)
+            {
+                // king side castling is available
+                if (castle & bk)
+                {
+                    // make sure square between king and king's rook are empty
+                    if (!getBit(occupancies[Both], f8) && !getBit(occupancies[Both], g8))
+                    {
+                        // make sure king and the f8 squares are not under attacks
+                        if (!isSquareAttacked(e8, White) && !isSquareAttacked(f8, White))
+                            printf("castling move: e8g8\n");
+                    }
+                }
+                
+                // queen side castling is available
+                if (castle & bq)
+                {
+                    // make sure square between king and queen's rook are empty
+                    if (!getBit(occupancies[Both], d8) && !getBit(occupancies[Both], c8) && !getBit(occupancies[Both], b8))
+                    {
+                        // make sure king and the d8 squares are not under attacks
+                        if (!isSquareAttacked(e8, White) && !isSquareAttacked(d8, White))
+                            printf("castling move: e8c8\n");
+                    }
+                }
+            }
         }
         
         // genarate knight moves
@@ -252,65 +311,12 @@ void generateMoves2()
     Bitboard bb, attacks;
     Bitboard freeSquares = ~occupancies[Both];
 
-    // black pawns
-    if (sideToMove == Black)
+    // white pieces
+    if (sideToMove == White)
     {
-        bb = bitboards[p];
-
-        // loop over black pawns
-        while (bb)
-        {
-            fromSq = ls1b(bb);
-            attacks = PawnPushes[Black][fromSq] & freeSquares;
-            if (attacks)
-                attacks |= PawnDoublePushes[Black][fromSq] & freeSquares;
-            attacks |= PawnAttacks[Black][fromSq] & occupancies[White];
-
-            while (attacks)
-            {
-                toSq = ls1b(attacks);
-
-                // promotions
-                if (SqBB[toSq] & Rank1_Mask)
-                {
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "q" << endl;
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "r" << endl;
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "b" << endl;
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "n" << endl;
-                }
-                else
-                {
-                    cout << "pmove: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << endl;
-                }
-
-                // pop ls1b
-                attacks ^= SqBB[toSq];
-            }
-
-            if (epsq)
-            {
-                if (PawnAttacks[Black][fromSq] & SqBB[epsq])
-                {
-                    if (bitboards[P] & SqBB[epsq - 8])
-                    {
-                        toSq = epsq;
-                        cout << "enpas: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << endl;
-                    }
-                }
-            }
-
-            // pop ls1b
-            bb ^= SqBB[fromSq];
-        }
-    }
-
-
-    // white pawns
-    else
-    {
+        // white pawns
         bb = bitboards[P];
 
-        // loop over white pawns
         while (bb)
         {
             fromSq = ls1b(bb);
@@ -339,7 +345,7 @@ void generateMoves2()
                 }
 
                 // pop ls1b
-                attacks ^= SqBB[toSq];
+                popBit(attacks, toSq);
             }
 
             // enpassant capture
@@ -356,7 +362,143 @@ void generateMoves2()
             }
 
             // pop ls1b
-            bb ^= SqBB[fromSq];
+            popBit(bb, fromSq);
+        }
+
+
+        // white King
+        bb = bitboards[K];
+        while (bb)
+        {
+            fromSq = ls1b(bb);
+           
+            // TODO: king Attacks
+
+            // short castle 0-0
+            if (castle & wk) 
+            {
+                if (!(FG1_Mask & occupancies[Both]))
+                {
+                    if (!isSquareAttacked(e1, Black) &&
+                        !isSquareAttacked(f1, Black) &&
+                        !isSquareAttacked(g1, Black))
+                    {
+                        cout << "castling move: e1g1" << endl;
+                    }
+                }
+            }
+
+            // long castle 0-0-0
+            if (castle & wq)
+            {
+                if (!(DCB1_Mask & occupancies[Both]))
+                {
+                    if (!isSquareAttacked(e1, Black) &&
+                        !isSquareAttacked(d1, Black) &&
+                        !isSquareAttacked(c1, Black))
+                    {
+                        cout << "castling move: e1c1" << endl;
+                    }
+                }
+            }
+
+            // move on to next piece (pop ls1b)
+            popBit(bb, fromSq);
+        }
+    }
+
+
+    // black pieces
+    else
+    {
+        // black pawns
+        bb = bitboards[p];
+
+        while (bb)
+        {
+            fromSq = ls1b(bb);
+            attacks = PawnPushes[Black][fromSq] & freeSquares;
+            if (attacks)
+                attacks |= PawnDoublePushes[Black][fromSq] & freeSquares;
+            attacks |= PawnAttacks[Black][fromSq] & occupancies[White];
+
+            while (attacks)
+            {
+                toSq = ls1b(attacks);
+
+                // promotions
+                if (SqBB[toSq] & Rank1_Mask)
+                {
+                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "q" << endl;
+                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "r" << endl;
+                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "b" << endl;
+                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "n" << endl;
+                }
+                else
+                {
+                    cout << "pmove: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << endl;
+                }
+
+                // pop ls1b
+                popBit(attacks, toSq);
+            }
+
+            // enpassant capture
+            if (epsq)
+            {
+                if (PawnAttacks[Black][fromSq] & SqBB[epsq])
+                {
+                    if (bitboards[P] & SqBB[epsq - 8])
+                    {
+                        toSq = epsq;
+                        cout << "enpas: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << endl;
+                    }
+                }
+            }
+
+            // pop ls1b
+            popBit(bb, fromSq);
+        }
+
+
+        // white King
+        bb = bitboards[K];
+        while (bb)
+        {
+            fromSq = ls1b(bb);
+           
+            // TODO: king Attacks
+
+            // short castle 0-0
+            if (castle & bk) 
+            {
+                if (!(FG8_Mask & occupancies[Both]))
+                {
+                    if (!isSquareAttacked(e8, White) &&
+                        !isSquareAttacked(f8, White) &&
+                        !isSquareAttacked(g8, White))
+                    {
+                        cout << "castling move: e8g8" << endl;
+                    }
+                }
+            }
+
+            // long castle 0-0-0
+            if (castle & bq)
+            {
+                if (!(DCB8_Mask & occupancies[Both]))
+                {
+                    if (!isSquareAttacked(e8, White) &&
+                        !isSquareAttacked(d8, White) &&
+                        !isSquareAttacked(c8, White))
+                    {
+                        cout << "castling move: e8c8" << endl;
+                    }
+                }
+            }
+
+            // move on to next piece (pop ls1b)
+            popBit(bb, fromSq);
         }
     }
 }

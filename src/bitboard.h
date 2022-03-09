@@ -105,6 +105,11 @@ static constexpr Bitboard NotFileH_Mask  = 9187201950435737471ULL;
 static constexpr Bitboard NotFileHG_Mask = 4557430888798830399ULL;
 static constexpr Bitboard NotFileAB_Mask = 18229723555195321596ULL;
 
+static constexpr Bitboard FG1_Mask  = 6917529027641081856ULL;
+static constexpr Bitboard FG8_Mask  = 96ULL;
+static constexpr Bitboard DCB1_Mask = 1008806316530991104ULL;
+static constexpr Bitboard DCB8_Mask = 14ULL;
+
 
 
 // A map to transform each square number into a Bitboard with only 1 bit set.

@@ -40,7 +40,7 @@ using namespace std;
 int main(void)
 {
     // Initialize neural network
-    //nnue_init("nn-eba324f53044.nnue");
+    nnue_init("nn-eba324f53044.nnue");
     std::cout << std::endl;
 
 
@@ -50,20 +50,21 @@ int main(void)
     initSliderAttacks(Bishop);
     initSliderAttacks(Rook);
 
-    //setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPpP/R3K2R b KQkq a3 0 1 ");
-    //setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ");
-    /*setPosition("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 b kq - 0 1");
+    setPosition("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  ");
     printBoard();
+
     auto start = chrono::high_resolution_clock::now();
     generateMoves();
     auto finish = chrono::high_resolution_clock::now();
     cout << chrono::duration_cast<chrono::nanoseconds>(finish-start).count() << "ns\n";
 
+    cout << endl << endl;
+
     auto start1 = chrono::high_resolution_clock::now();
     generateMoves2();
     auto finish1 = chrono::high_resolution_clock::now();
     cout << chrono::duration_cast<chrono::nanoseconds>(finish1-start1).count() << "ns\n";
-    */
+
 
 
    
