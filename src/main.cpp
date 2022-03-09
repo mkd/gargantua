@@ -53,18 +53,10 @@ int main(void)
     setPosition("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  ");
     printBoard();
 
-    auto start = chrono::high_resolution_clock::now();
-    generateMoves();
-    auto finish = chrono::high_resolution_clock::now();
-    cout << chrono::duration_cast<chrono::nanoseconds>(finish-start).count() << "ns\n";
-
-    cout << endl << endl;
-
     auto start1 = chrono::high_resolution_clock::now();
-    generateMoves2();
+    generateMoves();
     auto finish1 = chrono::high_resolution_clock::now();
     cout << chrono::duration_cast<chrono::nanoseconds>(finish1-start1).count() << "ns\n";
-
 
 
    
