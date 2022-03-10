@@ -50,16 +50,41 @@ int main(void)
     initSliderAttacks(Bishop);
     initSliderAttacks(Rook);
 
-    setPosition("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  ");
-    printBoard();
+    //setPosition("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  ");
+    //printBoard();
 
-    auto start1 = chrono::high_resolution_clock::now();
-    generateMoves();
-    auto finish1 = chrono::high_resolution_clock::now();
-    cout << chrono::duration_cast<chrono::nanoseconds>(finish1-start1).count() << "ns\n";
+    //auto start1 = chrono::high_resolution_clock::now();
+    //generateMoves();
+    //auto finish1 = chrono::high_resolution_clock::now();
+    //cout << chrono::duration_cast<chrono::nanoseconds>(finish1-start1).count() << "ns\n";
+
+    int move;
+    int source_square;
+    int target_square;
+    int piece;
+    int promoted_piece;
 
 
-   
+    auto start = chrono::high_resolution_clock::now();
+    move = encodeMove(d7, e8, P, Q, 1, 0, 0, 1);
+    source_square = getMoveSource(move);
+    target_square = getMoveTarget(move);
+    piece = getMovePiece(move);
+    promoted_piece = getPromo(move);
+    auto finish = chrono::high_resolution_clock::now();
+    
+    // print move items
+    cout << "source square: " << SquareToCoordinates[source_square] << endl;
+    cout << "target square: " << SquareToCoordinates[target_square] << endl;
+    cout << "piece: " << PieceStr[piece] << endl;
+    cout << "piece: " << PieceStr[promoted_piece] << endl;
+    cout << "capture flag: " << getMoveCapture(move) << endl;
+    cout << "double pawn push flag: " << getDoublePush(move) << endl;
+    cout << "enpassant flag: " << getEp(move) << endl;
+    cout << "castling flag: " << getCastle(move) << endl;
+    cout << chrono::duration_cast<chrono::nanoseconds>(finish-start).count() << "ns\n";
+    cout << endl << endl;
+
     // terminate program
     return 0;
 }

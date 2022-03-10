@@ -75,4 +75,65 @@ static inline bool isSquareAttacked(int square, int side)
 
 
 
+// Move encoding:
+//
+// Moves are encoded using 24 bits, where the following schema is followed:
+/*
+          binary move bits                               hexadecimal constants
+    
+    0000 0000 0000 0000 0011 1111    source square       0x3f
+    0000 0000 0000 1111 1100 0000    target square       0xfc0
+    0000 0000 1111 0000 0000 0000    piece               0xf000
+    0000 1111 0000 0000 0000 0000    promoted piece      0xf0000
+    0001 0000 0000 0000 0000 0000    capture flag        0x100000
+    0010 0000 0000 0000 0000 0000    double push flag    0x200000
+    0100 0000 0000 0000 0000 0000    enpassant flag      0x400000
+    1000 0000 0000 0000 0000 0000    castling flag       0x800000
+*/
+
+// Encode move macro
+#define encodeMove(source, target, piece, promoted, capture, double, enpassant, castling) \
+    (source) |          \
+    (target << 6) |     \
+    (piece << 12) |     \
+    (promoted << 16) |  \
+    (capture << 20) |   \
+    (double << 21) |    \
+    (enpassant << 22) | \
+    (castling << 23)    \
+
+
+// Extract source square
+#define getMoveSource(move) (move & 0x3f)
+
+
+// Extract target square
+#define getMoveTarget(move) ((move & 0xfc0) >> 6)
+
+
+// Extract piece
+#define getMovePiece(move) ((move & 0xf000) >> 12)
+
+
+// Extract promoted piece
+#define getPromo(move) ((move & 0xf0000) >> 16)
+
+
+// Extract capture flag
+#define getMoveCapture(move) (move & 0x100000)
+
+
+// Extract double pawn push flag
+#define getDoublePush(move) (move & 0x200000)
+
+
+// Extract enpassant flag
+#define getEp(move) (move & 0x400000)
+
+
+// Extract castling flag
+#define getCastle(move) (move & 0x800000)
+
+
+
 #endif  //  MOVGEN_H
