@@ -224,7 +224,7 @@ Bitboard maskKingAttacks(int square)
     setBit(bb, square);
 
 
-    // generate Knight attacks
+    // generate King attacks
     if (bb >> 8)                   attacks |= (bb >> 8);
     if ((bb >> 9) & NotFileH_Mask) attacks |= (bb >> 9);
     if ((bb >> 7) & NotFileA_Mask) attacks |= (bb >> 7);
@@ -444,9 +444,9 @@ Bitboard setOccupancy(int index, int bitMask, Bitboard attackMask)
 
 
 
-// initBitsets
+// initBitmaps
 //
-// Initialize different bitset tables for faster lookup.
+// Initialize different bitmap tables for faster lookup.
 void initBitmaps()
 {
     // populate SqBB
@@ -473,8 +473,10 @@ void initLeaperAttacks()
         PawnAttacks[White][square] = maskPawnAttacks(White, square);
         PawnAttacks[Black][square] = maskPawnAttacks(Black, square);
 
+
         // init Knight attacks
         KnightAttacks[square] = maskKnightAttacks(square);
+
 
         // init King attacks
         KingAttacks[square] = maskKingAttacks(square);
