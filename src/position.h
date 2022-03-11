@@ -56,6 +56,21 @@ static std::map<unsigned char, int> PieceConst = {
 
 
 
+// Array of promoted pieces, encoded from integer to character
+static std::map<int, unsigned char> PromoPieces = {
+    {0, ' '},
+    {Q, 'Q'},
+    {R, 'R'},
+    {B, 'B'},
+    {N, 'N'},
+    {q, 'q'},
+    {r, 'r'},
+    {b, 'b'},
+    {n, 'n'}
+};
+
+
+
 // A position is defined by the following elements:
 //
 // 1. A set of 12 bitboards with all the piece occupancies

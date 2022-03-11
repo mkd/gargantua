@@ -21,13 +21,118 @@
 #ifndef MOVGEN_H
 #define MOVGEN_H
 
+#include <vector>
+
 #include "bitboard.h"
 #include "position.h"
 
 
 
-// Functionality to generate all pseudo-legal moves for the current position.
+// Move list structure where to store the list of generated moves
+extern std::vector<int> MoveList;
+
+// alternative using C 
+// TODO: check array vs. vector implementation. Which is faster?
+typedef struct {
+    int moves[256];
+    int count;
+} MoveList_t;
+
+
+
+
+// Move encoding:
+//
+// Moves are encoded using 24 bits, where the following schema is followed:
+/*
+          binary move bits                               hexadecimal constants
+    
+    0000 0000 0000 0000 0011 1111    source square       0x3f
+    0000 0000 0000 1111 1100 0000    target square       0xfc0
+    0000 0000 1111 0000 0000 0000    piece               0xf000
+    0000 1111 0000 0000 0000 0000    promoted piece      0xf0000
+    0001 0000 0000 0000 0000 0000    capture flag        0x100000
+    0010 0000 0000 0000 0000 0000    double push flag    0x200000
+    0100 0000 0000 0000 0000 0000    enpassant flag      0x400000
+    1000 0000 0000 0000 0000 0000    castling flag       0x800000
+*/
+
+// Encode move macro
+#define encodeMove(fromSq, toSq, piece, promo, capture, double, ep, castling) \
+    (fromSq) |          \
+    (toSq << 6) |     \
+    (piece << 12) |     \
+    (promo << 16) |  \
+    (capture << 20) |   \
+    (double << 21) |    \
+    (ep << 22) | \
+    (castling << 23)    \
+
+
+// Extract source square
+#define getMoveSource(move) (move & 0x3f)
+
+
+// Extract target square
+#define getMoveTarget(move) ((move & 0xfc0) >> 6)
+
+
+// Extract piece
+#define getMovePiece(move) ((move & 0xf000) >> 12)
+
+
+// Extract promoted piece
+#define getPromo(move) ((move & 0xf0000) >> 16)
+
+
+// Extract capture flag
+#define getMoveCapture(move) (move & 0x100000)
+
+
+// Extract double pawn push flag
+#define getDoublePush(move) (move & 0x200000)
+
+
+// Extract enpassant flag
+#define getEp(move) (move & 0x400000)
+
+
+// Extract castling flag
+#define getCastle(move) (move & 0x800000)
+
+
+
+// Functionality to generate and manipulate chess moves.
 void generateMoves();
+void printMoveList(std::vector<int> &);
+
+
+
+// print_move
+static inline void print_move(int move)
+{
+    std::cout << SquareToCoordinates[getMoveSource(move)]
+              << SquareToCoordinates[getMoveTarget(move)]
+              << PromoPieces[getPromo(move)];
+}
+
+
+// add move to the move list
+static inline void add_move(MoveList_t *move_list, int move)
+{
+    // strore move
+    move_list->moves[move_list->count] = move;
+    
+    // increment move count
+    move_list->count++;
+}
+
+
+// print move list
+void print_move_list(MoveList_t *);
+
+
+
 
 
 
@@ -72,67 +177,6 @@ static inline bool isSquareAttacked(int square, int side)
     // by default return false
     return false;
 }
-
-
-
-// Move encoding:
-//
-// Moves are encoded using 24 bits, where the following schema is followed:
-/*
-          binary move bits                               hexadecimal constants
-    
-    0000 0000 0000 0000 0011 1111    source square       0x3f
-    0000 0000 0000 1111 1100 0000    target square       0xfc0
-    0000 0000 1111 0000 0000 0000    piece               0xf000
-    0000 1111 0000 0000 0000 0000    promoted piece      0xf0000
-    0001 0000 0000 0000 0000 0000    capture flag        0x100000
-    0010 0000 0000 0000 0000 0000    double push flag    0x200000
-    0100 0000 0000 0000 0000 0000    enpassant flag      0x400000
-    1000 0000 0000 0000 0000 0000    castling flag       0x800000
-*/
-
-// Encode move macro
-#define encodeMove(source, target, piece, promoted, capture, double, enpassant, castling) \
-    (source) |          \
-    (target << 6) |     \
-    (piece << 12) |     \
-    (promoted << 16) |  \
-    (capture << 20) |   \
-    (double << 21) |    \
-    (enpassant << 22) | \
-    (castling << 23)    \
-
-
-// Extract source square
-#define getMoveSource(move) (move & 0x3f)
-
-
-// Extract target square
-#define getMoveTarget(move) ((move & 0xfc0) >> 6)
-
-
-// Extract piece
-#define getMovePiece(move) ((move & 0xf000) >> 12)
-
-
-// Extract promoted piece
-#define getPromo(move) ((move & 0xf0000) >> 16)
-
-
-// Extract capture flag
-#define getMoveCapture(move) (move & 0x100000)
-
-
-// Extract double pawn push flag
-#define getDoublePush(move) (move & 0x200000)
-
-
-// Extract enpassant flag
-#define getEp(move) (move & 0x400000)
-
-
-// Extract castling flag
-#define getCastle(move) (move & 0x800000)
 
 
 

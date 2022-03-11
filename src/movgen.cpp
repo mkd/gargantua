@@ -19,6 +19,7 @@
 */
 
 #include <iostream>
+#include <vector>
 
 #include "bitboard.h"
 #include "position.h"
@@ -26,6 +27,11 @@
 
 
 using namespace std;
+
+
+
+// Move list structure where to store the list of generated moves
+std::vector<int> MoveList_v;
 
 
 
@@ -565,4 +571,106 @@ void generateMoves()
             popBit(bb, fromSq);
         }
     }
+}
+
+
+
+void print_move_list(MoveList_t *move_list)
+{
+    // do nothing on empty move list
+    if (!move_list->count)
+    {
+        cout << endl << "     No move in the move list!" << endl;
+        return;
+    }
+    
+    cout << endl << "     move    piece    promo    capture    double    ep    castle" << endl << endl;
+    
+    // loop over moves within a move list
+    for (int move_count = 0; move_count < move_list->count; move_count++)
+    {
+        // init move
+        int move = move_list->moves[move_count];
+        
+        // print move
+        cout << "     " << SquareToCoordinates[getMoveSource(move)]
+                        << SquareToCoordinates[getMoveTarget(move)]
+                        << PromoPieces[getPromo(move)] << "   "
+                        << PieceStr[getMovePiece(move)] << "        ";
+
+        if (getPromo(move) != 0) cout << "1";
+        else cout << "0";
+        cout << "        ";
+
+        if (getMoveCapture(move)) cout << "1";
+        else cout << "0";
+        cout << "          ";
+
+        if (getDoublePush(move)) cout << "1";
+        else cout << "0";
+        cout << "         ";
+
+        if (getEp(move)) cout << "1";
+        else cout << "0";
+        cout << "           ";
+
+        if (getCastle(move)) cout << "1";
+        else cout << "0";
+
+        cout << endl;
+    }
+    
+    // print total number of moves
+    cout << endl << endl << "     Total number of moves: " << move_list->count << endl << endl;
+}
+
+
+
+void printMoveList(vector<int> &MoveList)
+{
+    // do nothing on empty move list
+    if (MoveList.size() <= 0)
+    {
+        cout << endl << "     No move in the move list!" << endl;
+        return;
+    }
+    
+    cout << endl << "     move    piece    promo    capture    double    ep    castle" << endl << endl;
+    
+    // loop over moves within a move list
+    for (int move_count = 0; move_count < MoveList.size(); move_count++)
+    {
+        // init move
+        int move = MoveList[move_count];
+        
+        // print move
+        cout << "     " << SquareToCoordinates[getMoveSource(move)]
+                        << SquareToCoordinates[getMoveTarget(move)]
+                        << PromoPieces[getPromo(move)] << "   "
+                        << PieceStr[getMovePiece(move)] << "        ";
+
+        if (getPromo(move) != 0) cout << "1";
+        else cout << "0";
+        cout << "        ";
+
+        if (getMoveCapture(move)) cout << "1";
+        else cout << "0";
+        cout << "          ";
+
+        if (getDoublePush(move)) cout << "1";
+        else cout << "0";
+        cout << "         ";
+
+        if (getEp(move)) cout << "1";
+        else cout << "0";
+        cout << "           ";
+
+        if (getCastle(move)) cout << "1";
+        else cout << "0";
+
+        cout << endl;
+    }
+    
+    // print total number of moves
+    cout << endl << endl << "     Total number of moves: " << MoveList.size() << endl << endl;
 }
