@@ -152,6 +152,8 @@ static constexpr int BishopRelevantBits[64] = {
     6, 5, 5, 5, 5, 5, 5, 6
 };
 
+
+
 // Rook relevant occupancy bit count for every square on the board
 static constexpr int RookRelevantBits[64] = {
     12, 11, 11, 11, 11, 11, 11, 12, 
@@ -234,6 +236,7 @@ static constexpr Bitboard RookMagicNumbers[64] =
     0x2006104900a0804ULL,
     0x1004081002402ULL
 };
+
 
 
 // Bishop magic numbers
@@ -360,8 +363,7 @@ static inline void setBit(Bitboard &b, int pos)
 //
 // #define popBit(b, pos) (b &= ~(1ULL << pos))
 //
-// NOTE: for speed, use ^= SqBB[pos] inline within the code. Calling this
-//       function by address is much slower.
+// NOTE: for speed, use ^= SqBB[pos] inline within the code.
 static inline void popBit(Bitboard &b, int pos)
 {
     b &= ~(1ULL << pos);

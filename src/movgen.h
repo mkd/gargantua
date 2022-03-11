@@ -21,7 +21,7 @@
 #ifndef MOVGEN_H
 #define MOVGEN_H
 
-#include <vector>
+#include <sstream>
 
 #include "bitboard.h"
 #include "position.h"
@@ -29,15 +29,10 @@
 
 
 // Move list structure where to store the list of generated moves
-extern std::vector<int> MoveList;
-
-// alternative using C 
-// TODO: check array vs. vector implementation. Which is faster?
 typedef struct {
     int moves[256];
     int count;
 } MoveList_t;
-
 
 
 
@@ -103,36 +98,49 @@ typedef struct {
 
 
 // Functionality to generate and manipulate chess moves.
-void generateMoves();
-void printMoveList(std::vector<int> &);
+void generateMoves(MoveList_t &);
+void printMoveList(MoveList_t &);
 
 
 
-// print_move
-static inline void print_move(int move)
+// prettyMove
+//
+// Generate a string with the move in UCI notation.
+static inline std::string prettyMove(int move)
 {
-    std::cout << SquareToCoordinates[getMoveSource(move)]
-              << SquareToCoordinates[getMoveTarget(move)]
-              << PromoPieces[getPromo(move)];
+    std::stringstream ss;
+
+    ss << SquareToCoordinates[getMoveSource(move)]
+       << SquareToCoordinates[getMoveTarget(move)]
+       << PromoPieces[getPromo(move)];
+
+    return ss.str();
 }
 
 
-// add move to the move list
-static inline void add_move(MoveList_t *move_list, int move)
+
+// printMove
+//
+// Print a move in UCI notation.
+static inline void printMove(int move)
+{
+    std::cout << prettyMove(move);
+}
+
+
+
+// addMove
+//
+// Add a move to the move list.
+static inline void addMove(MoveList_t &MoveList, int move)
 {
     // strore move
-    move_list->moves[move_list->count] = move;
+    MoveList.moves[MoveList.count] = move;
+
     
     // increment move count
-    move_list->count++;
+    MoveList.count++;
 }
-
-
-// print move list
-void print_move_list(MoveList_t *);
-
-
-
 
 
 
@@ -144,7 +152,7 @@ static inline bool isSquareAttacked(int square, int side)
     // square attacked by White or Black pawns
     if ((side == White) && (PawnAttacks[Black][square] & bitboards[P]))
         return true;
-    
+
     if ((side == Black) && (PawnAttacks[White][square] & bitboards[p]))
         return true;
    

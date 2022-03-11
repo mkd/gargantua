@@ -19,13 +19,13 @@
 */
 
 #include <iostream>
-
 #include <chrono>
 
 #include "nnue.h"
 #include "bitboard.h"
 #include "position.h"
 #include "movgen.h"
+
 
 
 using namespace std;
@@ -50,26 +50,27 @@ int main(void)
     initSliderAttacks(Bishop);
     initSliderAttacks(Rook);
 
-    setPosition("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  ");
+    setPosition("r3k2r/pPppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1 ");
+    setPosition("r3k2r/pPppqpb1/bn2pNp1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1");
+    setPosition("r4rk1/pPppqpb1/bn2p1p1/3P2N1/2P1P3/1N3Q1p/Pp1BBPPP/R3K1KR w KQq - 0 1");
     printBoard();
 
+
     // create move list
-    MoveList_t move_list[1];
-    move_list->count = 0;
+    MoveList_t MoveList; 
+    MoveList.count = 0;
+
+    generateMoves(MoveList);
+
+    printMoveList(MoveList);
     
     // add move
-    /*cout << "array:" << endl;
+    /*
     auto start = chrono::high_resolution_clock::now();
-    for (int i = 0; i < 16384; i++)
-    {
-        add_move(move_list, encodeMove(d7, e8, B, Q, 0, 0, 0, 1));
-        //move1 = move_list->moves[i];
-        //move2 = move_list->moves[i+1];
-    }
     auto finish = chrono::high_resolution_clock::now();
     cout << chrono::duration_cast<chrono::nanoseconds>(finish-start).count() << "ns\n";
-    cout << endl << endl;
     */
+
 
     // terminate program
     return 0;

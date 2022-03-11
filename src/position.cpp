@@ -28,6 +28,7 @@
 #include "position.h"
 
 
+
 using namespace std;
 
 
@@ -71,10 +72,12 @@ void resetBoard()
 
     // reset repetition index
     //repetition_index = 0;
-    
+
+
     // reset fifty move rule counter
     //fifty = 0;
-    
+
+
     // reset repetition table
     //memset(repetition_table, 0ULL, sizeof(repetition_table));
 }

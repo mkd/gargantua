@@ -19,658 +19,504 @@
 */
 
 #include <iostream>
-#include <vector>
 
 #include "bitboard.h"
 #include "position.h"
 #include "movgen.h"
 
 
+
 using namespace std;
-
-
-
-// Move list structure where to store the list of generated moves
-std::vector<int> MoveList_v;
 
 
 
 // generateMoves
 //
 // Generate all pseudo-legal moves for the current position.
-void generateMoves()
+void generateMoves(MoveList_t &MoveList)
 {
     // Bitboard data and squares to generate moves
     int fromSq, toSq;
     Bitboard bb, attacks;
-    Bitboard freeSquares = ~occupancies[Both];
 
 
-    // Generate moves for White Pieces
-    // sideToMove == White
-    //
-    if (sideToMove == White)
+    // start with an empty move list
+    MoveList.count = 0;
+
+    
+    // loop over all the bitboards
+    for (int piece = P; piece <= k; piece++)
     {
-        // White Pawns
-        // bitboards[P]
-        //
-        bb = bitboards[P];
-        while (bb)
+        // init piece bitboard copy
+        bb = bitboards[piece];
+
+
+        // White Pawns and castling moves
+        if (sideToMove == White)
         {
-            fromSq = ls1b(bb);
-            attacks = PawnPushes[P][fromSq] & freeSquares;
-            if (attacks)
-                attacks |= PawnDoublePushes[P][fromSq] & freeSquares;
-            attacks |= PawnAttacks[White][fromSq] & occupancies[Black];
-
-            while (attacks)
+            // White Pawns
+            if (piece == P)
             {
-                toSq = ls1b(attacks);
-
-                // promotions
-                if (SqBB[toSq] & Rank8_Mask)
+                while (bb)
                 {
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "q" << endl;
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "r" << endl;
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "b" << endl;
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "n" << endl;
-                }
-
-                // pawn pushes and attacks
-                else
-                {
-                    cout << "pmove: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << endl;
-                }
-
-                // pop ls1b
-                popBit(attacks, toSq);
-            }
-
-            // enpassant capture
-            if (epsq)
-            {
-                if (PawnAttacks[White][fromSq] & SqBB[epsq])
-                {
-                    if (bitboards[p] & SqBB[epsq + 8])
-                    {
-                        toSq = epsq;
-                        cout << "enpas: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << endl;
-                    }
-                }
-            }
-
-            // pop ls1b
-            popBit(bb, fromSq);
-        }
-
-
-        // White King
-        // bitboards[K]
-        //
-        bb = bitboards[K];
-        while (bb)
-        {
-            fromSq = ls1b(bb);
-           
-            // init piece attacks in order to get set of target squares
-            attacks = KingAttacks[fromSq] & ~occupancies[White];
-                
-            // loop over target squares available from generated attacks
-            while (attacks)
-            {
-                // init target square
-                toSq = ls1b(attacks);    
-                
-                // quite move
-                if (!getBit(occupancies[Black], toSq))
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  king quiet move" << endl;
-                
-                else
-                    // capture move
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  king capture" << endl;
+                    // init source square
+                    fromSq = ls1b(bb);
                     
-                // pop ls1b in current attacks set
-                popBit(attacks, toSq);
+                    // init target square
+                    toSq = fromSq - 8;
+                    
+                    // generate quiet pawn moves
+                    if (!(toSq < a8) && !getBit(occupancies[Both], toSq))
+                    {
+                        // pawn promotions
+                        if (SqBB[toSq] & Rank8_Mask)
+                        {                            
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, Q, 0, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, R, 0, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, B, 0, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, N, 0, 0, 0, 0));
+                        }
+                        
+                        else
+                        {
+                            // one-square pawn push
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 0, 0, 0, 0));
+                            
+                            // double pawn push
+                            if (((fromSq >= a2) && (fromSq <= h2)) && !getBit(occupancies[Both], (toSq - 8)))
+                                addMove(MoveList, encodeMove(fromSq, (toSq - 8), piece, 0, 0, 1, 0, 0));
+                        }
+                    }
+                    
+                    // init pawn attacks bitboard
+                    attacks = PawnAttacks[sideToMove][fromSq] & occupancies[Black];
+                    
+                    // generate pawn captures
+                    while (attacks)
+                    {
+                        // init target square
+                        toSq = ls1b(attacks);
+                        
+                        // pawn promotions with capture
+                        if (SqBB[toSq] & Rank8_Mask)
+                        {
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, Q, 1, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, R, 1, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, B, 1, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, N, 1, 0, 0, 0));
+                        }
+                        
+                        else
+                            // one-square pawn push
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 1, 0, 0, 0));
+                        
+                        // pop ls1b from the pawn attacks
+                        popBit(attacks, toSq);
+                    }
+                    
+                    // generate enpassant captures
+                    if (epsq != NoSq)
+                    {
+                        // lookup pawn attacks and bitwise AND with enpassant square (bit)
+                        Bitboard enpassant_attacks = PawnAttacks[sideToMove][fromSq] & (1ULL << epsq);
+                        
+                        // make sure enpassant capture available
+                        if (enpassant_attacks)
+                        {
+                            // init enpassant capture target square
+                            int target_enpassant = ls1b(enpassant_attacks);
+                            addMove(MoveList, encodeMove(fromSq, target_enpassant, piece, 0, 1, 0, 1, 0));
+                        }
+                    }
+                    
+                    // pop ls1b from piece bitboard copy
+                    popBit(bb, fromSq);
+                }
             }
 
-
-            // short castle 0-0
-            if (castle & wk) 
+            
+            // castling moves
+            if (piece == K)
             {
-                if (!(FG1_Mask & occupancies[Both]))
+                // White King short castle 0-0
+                if (castle & wk)
                 {
-                    if (!isSquareAttacked(e1, Black) &&
-                        !isSquareAttacked(f1, Black) &&
-                        !isSquareAttacked(g1, Black))
+                    if (!(FG1_Mask & occupancies[Both]))
                     {
-                        cout << "e1g1  castling move" << endl;
+                        if (!isSquareAttacked(e1, Black) &&
+                            !isSquareAttacked(f1, Black) &&
+                            !isSquareAttacked(g1, Black))
+                        {
+                            addMove(MoveList, encodeMove(e1, g1, piece, 0, 0, 0, 0, 1));
+                        }
+                    }
+                }
+                
+                // White King long castle 0-0-0
+                if (castle & wq)
+                {
+                    if (!(DCB1_Mask & occupancies[Both]))
+                    {
+                        if (!isSquareAttacked(e1, Black) &&
+                            !isSquareAttacked(d1, Black) &&
+                            !isSquareAttacked(c1, Black))
+                        {
+                            addMove(MoveList, encodeMove(e1, c1, piece, 0, 0, 0, 0, 1));
+                        }
                     }
                 }
             }
+        }
+       
 
-            // long castle 0-0-0
-            if (castle & wq)
+        // Black Pawns and castling moves
+        else
+        {
+            // Black Pawns
+            if (piece == p)
             {
-                if (!(DCB1_Mask & occupancies[Both]))
+                while (bb)
                 {
-                    if (!isSquareAttacked(e1, Black) &&
-                        !isSquareAttacked(d1, Black) &&
-                        !isSquareAttacked(c1, Black))
+                    // init source square
+                    fromSq = ls1b(bb);
+                    
+                    // init target square
+                    toSq = fromSq + 8;
+                    
+                    // generate quiet pawn moves
+                    if (!(toSq > h1) && !getBit(occupancies[Both], toSq))
                     {
-                        cout << "e1c1  castling move" << endl;
+                        // pawn promotions
+                        if (SqBB[toSq] & Rank1_Mask)
+                        {
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, q, 0, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, r, 0, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, b, 0, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, n, 0, 0, 0, 0));
+                        }
+                        
+                        else
+                        {
+                            // one-square pawn push
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 0, 0, 0, 0));
+                            
+                            // double pawn push
+                            if (((fromSq >= a7) && (fromSq <= h7)) && !getBit(occupancies[Both], (toSq + 8)))
+                                addMove(MoveList, encodeMove(fromSq, (toSq + 8), piece, 0, 0, 1, 0, 0));
+                        }
+                    }
+                    
+                    // init pawn attacks bitboard
+                    attacks = PawnAttacks[sideToMove][fromSq] & occupancies[White];
+                    
+                    // generate pawn captures
+                    while (attacks)
+                    {
+                        // init target square
+                        toSq = ls1b(attacks);
+                        
+                        // pawn promotions with capture
+                        if (SqBB[toSq] & Rank1_Mask)
+                        {
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, q, 1, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, r, 1, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, b, 1, 0, 0, 0));
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, n, 1, 0, 0, 0));
+                        }
+                        
+                        else
+                            // one-square ahead pawn move
+                            addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 1, 0, 0, 0));
+                        
+                        // pop ls1b from the pawn attacks
+                        popBit(attacks, toSq);
+                    }
+
+                    // generate enpassant captures
+                    if (epsq != NoSq)
+                    {
+                        // lookup pawn attacks and bitwise AND with enpassant square (bit)
+                        Bitboard enpassant_attacks = PawnAttacks[sideToMove][fromSq] & (1ULL << epsq);
+                        
+                        // make sure enpassant capture available
+                        if (enpassant_attacks)
+                        {
+                            // init enpassant capture target square
+                            int target_enpassant = ls1b(enpassant_attacks);
+                            addMove(MoveList, encodeMove(fromSq, target_enpassant, piece, 0, 1, 0, 1, 0));
+                        }
+                    }
+                    
+                    // pop ls1b from piece bitboard copy
+                    popBit(bb, fromSq);
+                }
+            }
+           
+
+            // castling moves
+            if (piece == k)
+            {
+                // Black King short castle 0-0
+                if (castle & bk)
+                {
+                    if (!(FG8_Mask & occupancies[Both]))
+                    {
+                        if (!isSquareAttacked(e8, White) &&
+                            !isSquareAttacked(f8, White) &&
+                            !isSquareAttacked(g8, White))
+                        {
+                            addMove(MoveList, encodeMove(e8, g8, piece, 0, 0, 0, 0, 1));
+                        }
+                    }
+                }
+                
+                // Black King long castle 0-0-0
+                if (castle & bq)
+                {
+                    if (!(DCB8_Mask & occupancies[Both]))
+                    {
+                        if (!isSquareAttacked(e8, White) &&
+                            !isSquareAttacked(d8, White) &&
+                            !isSquareAttacked(c8, White))
+                        {
+                            addMove(MoveList, encodeMove(e8, c8, piece, 0, 0, 0, 0, 1));
+                        }
                     }
                 }
             }
-
-            // move on to next piece (pop ls1b)
-            popBit(bb, fromSq);
         }
+       
 
-        // White Knights
-        // bitboards[N]
-        bb = bitboards[N];
-        while (bb)
+        // Knight moves
+        if ((sideToMove == White) ? piece == N : piece == n)
         {
-            // init source square
-            fromSq = ls1b(bb);
-            
-            // init piece attacks in order to get set of target squares
-            attacks = KnightAttacks[fromSq] & ~occupancies[White];
-            
-            // loop over target squares available from generated attacks
-            while (attacks)
+            while (bb)
             {
-                // init target square
-                toSq = ls1b(attacks);    
+                // init source square
+                fromSq = ls1b(bb);
                 
-                // quite move
-                if (!getBit(occupancies[Black], toSq))
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  knight quiet move" << endl;
+                // init piece attacks in order to get set of target squares
+                attacks = KnightAttacks[fromSq] & ~occupancies[sideToMove];
                 
-                else
-                    // capture move
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  knight capture" << endl;
-                
-                // pop ls1b in current attacks set
-                popBit(attacks, toSq);
-            }
-            
-            
-            // pop ls1b of the current piece bitboard copy
-            popBit(bb, fromSq);
-        }
-
-
-        // White Bishops
-        // bitboards[B]
-        bb = bitboards[B];
-        while (bb)
-        {
-            // init source square
-            fromSq = ls1b(bb);
-            
-            // init piece attacks in order to get set of target squares
-            attacks = getBishopAttacks(fromSq, occupancies[Both]) & ~occupancies[White];
-
-            // loop over target squares available from generated attacks
-            while (attacks)
-            {
-                // init target square
-                toSq = ls1b(attacks);    
-                
-                // quite move
-                if (!getBit(occupancies[Black], toSq))
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  bishop quiet move" << endl;
-                
-                else
-                    // capture move
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  bishop capture" << endl;
-                
-                // pop ls1b in current attacks set
-                popBit(attacks, toSq);
-            }
-            
-            
-            // pop ls1b of the current piece bitboard copy
-            popBit(bb, fromSq);
-        }
-
-
-        // White Rooks
-        // bitboards[R]
-        //
-        bb = bitboards[R];
-        while (bb)
-        {
-            // init source square
-            fromSq = ls1b(bb);
-            
-            // init piece attacks in order to get set of target squares
-            attacks = getRookAttacks(fromSq, occupancies[Both]) & ~occupancies[White];
-            
-            // loop over target squares available from generated attacks
-            while (attacks)
-            {
-                // init target square
-                toSq = ls1b(attacks);    
-                
-                // quite move
-                if (!getBit(occupancies[Black], toSq))
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  rook quiet move" << endl;
-                
-                else
-                    // capture move
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  rook capture" << endl;
-                
-                // pop ls1b in current attacks set
-                popBit(attacks, toSq);
-            }
-            
-            
-            // pop ls1b of the current piece bitboard copy
-            popBit(bb, fromSq);
-        }
-
-
-
-        // White Queens
-        // bitboards[Q]
-        //
-        bb = bitboards[Q];
-        while (bb)
-        {
-            // init source square
-            fromSq = ls1b(bb);
-            
-            // init piece attacks in order to get set of target squares
-            attacks = getQueenAttacks(fromSq, occupancies[Both]) & ~occupancies[White];
-            
-            // loop over target squares available from generated attacks
-            while (attacks)
-            {
-                // init target square
-                toSq = ls1b(attacks);    
-                
-                // quite move
-                if (!getBit(occupancies[Black], toSq))
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  queen quiet move" << endl;
-                
-                else
-                    // capture move
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  queen capture" << endl;
-                
-                // pop ls1b in current attacks set
-                popBit(attacks, toSq);
-            }
-            
-            
-            // pop ls1b of the current piece bitboard copy
-            popBit(bb, fromSq);
-        }
-    }
-
-
-    // Generate moves for Black Pieces
-    // sideToMove == Black
-    //
-    else
-    {
-        // Black Pawns
-        // bitboard[p]
-        //
-        bb = bitboards[p];
-        while (bb)
-        {
-            fromSq = ls1b(bb);
-            attacks = PawnPushes[Black][fromSq] & freeSquares;
-            if (attacks)
-                attacks |= PawnDoublePushes[Black][fromSq] & freeSquares;
-            attacks |= PawnAttacks[Black][fromSq] & occupancies[White];
-
-            while (attacks)
-            {
-                toSq = ls1b(attacks);
-
-                // promotions
-                if (SqBB[toSq] & Rank1_Mask)
+                // loop over target squares available from generated attacks
+                while (attacks)
                 {
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "q" << endl;
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "r" << endl;
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "b" << endl;
-                    cout << "promo: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "n" << endl;
+                    // init target square
+                    toSq = ls1b(attacks);    
+                    
+                    // quiet move
+                    if (!getBit(((sideToMove == White) ? occupancies[Black] : occupancies[White]), toSq))
+                        addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 0, 0, 0, 0));
+                    
+                    else
+                        // capture move
+                        addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 1, 0, 0, 0));
+                    
+                    // pop ls1b from the current attacks set
+                    popBit(attacks, toSq);
                 }
-                else
+                
+                // pop ls1b from the current piece bitboard copy
+                popBit(bb, fromSq);
+            }
+        }
+       
+
+        // Bishop moves
+        if ((sideToMove == White) ? piece == B : piece == b)
+        {
+            while (bb)
+            {
+                // init source square
+                fromSq = ls1b(bb);
+                
+                // init piece attacks in order to get set of target squares
+                attacks = getBishopAttacks(fromSq, occupancies[Both]) & ~occupancies[sideToMove];
+                
+                // loop over target squares available from generated attacks
+                while (attacks)
                 {
-                    cout << "pmove: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << endl;
+                    // init target square
+                    toSq = ls1b(attacks);    
+                    
+                    // quiet move
+                    if (!getBit(((sideToMove == White) ? occupancies[Black] : occupancies[White]), toSq))
+                        addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 0, 0, 0, 0));
+                    
+                    else
+                        // capture move
+                        addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 1, 0, 0, 0));
+                    
+                    // pop ls1b from the current attacks set
+                    popBit(attacks, toSq);
+                }
+                
+                // pop ls1b of the current piece bitboard copy
+                popBit(bb, fromSq);
+            }
+        }
+       
+
+        // Rook moves
+        if ((sideToMove == White) ? piece == R : piece == r)
+        {
+            while (bb)
+            {
+                // init source square
+                fromSq = ls1b(bb);
+                
+                // init piece attacks in order to get set of target squares
+                attacks = getRookAttacks(fromSq, occupancies[Both]) & ~occupancies[sideToMove];
+                
+                // loop over target squares available from generated attacks
+                while (attacks)
+                {
+                    // init target square
+                    toSq = ls1b(attacks);    
+                    
+                    // quiet move
+                    if (!getBit(((sideToMove == White) ? occupancies[Black] : occupancies[White]), toSq))
+                        addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 0, 0, 0, 0));
+                    
+                    else
+                        // capture move
+                        addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 1, 0, 0, 0));
+                    
+                    // pop ls1b in current attacks set
+                    popBit(attacks, toSq);
+                }
+                
+                // pop ls1b from the current piece bitboard copy
+                popBit(bb, fromSq);
+            }
+        }
+
+        
+        // Queen moves
+        if ((sideToMove == White) ? piece == Q : piece == q)
+        {
+            while (bb)
+            {
+                // init source square
+                fromSq = ls1b(bb);
+                
+                // init piece attacks in order to get set of target squares
+                attacks = getQueenAttacks(fromSq, occupancies[Both]) & ~occupancies[sideToMove];
+                
+                // loop over target squares available from generated attacks
+                while (attacks)
+                {
+                    // init target square
+                    toSq = ls1b(attacks);    
+                    
+                    // quiet move
+                    if (!getBit(((sideToMove == White) ? occupancies[Black] : occupancies[White]), toSq))
+                        addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 0, 0, 0, 0));
+                    
+                    else
+                        // capture move
+                        addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 1, 0, 0, 0));
+                    
+                    // pop ls1b from the current attacks set
+                    popBit(attacks, toSq);
+                }
+                
+                // pop ls1b from the current piece bitboard copy
+                popBit(bb, fromSq);
+            }
+        }
+
+
+        // King moves
+        if ((sideToMove == White) ? piece == K : piece == k)
+        {
+            while (bb)
+            {
+                // init source square
+                fromSq = ls1b(bb);
+                
+                // init piece attacks in order to get set of target squares
+                attacks = KingAttacks[fromSq] & ~occupancies[sideToMove];
+                
+                // loop over target squares available from generated attacks
+                while (attacks)
+                {
+                    // init target square
+                    toSq = ls1b(attacks);    
+                    
+                    // quiet move
+                    if (!getBit(((sideToMove == White) ? occupancies[Black] : occupancies[White]), toSq))
+                        addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 0, 0, 0, 0));
+                    
+                    else
+                        // capture move
+                        addMove(MoveList, encodeMove(fromSq, toSq, piece, 0, 1, 0, 0, 0));
+                    
+                    // pop ls1b from current attacks set
+                    popBit(attacks, toSq);
                 }
 
-                // pop ls1b
-                popBit(attacks, toSq);
+                // pop ls1b from the current piece bitboard copy
+                popBit(bb, fromSq);
             }
-
-            // enpassant capture
-            if (epsq)
-            {
-                if (PawnAttacks[Black][fromSq] & SqBB[epsq])
-                {
-                    if (bitboards[P] & SqBB[epsq - 8])
-                    {
-                        toSq = epsq;
-                        cout << "enpas: " << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << endl;
-                    }
-                }
-            }
-
-            // pop ls1b
-            popBit(bb, fromSq);
-        }
-
-
-        // white King
-        bb = bitboards[k];
-        while (bb)
-        {
-            // init source square
-            fromSq = ls1b(bb);
-            
-            // init piece attacks in order to get set of target squares
-            attacks = KingAttacks[fromSq] & ~occupancies[Black];
-            
-            // loop over target squares available from generated attacks
-            while (attacks)
-            {
-                // init target square
-                toSq = ls1b(attacks);    
-                
-                // quite move
-                if (!getBit(occupancies[White], toSq))
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  king quiet move" << endl;
-                
-                else
-                    // capture move
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  king capture" << endl;
-                
-                // pop ls1b in current attacks set
-                popBit(attacks, toSq);
-            }
-
-
-            // short castle 0-0
-            if (castle & bk) 
-            {
-                if (!(FG8_Mask & occupancies[Both]))
-                {
-                    if (!isSquareAttacked(e8, White) &&
-                        !isSquareAttacked(f8, White) &&
-                        !isSquareAttacked(g8, White))
-                    {
-                        cout << "e8g8  castling move" << endl;
-                    }
-                }
-            }
-
-            // long castle 0-0-0
-            if (castle & bq)
-            {
-                if (!(DCB8_Mask & occupancies[Both]))
-                {
-                    if (!isSquareAttacked(e8, White) &&
-                        !isSquareAttacked(d8, White) &&
-                        !isSquareAttacked(c8, White))
-                    {
-                        cout << "e8c8  castling move" << endl;
-                    }
-                }
-            }
-
-            // move on to next piece (pop ls1b)
-            popBit(bb, fromSq);
-        }
-
-
-        // Black Knights
-        // bitboards[n]
-        //
-        bb = bitboards[n];
-        while (bb)
-        {
-            // init source square
-            fromSq = ls1b(bb);
-            
-            // init piece attacks in order to get set of target squares
-            attacks = KnightAttacks[fromSq] & ~occupancies[Black];
-            
-            // loop over target squares available from generated attacks
-            while (attacks)
-            {
-                // init target square
-                toSq = ls1b(attacks);    
-                
-                // quite move
-                if (!getBit(occupancies[White], toSq))
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  knight quiet move" << endl;
-                
-                else
-                    // capture move
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  knight capture" << endl;
-                
-                // pop ls1b in current attacks set
-                popBit(attacks, toSq);
-            }
-            
-            
-            // pop ls1b of the current piece bitboard copy
-            popBit(bb, fromSq);
-        }
-
-
-        // Black Bishops
-        // bitboards[b]
-        //
-        bb = bitboards[b];
-        while (bb)
-        {
-            // init source square
-            fromSq = ls1b(bb);
-            
-            // init piece attacks in order to get set of target squares
-            attacks = getBishopAttacks(fromSq, occupancies[Both]) & ~occupancies[Black];
-
-            // loop over target squares available from generated attacks
-            while (attacks)
-            {
-                // init target square
-                toSq = ls1b(attacks);    
-                
-                // quite move
-                if (!getBit(occupancies[White], toSq))
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  bishop quiet move" << endl;
-                
-                else
-                    // capture move
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  bishop capture" << endl;
-                
-                // pop ls1b in current attacks set
-                popBit(attacks, toSq);
-            }
-            
-            
-            // pop ls1b of the current piece bitboard copy
-            popBit(bb, fromSq);
-        }
-
-
-        // Black Rooks
-        // bitboards[r]
-        //
-        bb = bitboards[r];
-        while (bb)
-        {
-            // init source square
-            fromSq = ls1b(bb);
-            
-            // init piece attacks in order to get set of target squares
-            attacks = getRookAttacks(fromSq, occupancies[Both]) & ~occupancies[Black];
-            
-            // loop over target squares available from generated attacks
-            while (attacks)
-            {
-                // init target square
-                toSq = ls1b(attacks);    
-                
-                // quite move
-                if (!getBit(occupancies[White], toSq))
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  rook quiet move" << endl;
-                
-                else
-                    // capture move
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  rook capture" << endl;
-                
-                // pop ls1b in current attacks set
-                popBit(attacks, toSq);
-            }
-            
-            
-            // pop ls1b of the current piece bitboard copy
-            popBit(bb, fromSq);
-        }
-
-
-        // Black Queens
-        // bitboards[q]
-        //
-        bb = bitboards[q];
-        while (bb)
-        {
-            // init source square
-            fromSq = ls1b(bb);
-            
-            // init piece attacks in order to get set of target squares
-            attacks = getQueenAttacks(fromSq, occupancies[Both]) & ~occupancies[Black];
-            
-            // loop over target squares available from generated attacks
-            while (attacks)
-            {
-                // init target square
-                toSq = ls1b(attacks);    
-                
-                // quite move
-                if (!getBit(occupancies[White], toSq))
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  queen quiet move" << endl;
-                
-                else
-                    // capture move
-                    cout << SquareToCoordinates[fromSq] << SquareToCoordinates[toSq] << "  queen capture" << endl;
-                
-                // pop ls1b in current attacks set
-                popBit(attacks, toSq);
-            }
-            
-            
-            // pop ls1b of the current piece bitboard copy
-            popBit(bb, fromSq);
         }
     }
 }
 
 
 
-void print_move_list(MoveList_t *move_list)
+// printMoveList
+//
+// Print the list of generated pseudo-legal moves.
+void printMoveList(MoveList_t &MoveList)
 {
-    // do nothing on empty move list
-    if (!move_list->count)
-    {
-        cout << endl << "     No move in the move list!" << endl;
+    // don't print anything when the move list is empty
+    if (MoveList.count <= 0)
         return;
-    }
     
-    cout << endl << "     move    piece    promo    capture    double    ep    castle" << endl << endl;
+
+    // header text before listing the moves and their flags
+    cout << endl;
+    cout << "     move    piece    capture    double    ep    castle";
+    cout << endl << endl;
+
     
     // loop over moves within a move list
-    for (int move_count = 0; move_count < move_list->count; move_count++)
+    for (int i = 0; i < MoveList.count; i++)
     {
         // init move
-        int move = move_list->moves[move_count];
+        int move = MoveList.moves[i];
         
-        // print move
+        // print move and piece
         cout << "     " << SquareToCoordinates[getMoveSource(move)]
                         << SquareToCoordinates[getMoveTarget(move)]
                         << PromoPieces[getPromo(move)] << "   "
                         << PieceStr[getMovePiece(move)] << "        ";
 
-        if (getPromo(move) != 0) cout << "1";
-        else cout << "0";
-        cout << "        ";
-
+        // print capture flag
         if (getMoveCapture(move)) cout << "1";
         else cout << "0";
         cout << "          ";
 
+        // print double pawn push flag
         if (getDoublePush(move)) cout << "1";
         else cout << "0";
         cout << "         ";
 
+        // print enpassant flag
         if (getEp(move)) cout << "1";
         else cout << "0";
-        cout << "           ";
+        cout << "     ";
 
+        // print castling flag
         if (getCastle(move)) cout << "1";
         else cout << "0";
 
         cout << endl;
     }
-    
+
+
     // print total number of moves
-    cout << endl << endl << "     Total number of moves: " << move_list->count << endl << endl;
-}
-
-
-
-void printMoveList(vector<int> &MoveList)
-{
-    // do nothing on empty move list
-    if (MoveList.size() <= 0)
-    {
-        cout << endl << "     No move in the move list!" << endl;
-        return;
-    }
-    
-    cout << endl << "     move    piece    promo    capture    double    ep    castle" << endl << endl;
-    
-    // loop over moves within a move list
-    for (int move_count = 0; move_count < MoveList.size(); move_count++)
-    {
-        // init move
-        int move = MoveList[move_count];
-        
-        // print move
-        cout << "     " << SquareToCoordinates[getMoveSource(move)]
-                        << SquareToCoordinates[getMoveTarget(move)]
-                        << PromoPieces[getPromo(move)] << "   "
-                        << PieceStr[getMovePiece(move)] << "        ";
-
-        if (getPromo(move) != 0) cout << "1";
-        else cout << "0";
-        cout << "        ";
-
-        if (getMoveCapture(move)) cout << "1";
-        else cout << "0";
-        cout << "          ";
-
-        if (getDoublePush(move)) cout << "1";
-        else cout << "0";
-        cout << "         ";
-
-        if (getEp(move)) cout << "1";
-        else cout << "0";
-        cout << "           ";
-
-        if (getCastle(move)) cout << "1";
-        else cout << "0";
-
-        cout << endl;
-    }
-    
-    // print total number of moves
-    cout << endl << endl << "     Total number of moves: " << MoveList.size() << endl << endl;
+    cout << endl << endl << "     Total number of moves: " << MoveList.count;
+    cout << endl << endl;
 }

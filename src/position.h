@@ -59,10 +59,10 @@ static std::map<unsigned char, int> PieceConst = {
 // Array of promoted pieces, encoded from integer to character
 static std::map<int, unsigned char> PromoPieces = {
     {0, ' '},
-    {Q, 'Q'},
-    {R, 'R'},
-    {B, 'B'},
-    {N, 'N'},
+    {Q, 'q'},
+    {R, 'r'},
+    {B, 'b'},
+    {N, 'n'},
     {q, 'q'},
     {r, 'r'},
     {b, 'b'},
@@ -111,11 +111,12 @@ enum CastlingRights { wk = 1, wq = 2, bk = 4, bq = 8 };
 
 
 
+// Functionality to handle a position on the chess board, including
+// resting the board to its initial status, printing the board and
+// parsing positions in FEN notation.
 void resetBoard();
 void printBoard();
 void setPosition(const std::string &);
-
-
 
 
 
