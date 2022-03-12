@@ -50,19 +50,21 @@ int main(void)
     initSliderAttacks(Bishop);
     initSliderAttacks(Rook);
 
-    setPosition("r3k2r/pPppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1 ");
-    setPosition("r3k2r/pPppqpb1/bn2pNp1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1");
-    setPosition("r4rk1/pPppqpb1/bn2p1p1/3P2N1/2P1P3/1N3Q1p/Pp1BBPPP/R3K1KR w KQq - 0 1");
+    // parse fen
+    setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq c6 0 1 ");
     printBoard();
+    
+    // preserve board state
+    saveBoard();
+    
+    // parse fen
+    setPosition(EMPTYBOARD);
+    printBoard();
+    
+    // restore board state
+    takeBack();
 
-
-    // create move list
-    MoveList_t MoveList; 
-    MoveList.count = 0;
-
-    generateMoves(MoveList);
-
-    printMoveList(MoveList);
+    printBoard();
     
     // add move
     /*

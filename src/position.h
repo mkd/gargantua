@@ -22,10 +22,31 @@
 #define POSITION_H
 
 #include <map>
+#include <cstring>
 
 
 
+// List of useful FEN positions used for testing and debbuging purposes
 #define STARTPOS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define EMPTYBOARD "8/8/8/8/8/8/8/8 b - - "
+
+
+
+// Macro to preserve the current board state
+#define saveBoard()                                                       \
+    Bitboard bitboards_copy[12], occupancies_copy[3];                          \
+    int side_copy, enpassant_copy, castle_copy;                           \
+    memcpy(bitboards_copy, bitboards, sizeof(bitboards));                 \
+    memcpy(occupancies_copy, occupancies, sizeof(occupancies));            \
+    side_copy = sideToMove, enpassant_copy = epsq, castle_copy = castle;  \
+
+
+
+// Macro to restore the previous board state
+#define takeBack()                                                        \
+    memcpy(bitboards, bitboards_copy, sizeof(bitboards));                 \
+    memcpy(occupancies, occupancies_copy, sizeof(occupancies));           \
+    sideToMove = side_copy, epsq = enpassant_copy, castle = castle_copy;  \
 
 
 
