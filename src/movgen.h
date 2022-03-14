@@ -188,4 +188,77 @@ static inline bool isSquareAttacked(int square, int side)
 
 
 
+// Macro to preserve the current board state
+#define saveBoard()                                                       \
+    Bitboard bitboards_copy[12], occupancies_copy[3];                          \
+    int side_copy, enpassant_copy, castle_copy;                           \
+    memcpy(bitboards_copy, bitboards, sizeof(bitboards));                 \
+    memcpy(occupancies_copy, occupancies, sizeof(occupancies));            \
+    side_copy = sideToMove, enpassant_copy = epsq, castle_copy = castle;  \
+
+
+
+// Macro to restore the previous board state
+#define takeBack()                                                        \
+    memcpy(bitboards, bitboards_copy, sizeof(bitboards));                 \
+    memcpy(occupancies, occupancies_copy, sizeof(occupancies));           \
+    sideToMove = side_copy, epsq = enpassant_copy, castle = castle_copy;  \
+
+
+
+// Different move types for make/unmake move
+enum MoveType { AllMoves, CaptureMoves };
+
+
+
+// makeMove
+//
+// Make move (thus alter the position) on the chess board.
+//
+// Note: remember to save the board status (saveBoard) before calling
+//       makeMove(), if you then want to be able to use takeBack().
+static inline int makeMove(int move, int flag)
+{
+    // Quiet moves
+    if (flag == AllMoves)
+    {
+        // preserve board status
+        saveBoard();
+
+
+        // parse move
+        int fromSq   = getMoveSource(move);
+        int toSq     = getMoveTarget(move);
+        int piece    = getMovePiece(move);
+        int promo    = getPromo(move);
+        int capture  = getMoveCapture(move);
+        int dpush    = getDoublePush(move);
+        int ep       = getEp(move);
+        int castling = getCastle(move);
+       
+
+        // move piece
+        popBit(bitboards[piece], fromSq);
+        setBit(bitboards[piece], toSq);
+    }
+
+    
+    // capture moves
+    else
+    {
+        // make sure move is the capture
+        if (getMoveCapture(move))
+            makeMove(move, AllMoves);
+        
+        // otherwise the move is not a capture
+        else
+            // don't make it
+            return 0;
+    }
+
+    return 0;
+}
+
+
+
 #endif  //  MOVGEN_H

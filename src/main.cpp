@@ -50,21 +50,28 @@ int main(void)
     initSliderAttacks(Bishop);
     initSliderAttacks(Rook);
 
-    // parse fen
-    setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq c6 0 1 ");
-    printBoard();
-    
-    // preserve board state
-    saveBoard();
-    
-    // parse fen
-    setPosition(EMPTYBOARD);
-    printBoard();
-    
-    // restore board state
-    takeBack();
 
+    // set up position
+    setPosition(FENPOS_KIWIPETE);
     printBoard();
+   
+
+    // create move list instance
+    MoveList_t move_list;
+    
+    // generate moves
+    generateMoves(move_list);
+
+    auto start = chrono::high_resolution_clock::now();
+    cout << "Testing move '" << prettyMove(move_list.moves[0]) << "'..." << endl;
+    for (long i = 0; i < 100000000; i++)
+    {
+        saveBoard();
+        makeMove(move_list.moves[0], AllMoves);
+        takeBack();
+    }
+    auto finish = chrono::high_resolution_clock::now();
+    cout << chrono::duration_cast<chrono::milliseconds>(finish-start).count() << "ms\n";
     
     // add move
     /*
