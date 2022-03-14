@@ -27,26 +27,9 @@
 
 
 // List of useful FEN positions used for testing and debbuging purposes
-#define STARTPOS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-#define EMPTYBOARD "8/8/8/8/8/8/8/8 b - - "
-
-
-
-// Macro to preserve the current board state
-#define saveBoard()                                                       \
-    Bitboard bitboards_copy[12], occupancies_copy[3];                          \
-    int side_copy, enpassant_copy, castle_copy;                           \
-    memcpy(bitboards_copy, bitboards, sizeof(bitboards));                 \
-    memcpy(occupancies_copy, occupancies, sizeof(occupancies));            \
-    side_copy = sideToMove, enpassant_copy = epsq, castle_copy = castle;  \
-
-
-
-// Macro to restore the previous board state
-#define takeBack()                                                        \
-    memcpy(bitboards, bitboards_copy, sizeof(bitboards));                 \
-    memcpy(occupancies, occupancies_copy, sizeof(occupancies));           \
-    sideToMove = side_copy, epsq = enpassant_copy, castle = castle_copy;  \
+#define FENPOS_EMPTYBOARD "8/8/8/8/8/8/8/8 b - - "
+#define FENPOS_STARTPOS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define FENPOS_KIWIPETE "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "
 
 
 
