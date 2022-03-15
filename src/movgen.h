@@ -280,6 +280,37 @@ static inline int makeMove(int move, int flag)
                 }
             }
         }
+
+
+        // handle pawn promotions
+        if (promo)
+        {
+            // white to move
+            if (sideToMove == White)
+            {
+                // erase the pawn from the target square
+                popBit(bitboards[P], toSq);
+                
+                // remove pawn from hash key
+                //hash_key ^= piece_keys[P][toSq];
+            }
+            
+            // black to move
+            else
+            {
+                // erase the pawn from the target square
+                popBit(bitboards[p], toSq);
+                
+                // remove pawn from hash key
+                //hash_key ^= piece_keys[p][toSq];
+            }
+            
+            // set up promoted piece on chess board
+            setBit(bitboards[promo], toSq);
+            
+            // add promoted piece into the hash key
+            //hash_key ^= piece_keys[promo][toSq];
+        }
     }
 
     
