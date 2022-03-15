@@ -62,16 +62,25 @@ int main(void)
     // generate moves
     generateMoves(move_list);
 
-    auto start = chrono::high_resolution_clock::now();
-    cout << "Testing move '" << prettyMove(move_list.moves[0]) << "'..." << endl;
-    for (long i = 0; i < 100000000; i++)
+    // loop over generated moves
+    for (int move_count = 0; move_count < move_list.count; move_count++)
     {
+        // init move
+        int move = move_list.moves[move_count];
+        
+        // preserve board state
         saveBoard();
-        makeMove(move_list.moves[0], AllMoves);
+        
+        // make move
+        makeMove(move, AllMoves);
+        printBoard();
+        getchar();
+        
+        // take back
         takeBack();
+        printBoard();
+        getchar();
     }
-    auto finish = chrono::high_resolution_clock::now();
-    cout << chrono::duration_cast<chrono::milliseconds>(finish-start).count() << "ms\n";
     
     // add move
     /*
