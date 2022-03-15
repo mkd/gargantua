@@ -240,6 +240,46 @@ static inline int makeMove(int move, int flag)
         // move piece
         popBit(bitboards[piece], fromSq);
         setBit(bitboards[piece], toSq);
+
+
+        // after the moving piece, also handle capture if needed
+        if (capture)
+        {
+            // reset fifty move rule counter
+            //fifty = 0;
+            
+            // pick up bitboard piece index ranges depending on side
+            int start_piece, end_piece;
+           
+
+            // configure side to move (in order to reduce the piece)
+            if (sideToMove == White)
+            {
+                start_piece = p;
+                end_piece = k;
+            }
+            else
+            {
+                start_piece = P;
+                end_piece = K;
+            }
+
+            
+            // loop over bitboards opposite to the current side to move
+            for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++)
+            {
+                // if there's a piece on the target square
+                if (getBit(bitboards[bb_piece], toSq))
+                {
+                    // remove it from corresponding bitboard
+                    popBit(bitboards[bb_piece], toSq);
+                    
+                    // remove the piece from hash key
+                    //hash_key ^= piece_keys[bb_piece][target_square];
+                    break;
+                }
+            }
+        }
     }
 
     
