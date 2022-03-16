@@ -53,7 +53,7 @@ int main(void)
 
     // set up position
     //setPosition(FENPOS_KIWIPETE);
-    setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPpP/R3K2R b KQkq - 0 1 ");
+    setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPpP/R3K2R b KQkq - 0 1 ");
     printBoard();
    
 
@@ -64,6 +64,9 @@ int main(void)
     generateMoves(move_list);
 
     // loop over generated moves
+    auto start = chrono::high_resolution_clock::now();
+    for (int i = 0; i < 999999; i++)
+    {
     for (int move_count = 0; move_count < move_list.count; move_count++)
     {
         // init move
@@ -74,14 +77,17 @@ int main(void)
         
         // make move
         makeMove(move, AllMoves);
-        printBoard();
-        getchar();
+        //printBoard();
+        //getchar();
         
         // take back
         takeBack();
-        printBoard();
-        getchar();
+        //printBoard();
+        //getchar();
     }
+    }
+    auto finish = chrono::high_resolution_clock::now();
+    cout << chrono::duration_cast<chrono::milliseconds>(finish-start).count() << "ms\n";
     
     // add move
     /*
