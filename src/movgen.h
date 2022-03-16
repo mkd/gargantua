@@ -115,7 +115,7 @@ typedef struct {
 
 */
 
-// castling rights update constants
+// Castling rights update constants
 static constexpr int CastlingRights[64] =
 {
      7, 15, 15, 15,  3, 15, 15, 11,
@@ -496,6 +496,23 @@ static inline int makeMove(int move, int flag)
 
         // hash side
         //hash_key ^= side_key;
+        
+        // make sure that king has not been exposed into a check
+        if (isSquareAttacked((sideToMove == White) ? ls1b(bitboards[k]) : ls1b(bitboards[K]), sideToMove))
+        {
+            // take move back
+            takeBack();
+            
+            // return illegal move
+            return 0;
+        }
+        
+        // otherwise
+        else
+        {
+            // return legal move
+            return 1;
+        }
     }
 
     
@@ -512,6 +529,8 @@ static inline int makeMove(int move, int flag)
             return 0;
     }
 
+
+    // return 0 as 'illegal move' if nothing happens
     return 0;
 }
 
