@@ -97,6 +97,39 @@ typedef struct {
 
 
 
+// Table for bookkeeping castling rights when the King or Rook(s)
+// move.
+/*
+                           castling   move     in      in
+                              right update     binary  decimal
+
+ king & rooks didn't move:     1111 & 1111  =  1111    15
+
+        white king  moved:     1111 & 1100  =  1100    12
+  white king's rook moved:     1111 & 1110  =  1110    14
+ white queen's rook moved:     1111 & 1101  =  1101    13
+     
+         black king moved:     1111 & 0011  =  1011    3
+  black king's rook moved:     1111 & 1011  =  1011    11
+ black queen's rook moved:     1111 & 0111  =  0111    7
+
+*/
+
+// castling rights update constants
+static constexpr int CastlingRights[64] =
+{
+     7, 15, 15, 15,  3, 15, 15, 11,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    13, 15, 15, 15, 12, 15, 15, 14
+};
+
+
+
 // Functionality to generate and manipulate chess moves.
 void generateMoves(MoveList_t &);
 void printMoveList(MoveList_t &);
@@ -311,6 +344,158 @@ static inline int makeMove(int move, int flag)
             // add promoted piece into the hash key
             //hash_key ^= piece_keys[promo][toSq];
         }
+
+
+
+        // handle enpassant captures
+        if (ep)
+        {
+            // erase the pawn depending on side to move
+            (sideToMove == White) ? popBit(bitboards[p], toSq + 8) :
+                                    popBit(bitboards[P], toSq - 8);
+                              
+            // white to move
+            if (sideToMove == White)
+            {
+                // remove captured pawn
+                popBit(bitboards[p], toSq + 8);
+                
+                // remove pawn from hash key
+                //hash_key ^= piece_keys[p][toSq + 8];
+            }
+            
+            // black to move
+            else
+            {
+                // remove captured pawn
+                popBit(bitboards[P], toSq - 8);
+                
+                // remove pawn from hash key
+                //hash_key ^= piece_keys[P][toSq - 8];
+            }
+        }
+
+
+        // hash enpassant if available (remove enpassant square from hash key )
+        //if (ep != NoSq) hash_key ^= enpassant_keys[ep];
+        
+        // reset enpassant square
+        ep = NoSq;
+
+
+        // handle double pawn push
+        if (dpush)
+        {
+            // white to move
+            if (sideToMove == White)
+            {
+                // set enpassant square
+                epsq = toSq + 8;
+                
+                // hash enpassant
+                //hash_key ^= enpassant_keys[toSq + 8];
+            }
+            
+            // black to move
+            else
+            {
+                // set enpassant square
+                epsq = toSq - 8;
+                
+                // hash enpassant
+                //hash_key ^= enpassant_keys[target_square - 8];
+            }
+        }
+
+
+        // handle castling moves
+        if (castling)
+        {
+            // switch target square
+            switch (toSq)
+            {
+                // white castles king side
+                case (g1):
+                    // move H rook
+                    popBit(bitboards[R], h1);
+                    setBit(bitboards[R], f1);
+                    
+                    // hash rook
+                    //hash_key ^= piece_keys[R][h1];  // remove rook from h1 from hash key
+                    //hash_key ^= piece_keys[R][f1];  // put rook on f1 into a hash key
+                    break;
+                
+                // white castles queen side
+                case (c1):
+                    // move A rook
+                    popBit(bitboards[R], a1);
+                    setBit(bitboards[R], d1);
+                    
+                    // hash rook
+                    //hash_key ^= piece_keys[R][a1];  // remove rook from a1 from hash key
+                    //hash_key ^= piece_keys[R][d1];  // put rook on d1 into a hash key
+                    break;
+                
+                // black castles king side
+                case (g8):
+                    // move H rook
+                    popBit(bitboards[r], h8);
+                    setBit(bitboards[r], f8);
+                    
+                    // hash rook
+                    //hash_key ^= piece_keys[r][h8];  // remove rook from h8 from hash key
+                    //hash_key ^= piece_keys[r][f8];  // put rook on f8 into a hash key
+                    break;
+                
+                // black castles queen side
+                case (c8):
+                    // move A rook
+                    popBit(bitboards[r], a8);
+                    setBit(bitboards[r], d8);
+                    
+                    // hash rook
+                    //hash_key ^= piece_keys[r][a8];  // remove rook from a8 from hash key
+                    //hash_key ^= piece_keys[r][d8];  // put rook on d8 into a hash key
+                    break;
+            }
+        }
+
+
+        // hash castling
+        //hash_key ^= castle_keys[castle];
+
+        
+        // update castling rights
+        castle &= CastlingRights[fromSq];
+        castle &= CastlingRights[toSq];
+
+
+        // reset occupancies
+        memset(occupancies, 0ULL, sizeof(occupancies));
+
+        
+        // loop over white pieces bitboards
+        for (int bb_piece = P; bb_piece <= K; bb_piece++)
+            // update white occupancies
+            occupancies[White] |= bitboards[bb_piece];
+
+        // loop over black pieces bitboards
+        for (int bb_piece = p; bb_piece <= k; bb_piece++)
+            // update black occupancies
+            occupancies[Black] |= bitboards[bb_piece];
+
+
+        // update both sides occupancies
+        occupancies[Both] |= occupancies[White];
+        occupancies[Both] |= occupancies[Black];
+       
+
+        // change side
+        sideToMove ^= 1;
+       
+
+        // hash side
+        //hash_key ^= side_key;
     }
 
     
