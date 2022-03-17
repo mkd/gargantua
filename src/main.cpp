@@ -78,15 +78,9 @@ int main(void)
             // make move
             if (makeMove(move, AllMoves) == 0)
                 takeBack();
-            //makeMove(move, AllMoves);
-            //getchar();
-            //printBoard();
-
 
             // take back
             takeBack();
-            //printBoard();
-            //getchar();
         }
     }
     auto finish = chrono::high_resolution_clock::now();
