@@ -44,6 +44,7 @@ Bitboard KnightAttacks[64];
 Bitboard KingAttacks[64];
 
 
+
 // Slider masks and attack tables
 Bitboard BishopMasks[64];
 Bitboard RookMasks[64];
@@ -360,6 +361,7 @@ Bitboard genBishopAttacks(int square, Bitboard block)
     // return attack map
     return attacks;
 }
+
 
 
 // genRookAttacks

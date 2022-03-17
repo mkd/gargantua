@@ -21,6 +21,7 @@
 #ifndef MOVGEN_H
 #define MOVGEN_H
 
+#include <iostream>
 #include <sstream>
 
 #include "bitboard.h"
@@ -28,7 +29,9 @@
 
 
 
-// Move list structure where to store the list of generated moves
+// MoveList_t is a structure holding a list of moves (up to 256, which is
+// enough for any legal chess position), and a pointer to the last element,
+// which can also be used as a counter of elements in the move list.
 typedef struct {
     int moves[256];
     int count;
@@ -132,6 +135,7 @@ static constexpr int CastlingRights[64] =
 
 // Functionality to generate and manipulate chess moves.
 void generateMoves(MoveList_t &);
+void generate_moves(MoveList_t &);
 void printMoveList(MoveList_t &);
 
 
@@ -164,7 +168,7 @@ static inline void printMove(int move)
 
 // addMove
 //
-// Add a move to the move list.
+// Add a move to a move list.
 static inline void addMove(MoveList_t &MoveList, int move)
 {
     // strore move
@@ -221,7 +225,10 @@ static inline bool isSquareAttacked(int square, int side)
 
 
 
-// Macro to preserve the current board state
+// saveBoard
+//
+// Implemented as a macro, it's job is to preserve the current board state
+// in temporary variables.
 #define saveBoard()                                                       \
     Bitboard bitboards_copy[12], occupancies_copy[3];                          \
     int side_copy, enpassant_copy, castle_copy;                           \
@@ -231,7 +238,11 @@ static inline bool isSquareAttacked(int square, int side)
 
 
 
-// Macro to restore the previous board state
+// takeBack
+//
+// Implemented as a macro, it's job is to restore the previous board state
+// from temporary variables. Because this is a macro, it needs to be used
+// in conjunction with saveBoard() within the same scope.
 #define takeBack()                                                        \
     memcpy(bitboards, bitboards_copy, sizeof(bitboards));                 \
     memcpy(occupancies, occupancies_copy, sizeof(occupancies));           \
@@ -239,7 +250,10 @@ static inline bool isSquareAttacked(int square, int side)
 
 
 
-// Different move types for make/unmake move
+// Different move types for make/unmake move. This is a way to later 
+// ask the engine to online reproduce captures for specific searches
+// or functionalities. However AllMoves will be the standard flag
+// when calling makeMove().
 enum MoveType { AllMoves, CaptureMoves };
 
 
@@ -252,10 +266,10 @@ enum MoveType { AllMoves, CaptureMoves };
 //       makeMove(), if you then want to be able to use takeBack().
 static inline int makeMove(int move, int flag)
 {
-    // Quiet moves
+    // Quiet moves:
     if (flag == AllMoves)
     {
-        // parse move
+        // parse move elements
         int fromSq   = getMoveSource(move);
         int toSq     = getMoveTarget(move);
         int piece    = getMovePiece(move);
@@ -266,26 +280,28 @@ static inline int makeMove(int move, int flag)
         int castling = getCastle(move);
 
 
-        // opponent's color
+        // configure opponent's color
         int Them     = White;
         if (sideToMove == White)
             Them = Black;
        
 
-        // move piece
+        // move the piece from source to target
         popBit(bitboards[piece], fromSq);
         setBit(bitboards[piece], toSq);
 
-        // update occupancies
+
+        // update occupancies for the piece being moved
         popBit(occupancies[sideToMove], fromSq);
         setBit(occupancies[sideToMove], toSq);
                     
 
-        // after the moving piece, also handle capture if needed
+        // after the moving piece, also handle the captured piece, if any
         if (capture)
         {
             // reset fifty move rule counter
             //fifty = 0;
+
             
             // pick up bitboard piece index ranges depending on side
             int start_piece, end_piece;
@@ -311,7 +327,7 @@ static inline int makeMove(int move, int flag)
                 {
                     popBit(bitboards[bb_piece], toSq);
 
-                    // update occupancies
+                    // update occupancies for the piece just removed
                     popBit(occupancies[Them], toSq);
 
                     // remove the piece from hash key
@@ -334,6 +350,7 @@ static inline int makeMove(int move, int flag)
                 // remove pawn from hash key
                 //hash_key ^= piece_keys[P][toSq];
             }
+
             
             // black to move
             else
@@ -344,14 +361,15 @@ static inline int makeMove(int move, int flag)
                 // remove pawn from hash key
                 //hash_key ^= piece_keys[p][toSq];
             }
+
             
-            // set up promoted piece on chess board
+            // set promoted piece on the chess board
             setBit(bitboards[promo], toSq);
+
             
             // add promoted piece into the hash key
             //hash_key ^= piece_keys[promo][toSq];
         }
-
 
 
         // handle enpassant captures
@@ -360,7 +378,8 @@ static inline int makeMove(int move, int flag)
             // erase the pawn depending on side to move
             (sideToMove == White) ? popBit(bitboards[p], toSq + 8) :
                                     popBit(bitboards[P], toSq - 8);
-                              
+                     
+
             // white to move
             if (sideToMove == White)
             {
@@ -373,7 +392,8 @@ static inline int makeMove(int move, int flag)
                 // remove pawn from hash key
                 //hash_key ^= piece_keys[p][toSq + 8];
             }
-            
+           
+
             // black to move
             else
             {
@@ -389,14 +409,15 @@ static inline int makeMove(int move, int flag)
         }
 
 
-        // hash enpassant if available (remove enpassant square from hash key )
+        // hash enpassant if available (remove enpassant square from hash key)
         //if (ep != NoSq) hash_key ^= enpassant_keys[ep];
-        
+       
+
         // reset enpassant square
-        ep = NoSq;
+        epsq = NoSq;
 
 
-        // handle double pawn push
+        // handle double pawn pushes
         if (dpush)
         {
             // white to move
@@ -424,12 +445,12 @@ static inline int makeMove(int move, int flag)
         // handle castling moves
         if (castling)
         {
-            // switch target square
+            // four different possibilities: white and black, 0-0 and 0-0-0
             switch (toSq)
             {
-                // white castles king side
+                // white castles king side (0-0)
                 case (g1):
-                    // move H rook
+                    // move rook from h1
                     popBit(bitboards[R], h1);
                     setBit(bitboards[R], f1);
 
@@ -441,10 +462,11 @@ static inline int makeMove(int move, int flag)
                     //hash_key ^= piece_keys[R][h1];  // remove rook from h1 from hash key
                     //hash_key ^= piece_keys[R][f1];  // put rook on f1 into a hash key
                     break;
-                
-                // white castles queen side
+               
+
+                // white castles queen side (0-0-0)
                 case (c1):
-                    // move A rook
+                    // move rook from a1
                     popBit(bitboards[R], a1);
                     setBit(bitboards[R], d1);
 
@@ -456,10 +478,11 @@ static inline int makeMove(int move, int flag)
                     //hash_key ^= piece_keys[R][a1];  // remove rook from a1 from hash key
                     //hash_key ^= piece_keys[R][d1];  // put rook on d1 into a hash key
                     break;
-                
-                // black castles king side
+               
+
+                // black castles king side (0-0)
                 case (g8):
-                    // move H rook
+                    // move rook from h8
                     popBit(bitboards[r], h8);
                     setBit(bitboards[r], f8);
 
@@ -471,10 +494,11 @@ static inline int makeMove(int move, int flag)
                     //hash_key ^= piece_keys[r][h8];  // remove rook from h8 from hash key
                     //hash_key ^= piece_keys[r][f8];  // put rook on f8 into a hash key
                     break;
-                
-                // black castles queen side
+               
+
+                // black castles queen side (0-0-0)
                 case (c8):
-                    // move A rook
+                    // move rook from a8
                     popBit(bitboards[r], a8);
                     setBit(bitboards[r], d8);
 
@@ -499,16 +523,16 @@ static inline int makeMove(int move, int flag)
         castle &= CastlingRights[toSq];
 
 
-        // incremental occupancies update
+        // update all occupancies
         occupancies[Both] = occupancies[White] | occupancies[Black];
 
 
-        // change side
+        // change side to move
         sideToMove ^= 1;
         //hash_key ^= side_key;
 
         
-        // check move is legal (return 0 for illegal move, 1 for legal)
+        // check if move is legal (return 0 for illegal move, 1 for legal)
         if (isSquareAttacked((sideToMove == White) ? ls1b(bitboards[k]) : ls1b(bitboards[K]), sideToMove))
             return 0;
         else
@@ -516,13 +540,14 @@ static inline int makeMove(int move, int flag)
     }
 
     
-    // capture moves
+    // Capture moves
     else
     {
         // make sure move is the capture
         if (getMoveCapture(move))
             makeMove(move, AllMoves);
-        
+       
+
         // otherwise the move is not a capture, so don't make it
         else
             return 0;

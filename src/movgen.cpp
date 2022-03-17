@@ -486,6 +486,7 @@ void printMoveList(MoveList_t &MoveList)
     {
         // init move
         int move = MoveList.moves[i];
+
         
         // print move and piece
         cout << "     " << SquareToCoordinates[getMoveSource(move)]
@@ -493,24 +494,29 @@ void printMoveList(MoveList_t &MoveList)
                         << PromoPieces[getPromo(move)] << "   "
                         << PieceStr[getMovePiece(move)] << "        ";
 
+
         // print capture flag
         if (getMoveCapture(move)) cout << "1";
         else cout << "0";
         cout << "          ";
+
 
         // print double pawn push flag
         if (getDoublePush(move)) cout << "1";
         else cout << "0";
         cout << "         ";
 
+
         // print enpassant flag
         if (getEp(move)) cout << "1";
         else cout << "0";
         cout << "     ";
 
+
         // print castling flag
         if (getCastle(move)) cout << "1";
         else cout << "0";
+
 
         cout << endl;
     }
