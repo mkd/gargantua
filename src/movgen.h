@@ -433,7 +433,7 @@ static inline int makeMove(int move, int flag)
                     popBit(bitboards[R], h1);
                     setBit(bitboards[R], f1);
 
-                    // incremental occupancies update
+                    // update occupancies
                     popBit(occupancies[White], h1);
                     setBit(occupancies[White], f1);
                     
@@ -448,7 +448,7 @@ static inline int makeMove(int move, int flag)
                     popBit(bitboards[R], a1);
                     setBit(bitboards[R], d1);
 
-                    // incremental occupancies update
+                    // update occupancies
                     popBit(occupancies[White], a1);
                     setBit(occupancies[White], d1);
                     
@@ -463,7 +463,7 @@ static inline int makeMove(int move, int flag)
                     popBit(bitboards[r], h8);
                     setBit(bitboards[r], f8);
 
-                    // incremental occupancies update
+                    // update occupancies
                     popBit(occupancies[Black], h8);
                     setBit(occupancies[Black], f8);
                     
@@ -478,7 +478,7 @@ static inline int makeMove(int move, int flag)
                     popBit(bitboards[r], a8);
                     setBit(bitboards[r], d8);
 
-                    // incremental occupancies update
+                    // update occupancies
                     popBit(occupancies[Black], a8);
                     setBit(occupancies[Black], d8);
                     
@@ -503,50 +503,16 @@ static inline int makeMove(int move, int flag)
         occupancies[Both] = occupancies[White] | occupancies[Black];
 
 
-        // reset occupancies
-        /*
-        memset(occupancies, 0ULL, sizeof(occupancies));
-
-        // loop over white pieces bitboards
-        for (int bb_piece = P; bb_piece <= K; bb_piece++)
-            // update white occupancies
-            occupancies[White] |= bitboards[bb_piece];
-
-        // loop over black pieces bitboards
-        for (int bb_piece = p; bb_piece <= k; bb_piece++)
-            // update black occupancies
-            occupancies[Black] |= bitboards[bb_piece];
-
-
-        // update both sides occupancies
-        occupancies[Both] |= occupancies[White];
-        occupancies[Both] |= occupancies[Black];
-        */
-
-
         // change side
         sideToMove ^= 1;
-       
-
-        // hash side
         //hash_key ^= side_key;
+
         
-        // make sure that king has not been exposed into a check
+        // check move is legal (return 0 for illegal move, 1 for legal)
         if (isSquareAttacked((sideToMove == White) ? ls1b(bitboards[k]) : ls1b(bitboards[K]), sideToMove))
-        {
-            // take move back
-            takeBack();
-            
-            // return illegal move
             return 0;
-        }
-        
-        // otherwise
         else
-        {
-            // return legal move
             return 1;
-        }
     }
 
     
@@ -557,9 +523,8 @@ static inline int makeMove(int move, int flag)
         if (getMoveCapture(move))
             makeMove(move, AllMoves);
         
-        // otherwise the move is not a capture
+        // otherwise the move is not a capture, so don't make it
         else
-            // don't make it
             return 0;
     }
 
