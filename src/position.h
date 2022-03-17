@@ -29,11 +29,11 @@
 // List of useful FEN positions used for testing and debbuging purposes
 #define FENPOS_EMPTYBOARD "8/8/8/8/8/8/8/8 b - - "
 #define FENPOS_STARTPOS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-#define FENPOS_KIWIPETE "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - "
+#define FENPOS_KIWIPETE "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "
 
 
 
-// ASCII pieces
+// ASCII piece strings lookup table
 static const std::array<std::string, 12> PieceStr
 {
     "P", "N", "B", "R", "Q", "K",
@@ -62,7 +62,7 @@ static std::map<unsigned char, int> PieceConst = {
 
 // Array of promoted pieces, encoded from integer to character
 static std::map<int, unsigned char> PromoPieces = {
-    {0, ' '},
+    {0, '\0'},
     {Q, 'q'},
     {R, 'r'},
     {B, 'b'},
@@ -75,7 +75,7 @@ static std::map<int, unsigned char> PromoPieces = {
 
 
 
-// A position is defined by the following elements:
+// A chess position is defined by the following elements:
 //
 // 1. A set of 12 bitboards with all the piece occupancies
 // 2. The side to move

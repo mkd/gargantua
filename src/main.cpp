@@ -19,12 +19,11 @@
 */
 
 #include <iostream>
-#include <chrono>
 
 #include "nnue.h"
 #include "bitboard.h"
 #include "position.h"
-#include "movgen.h"
+#include "search.h"
 
 
 
@@ -41,7 +40,7 @@ int main(void)
 {
     // Initialize neural network
     nnue_init("nn-eba324f53044.nnue");
-    std::cout << std::endl;
+    cout << endl;
 
 
     // init piece moves and data structures
@@ -52,46 +51,12 @@ int main(void)
 
 
     // set up position
-    setPosition(FENPOS_KIWIPETE);
-    //printBoard();
-   
+    setPosition(FENPOS_STARTPOS);
+    printBoard();
 
-    // create move list instance
-    MoveList_t move_list;
-    
-    // generate moves
-    generateMoves(move_list);
 
-    // loop over generated moves
-    cout << "Loop 999999 times -- Testing " << move_list.count << " moves..." << endl;
-    auto start = chrono::high_resolution_clock::now();
-    for (int i = 0; i < 9999999; i++)
-    {
-        for (int move_count = 0; move_count < move_list.count; move_count++)
-        {
-            // init move
-            int move = move_list.moves[move_count];
-            
-            // preserve board state
-            saveBoard();
-            
-            // make move
-            if (makeMove(move, AllMoves) == 0)
-                takeBack();
-
-            // take back
-            takeBack();
-        }
-    }
-    auto finish = chrono::high_resolution_clock::now();
-    cout << chrono::duration_cast<chrono::milliseconds>(finish-start).count() << "ms\n";
-    
-    // add move
-    /*
-    auto start = chrono::high_resolution_clock::now();
-    auto finish = chrono::high_resolution_clock::now();
-    cout << chrono::duration_cast<chrono::nanoseconds>(finish-start).count() << "ns\n";
-    */
+    // test perft
+    dperft(6);
 
 
     // terminate program

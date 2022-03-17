@@ -388,7 +388,7 @@ static inline void toggleBit(Bitboard &b, int pos)
 // @see http://graphics.stanford.edu/~seander/bithacks.html
 static inline int countBits(Bitboard bb)
 {
-    // Win64 targets use popcount -- fastest way to count bits using HW accel
+    // Win64 targets use MIT HAKEM -- fastest way to count bits without HW accel
     #ifdef WIN64
 
         static const Bitboard  M1 = 0x5555555555555555;  // 1 zero,  1 one ...
@@ -440,6 +440,7 @@ static inline unsigned int ls1b(Bitboard bb)
 
     return INDEX64[((bb & -bb) * DEBRUIJN64) >> 58];  
 }
+
 
 
 // getBishopAttacks
@@ -515,7 +516,6 @@ static inline Bitboard getQueenAttacks(int square, Bitboard occupancy)
 // The functions rng32() and rng64() are a portable implementation of the 
 // XORSHIFT algorithm to generate a sequence of pseudo-random numbers that
 // is always the same for the same starting seed (state).
-
 
 // rng32
 //
