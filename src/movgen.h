@@ -255,10 +255,6 @@ static inline int makeMove(int move, int flag)
     // Quiet moves
     if (flag == AllMoves)
     {
-        // preserve board status
-        saveBoard();
-
-
         // parse move
         int fromSq   = getMoveSource(move);
         int toSq     = getMoveTarget(move);
@@ -268,12 +264,22 @@ static inline int makeMove(int move, int flag)
         int dpush    = getDoublePush(move);
         int ep       = getEp(move);
         int castling = getCastle(move);
+
+
+        // opponent's color
+        int Them     = White;
+        if (sideToMove == White)
+            Them = Black;
        
 
         // move piece
         popBit(bitboards[piece], fromSq);
         setBit(bitboards[piece], toSq);
 
+        // update occupancies
+        popBit(occupancies[sideToMove], fromSq);
+        setBit(occupancies[sideToMove], toSq);
+                    
 
         // after the moving piece, also handle capture if needed
         if (capture)
@@ -298,15 +304,16 @@ static inline int makeMove(int move, int flag)
             }
 
             
-            // loop over bitboards opposite to the current side to move
+            // if there's a piece on the target, remove it from the bitboard
             for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++)
             {
-                // if there's a piece on the target square
                 if (getBit(bitboards[bb_piece], toSq))
                 {
-                    // remove it from corresponding bitboard
                     popBit(bitboards[bb_piece], toSq);
-                    
+
+                    // update occupancies
+                    popBit(occupancies[Them], toSq);
+
                     // remove the piece from hash key
                     //hash_key ^= piece_keys[bb_piece][target_square];
                     break;
@@ -323,7 +330,7 @@ static inline int makeMove(int move, int flag)
             {
                 // erase the pawn from the target square
                 popBit(bitboards[P], toSq);
-                
+
                 // remove pawn from hash key
                 //hash_key ^= piece_keys[P][toSq];
             }
@@ -359,6 +366,9 @@ static inline int makeMove(int move, int flag)
             {
                 // remove captured pawn
                 popBit(bitboards[p], toSq + 8);
+
+                // update occupancies
+                popBit(occupancies[Black], toSq + 8);
                 
                 // remove pawn from hash key
                 //hash_key ^= piece_keys[p][toSq + 8];
@@ -369,6 +379,9 @@ static inline int makeMove(int move, int flag)
             {
                 // remove captured pawn
                 popBit(bitboards[P], toSq - 8);
+
+                // update occupancies
+                popBit(occupancies[White], toSq - 8);
                 
                 // remove pawn from hash key
                 //hash_key ^= piece_keys[P][toSq - 8];
@@ -419,6 +432,10 @@ static inline int makeMove(int move, int flag)
                     // move H rook
                     popBit(bitboards[R], h1);
                     setBit(bitboards[R], f1);
+
+                    // incremental occupancies update
+                    popBit(occupancies[White], h1);
+                    setBit(occupancies[White], f1);
                     
                     // hash rook
                     //hash_key ^= piece_keys[R][h1];  // remove rook from h1 from hash key
@@ -430,6 +447,10 @@ static inline int makeMove(int move, int flag)
                     // move A rook
                     popBit(bitboards[R], a1);
                     setBit(bitboards[R], d1);
+
+                    // incremental occupancies update
+                    popBit(occupancies[White], a1);
+                    setBit(occupancies[White], d1);
                     
                     // hash rook
                     //hash_key ^= piece_keys[R][a1];  // remove rook from a1 from hash key
@@ -441,6 +462,10 @@ static inline int makeMove(int move, int flag)
                     // move H rook
                     popBit(bitboards[r], h8);
                     setBit(bitboards[r], f8);
+
+                    // incremental occupancies update
+                    popBit(occupancies[Black], h8);
+                    setBit(occupancies[Black], f8);
                     
                     // hash rook
                     //hash_key ^= piece_keys[r][h8];  // remove rook from h8 from hash key
@@ -452,6 +477,10 @@ static inline int makeMove(int move, int flag)
                     // move A rook
                     popBit(bitboards[r], a8);
                     setBit(bitboards[r], d8);
+
+                    // incremental occupancies update
+                    popBit(occupancies[Black], a8);
+                    setBit(occupancies[Black], d8);
                     
                     // hash rook
                     //hash_key ^= piece_keys[r][a8];  // remove rook from a8 from hash key
@@ -470,10 +499,14 @@ static inline int makeMove(int move, int flag)
         castle &= CastlingRights[toSq];
 
 
+        // incremental occupancies update
+        occupancies[Both] = occupancies[White] | occupancies[Black];
+
+
         // reset occupancies
+        /*
         memset(occupancies, 0ULL, sizeof(occupancies));
 
-        
         // loop over white pieces bitboards
         for (int bb_piece = P; bb_piece <= K; bb_piece++)
             // update white occupancies
@@ -488,7 +521,8 @@ static inline int makeMove(int move, int flag)
         // update both sides occupancies
         occupancies[Both] |= occupancies[White];
         occupancies[Both] |= occupancies[Black];
-       
+        */
+
 
         // change side
         sideToMove ^= 1;

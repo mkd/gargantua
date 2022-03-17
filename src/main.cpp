@@ -53,7 +53,7 @@ int main(void)
 
     // set up position
     setPosition(FENPOS_KIWIPETE);
-    printBoard();
+    //printBoard();
    
 
     // create move list instance
@@ -63,9 +63,9 @@ int main(void)
     generateMoves(move_list);
 
     // loop over generated moves
-    cout << "Looping 999999 times over " << move_list.count << " moves..." << endl;
+    cout << "Loop 999999 times -- Testing " << move_list.count << " moves..." << endl;
     auto start = chrono::high_resolution_clock::now();
-    for (int i = 0; i < 999999; i++)
+    for (int i = 0; i < 9999999; i++)
     {
         for (int move_count = 0; move_count < move_list.count; move_count++)
         {
@@ -76,10 +76,13 @@ int main(void)
             saveBoard();
             
             // make move
-            makeMove(move, AllMoves);
-            //printBoard();
+            if (makeMove(move, AllMoves) == 0)
+                takeBack();
+            //makeMove(move, AllMoves);
             //getchar();
-            
+            //printBoard();
+
+
             // take back
             takeBack();
             //printBoard();
