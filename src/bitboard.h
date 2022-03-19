@@ -21,6 +21,7 @@
 #ifndef BITBOARD_H
 #define BITBOARD_H
 
+#include <iostream>
 #include <string>
 #include <array>
 
@@ -418,13 +419,47 @@ static inline int countBits(Bitboard bb)
 
 
 
+static inline unsigned int ls1b(Bitboard bb)
+{
+    #if defined(__GNUC__)  // GCC, Clang, ICC
+        std::cout << "GNUC: __builtin_ctzll" << std::endl; 
+        return (unsigned int) __builtin_ctzll(bb);
+    #else
+    #ifdef WIN64  // WIN64
+
+        std::cout << "WIN64: __BitScanForward" << std::endl; 
+        unsigned long idx;
+        _BitScanForward64(&idx, b);
+        return (unsigned int) idx;
+
+
+
+    #else  // MSVC, WIN32
+
+        std::cout << "WIN32: __BitScanForward" << std::endl; 
+        unsigned long idx;
+
+        if (b & 0xffffffff) {
+            _BitScanForward(&idx, int32_t(b));
+            return Square(idx);
+        } else {
+            _BitScanForward(&idx, int32_t(b >> 32));
+            return Square(idx + 32);
+        }
+
+    #endif
+#endif
+}
+
+
 // ls1b
 //
 // Find the first bit on a Bitboard using the De Bruijn Multiplication
 // @see http://chessprogramming.wikispaces.com/BitScan
 //
 // Note: don't use this if bb = 0
-static inline unsigned int ls1b(Bitboard bb)
+//static inline unsigned int ls1b(Bitboard bb)
+static inline unsigned int ls1b_old(Bitboard bb)
 {
     static constexpr int INDEX64[64] = {
         63,  0, 58,  1, 59, 47, 53,  2,

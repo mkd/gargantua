@@ -50,13 +50,31 @@ int main(void)
     initSliderAttacks(Rook);
 
 
-    // set up position
+    // test perft on different positions
+    cout << "Test 'startpos': " << endl;
     setPosition(FENPOS_STARTPOS);
-    printBoard();
-
-
-    // test perft
     dperft(6);
+
+    cout << "Test 'kiwipete': " << endl;
+    setPosition(FENPOS_KIWIPETE);
+    dperft(6);
+
+    cout << "Test 'pos3': " << endl;
+    setPosition(FENPOS_POS3);
+    dperft(6);
+
+    cout << "Test 'pos4': " << endl;
+    setPosition(FENPOS_POS4);
+    dperft(6);
+
+    cout << "Test 'pos5': " << endl;
+    setPosition(FENPOS_POS5);
+    dperft(6);
+
+    cout << "Test 'pos6': " << endl;
+    setPosition(FENPOS_POS6);
+    dperft(6);
+
 
 
     // terminate program
