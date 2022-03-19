@@ -21,7 +21,6 @@
 #ifndef BITBOARD_H
 #define BITBOARD_H
 
-#include <iostream>
 #include <string>
 #include <array>
 
@@ -389,8 +388,15 @@ static inline void toggleBit(Bitboard &b, int pos)
 // @see http://graphics.stanford.edu/~seander/bithacks.html
 static inline int countBits(Bitboard bb)
 {
-    // Win64 targets use MIT HAKEM -- fastest way to count bits without HW accel
     #ifdef WIN64
+        // Win64 targets compiled using MSVC on Intel paltforms -- use HW acceleration
+        #if defined(_MSC_VER) || defined(__INTEL_COMPILER)  // MSVC on Intel
+
+        return (int)_mm_popcnt_u64(b);
+
+
+        // Win64 targets use MIT HAKEM -- fastest way to count bits using SW
+        #else
 
         static const Bitboard  M1 = 0x5555555555555555;  // 1 zero,  1 one ...
         static const Bitboard  M2 = 0x3333333333333333;  // 2 zeros,  2 ones ...
@@ -409,10 +415,14 @@ static inline int countBits(Bitboard bb)
         return (int)bb;
 
 
+        #endif
+
+
     // Unix targets use popcount -- fastest way to count bits using HW accel.
     #else
 
         return __builtin_popcountll(bb);
+
 
     #endif
 }
@@ -423,7 +433,6 @@ static inline unsigned int ls1b(Bitboard bb)
 {
     #if defined(__GNUC__)  // GCC, Clang, ICC
 
-        std::cout << "GNUC: __builtin_ctzll" << std::endl; 
         return (unsigned int) __builtin_ctzll(bb);
 
 
@@ -431,16 +440,13 @@ static inline unsigned int ls1b(Bitboard bb)
 
     #ifdef WIN64  // MSVC, WIN64
 
-        std::cout << "WIN64: __BitScanForward" << std::endl; 
         unsigned long idx;
         _BitScanForward64(&idx, b);
         return (unsigned int) idx;
 
 
-
     #else  // MSVC, WIN32
 
-        std::cout << "WIN32: __BitScanForward" << std::endl; 
         unsigned long idx;
 
         if (b & 0xffffffff) {
@@ -453,8 +459,8 @@ static inline unsigned int ls1b(Bitboard bb)
 
     #endif
 
+
     #else  // SW-based solution
-        std::cout << "sw-based" << std::endl; 
 
         static constexpr int INDEX64[64] = {
             63,  0, 58,  1, 59, 47, 53,  2,
