@@ -49,6 +49,7 @@ void dperft(int depth)
     // generate moves
     generateMoves(MoveList);
 
+
     
     // init start time
     auto start = chrono::high_resolution_clock::now();
@@ -58,12 +59,18 @@ void dperft(int depth)
     for (int move_count = 0; move_count < MoveList.count; move_count++)
     {   
         // preserve board state
-        saveBoard();
+        //saveBoard();
+        assert(st != NULL);
+        StateInfo newState = *st;
+        newState.previous = st;
+        st = &newState;
+
 
         // make move and, if illegal, skip to the next move
         if (!makeMove(MoveList.moves[move_count], AllMoves))
         {
-            takeBack();
+            //takeBack();
+            undoMove(MoveList.moves[move_count]);
             continue;
         }
         
@@ -77,7 +84,8 @@ void dperft(int depth)
         uint64_t PrevNodes = nodes - cNodes;
         
         // take back
-        takeBack();
+        //takeBack();
+        undoMove(MoveList.moves[move_count]);
         
         // print move
         cout << prettyMove(MoveList.moves[move_count]) << ": " << PrevNodes << endl;
@@ -94,5 +102,5 @@ void dperft(int depth)
     cout << "    Depth: " << depth << endl;
     cout << "    Nodes: " << nodes << endl;
     cout << "    Time:  " << ms << "ms" << endl;
-    cout << "   Speed:  " << nodes / ms << " Knps" << endl << endl;
+    //cout << "   Speed:  " << nodes / ms << " Knps" << endl << endl;
 }

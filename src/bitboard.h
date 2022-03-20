@@ -47,7 +47,8 @@ enum Pieces { P, N, B, R, Q, K, p, n, b, r, q, k };
 
 
 // List of board squares
-enum BoardSquares {
+enum BoardSquares
+{
     a8, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
     a6, b6, c6, d6, e6, f6, g6, h6,
@@ -141,7 +142,8 @@ extern uint32_t rng32_state;
 
 
 // Bishop relevant occupancy bit count for every square on the board
-static constexpr int BishopRelevantBits[64] = {
+static constexpr int BishopRelevantBits[64] =
+{
     6, 5, 5, 5, 5, 5, 5, 6, 
     5, 5, 5, 5, 5, 5, 5, 5, 
     5, 5, 7, 7, 7, 7, 5, 5, 
@@ -155,7 +157,8 @@ static constexpr int BishopRelevantBits[64] = {
 
 
 // Rook relevant occupancy bit count for every square on the board
-static constexpr int RookRelevantBits[64] = {
+static constexpr int RookRelevantBits[64] =
+{
     12, 11, 11, 11, 11, 11, 11, 12, 
     11, 10, 10, 10, 10, 10, 10, 11, 
     11, 10, 10, 10, 10, 10, 10, 11, 
@@ -462,10 +465,13 @@ static inline unsigned int ls1b(Bitboard bb)
 
         unsigned long idx;
 
-        if (b & 0xffffffff) {
+        if (b & 0xffffffff)
+        {
             _BitScanForward(&idx, int32_t(b));
             return Square(idx);
-        } else {
+        }
+        else
+        {
             _BitScanForward(&idx, int32_t(b >> 32));
             return Square(idx + 32);
         }
