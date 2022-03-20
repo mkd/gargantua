@@ -18,6 +18,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
+#include <iomanip>
 #include <chrono>
 #include <cassert>
 
@@ -68,13 +70,27 @@ void dperft(int depth)
 
 
         // make move and, if illegal, skip to the next move
+        string ss;
         if (!makeMove(MoveList.moves[move_count], AllMoves))
         {
+            cout << "illegal -- continue" << endl;
+            printBoard();
+            cin >> ss;
             //takeBack();
             undoMove(MoveList.moves[move_count]);
             continue;
         }
-        
+
+        cout << "=== BEFORE UNDO ===" << endl;
+        cout << "Board after move " << prettyMove(MoveList.moves[move_count]) << endl;
+        printBoard();
+
+        cout << "White pawns:" << endl;
+        printBitboard(bitboards[P]);
+
+        cout << "Black pawns:" << endl;
+        printBitboard(bitboards[p]);
+
         // cummulative nodes
         uint64_t cNodes = nodes;
 
@@ -87,6 +103,15 @@ void dperft(int depth)
         // take back
         //takeBack();
         undoMove(MoveList.moves[move_count]);
+        cout << "=== AFTER UNDO ===" << endl;
+        cout << "Board after move " << prettyMove(MoveList.moves[move_count]) << endl;
+        printBoard();
+
+        cout << "White pawns:" << endl;
+        printBitboard(bitboards[P]);
+
+        cout << "Black pawns:" << endl;
+        printBitboard(bitboards[p]);
         
         // print move
         cout << prettyMove(MoveList.moves[move_count]) << ": " << PrevNodes << endl;
@@ -98,10 +123,11 @@ void dperft(int depth)
    
 
     // print results
-    auto ms = chrono::duration_cast<chrono::milliseconds>(finish-start).count();
+    auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
     cout << endl;
     cout << "    Depth: " << depth << endl;
     cout << "    Nodes: " << nodes << endl;
-    cout << "    Time:  " << ms << "ms" << endl;
-    //cout << "   Speed:  " << nodes / ms << " Knps" << endl << endl;
+    cout << fixed << setprecision(3);
+    cout << "    Time:  " << ns / 1000000.0 << "ms" << endl;
+    cout << "   Speed:  " << nodes * 1000000 / ns << " Knps" << endl << endl;
 }

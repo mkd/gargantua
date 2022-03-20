@@ -49,15 +49,43 @@ int main(void)
     initSliderAttacks(Bishop);
     initSliderAttacks(Rook);
 
+    
 
-    setPosition(FENPOS_KIWIPETE);
+    setPosition(FENPOS_STARTPOS);
     printBoard();
-    StateInfo newState;
-    newState.castle = castle;
-    newState.epsq = epsq;
-    newState.capturedPiece = -1;
-    st = &newState;
-    //dperft(5);
+    StateInfo si;
+    si.previous = st;
+    st = &si;
+    dperft(4);
+    return 0;
+
+
+/*
+    MoveList_t moves;
+    generateMoves(moves);
+
+    for (int i = 0; i < moves.count; i++)
+    {
+        // save board state
+        StateInfo nsi = *st;
+        nsi.id = st->id + 1;
+        nsi.previous = st;
+        st = &nsi;
+        cout << "Saving board state; stID = " << st->id << endl;
+
+        // make move
+        if (!makeMove(moves.moves[i], AllMoves))
+        {
+            undoMove(moves.moves[i]);
+            continue;
+        }
+
+        undoMove(moves.moves[i]);
+        cout << "Restored board state; stID = " << st->id << endl;
+    }
+    return 0;
+    */
+
 
     // test perft on different positions
     cout << "Test 'startpos': " << endl;
