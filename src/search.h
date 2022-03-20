@@ -21,6 +21,8 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
+#include <cassert>
+
 #include "movgen.h"
 
 

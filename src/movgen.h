@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cassert>
 
 #include "bitboard.h"
 #include "position.h"

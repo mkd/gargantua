@@ -19,6 +19,7 @@
 */
 
 #include <chrono>
+#include <cassert>
 
 #include "search.h"
 
