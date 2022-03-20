@@ -50,10 +50,14 @@ int main(void)
     initSliderAttacks(Rook);
 
 
-    //setPosition(FENPOS_STARTPOS);
-    //dperft(6);
-    //return 0;
-
+    setPosition(FENPOS_KIWIPETE);
+    printBoard();
+    StateInfo newState;
+    newState.castle = castle;
+    newState.epsq = epsq;
+    newState.capturedPiece = -1;
+    st = &newState;
+    //dperft(5);
 
     // test perft on different positions
     cout << "Test 'startpos': " << endl;

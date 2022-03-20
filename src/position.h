@@ -95,6 +95,21 @@ extern int castle;
 
 
 
+// StateInfo struct stores information needed to restore a position to its
+// previous state when we retract a move. Whenever a move is made on the
+// board (by calling Position::do_move), a StateInfo object must be passed.
+struct StateInfo
+{
+  int castle = 0;
+  int epsq = NoSq;
+  int capturedPiece = -1;
+  StateInfo *previous = NULL;
+};
+
+extern StateInfo *st;
+
+
+
 // Flag to indicate whether the board should be displayed from White's
 // perspective (false) or Black's perspective (true).
 extern bool flip;
