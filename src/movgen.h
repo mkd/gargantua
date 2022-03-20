@@ -269,7 +269,6 @@ static inline int makeMove(int move, int flag)
 {
     assert(st != NULL);
 
-    std::cout << "Enter makeMove()" << std::endl;
     // Quiet moves:
     if (flag == AllMoves)
     {
@@ -543,8 +542,6 @@ static inline int makeMove(int move, int flag)
         sideToMove ^= 1;
         //hash_key ^= side_key;
 
-        std::cout << "Leave makeMove()" << std::endl;
-
         
         // check if move is legal (return 0 for illegal move, 1 for legal)
         if (isSquareAttacked((sideToMove == White) ? ls1b(bitboards[k]) : ls1b(bitboards[K]), sideToMove))
@@ -557,7 +554,6 @@ static inline int makeMove(int move, int flag)
     // Capture moves
     else
     {
-        std::cout << "Leave makeMove()" << std::endl;
         // make sure move is the capture
         if (getMoveCapture(move))
             makeMove(move, AllMoves);
@@ -583,7 +579,6 @@ static inline void undoMove(int m)
 {
     assert(st != NULL);
 
-    std::cout << "Enter undoMove()" << std::endl;
     sideToMove ^= 1;
 
     int fromSq = getMoveSource(m);
@@ -680,24 +675,24 @@ static inline void undoMove(int m)
         else
         {
             // undo moving the King
-            popBit(bitboards[K], toSq);
-            popBit(occupancies[White], toSq);
-            setBit(bitboards[K], e8);
-            setBit(occupancies[White], e8);
+            popBit(bitboards[k], toSq);
+            popBit(occupancies[Black], toSq);
+            setBit(bitboards[k], e8);
+            setBit(occupancies[Black], e8);
 
             // undo moving the Rook
             if (toSq == g8)
             {
-                popBit(bitboards[R], f8);
+                popBit(bitboards[r], f8);
                 popBit(occupancies[Black], f8);
-                setBit(bitboards[R], h8);
+                setBit(bitboards[r], h8);
                 setBit(occupancies[Black], h8);
             }
             else
             {
-                popBit(bitboards[R], d8);
+                popBit(bitboards[r], d8);
                 popBit(occupancies[Black], d8);
-                setBit(bitboards[R], a8);
+                setBit(bitboards[r], a8);
                 setBit(occupancies[Black], a8);
             }
         }
@@ -780,6 +775,8 @@ static inline void undoMove(int m)
                     setBit(bitboards[k], fromSq);
                     setBit(occupancies[Black], fromSq);
                     break;
+
+            default: break;
         }
 
 
@@ -806,8 +803,6 @@ static inline void undoMove(int m)
     // Finally point our state pointer back to the previous state
     st = st->previous;
     castle = st->castle;
-
-    std::cout << "Leave undoMove()" << std::endl;
 }
 
 
