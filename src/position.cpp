@@ -45,8 +45,6 @@ int sideToMove = White;
 int epsq = NoSq; 
 int castle;
 
-StateInfo *st;
-
 
 
 // Flag to indicate whether the board should be displayed from White's
