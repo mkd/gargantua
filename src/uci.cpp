@@ -1,0 +1,99 @@
+/*
+  This file is part of Gargantua, a UCI chess engine with NNUE evaluation
+  derived from Chess0, and inspired by Code Monkey King's bbc-1.4.
+     
+  Copyright (C) 2022 Claudio M. Camacho
+ 
+  Gargantua is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  Gargantua is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <string>
+
+#include "bitboard.h"
+#include "movgen.h"
+#include "position.h"
+
+
+
+using namespace std;
+
+
+
+// UCI::moveToString converts a Move to a string in coordinate notation
+// (e.g., g1f3, a7a8q).
+//
+// The only special case is castling, where we print in the e1g1 notation in
+// normal chess mode, and in e1h1 notation in chess960 mode. Internally all
+// castling moves are always encoded as 'king captures rook'.
+string moveToUCI(int m)
+{
+    int fromSq = getMoveSource(m);
+    int toSq   = getMoveTarget(m);
+
+
+    //if (m == MOVE_NULL)
+    //    return "0000";
+
+
+    // castling
+    //if (getCastle(m))
+    //    toSq = make_square(to > from ? FILE_G : FILE_C, rank_of(from));
+
+
+    // compose move in UCI mode: origin square + target square (e.g., e2e4)
+    string move = SquareToCoordinates[fromSq] + SquareToCoordinates[toSq];
+
+
+    // add promotion piece
+    if (getPromo(m))
+        move += PromoPieces[getPromo(m)];
+
+
+    // return move string
+    return move;
+}
+
+
+
+// UCI::parseMove
+//
+// UCI::to_move() converts a string representing a move in coordinate notation
+// (g1f3, a7a8q) to the corresponding (pseudo) legal move, if any.
+//
+// Note: the move will be considered legal if it is in the pseudo-legal moves
+//       list. That means you must take care of checking legality after parsing
+//       the move, before making it on the board; i.e, is King in check?
+int parseUCIMove(string str)
+{
+    // verify promotion and make sure it is in lower-case
+    if (str.length() == 5)
+        str[4] = char(tolower(str[4]));
+
+
+    // generate all moves
+    MoveList_t MoveList;
+    generateMoves(MoveList);
+
+
+    // try to find the move in the list of pseudo-legal moves
+    for (int move_count = 0; move_count < MoveList.count; move_count++)
+    {
+        if (str == moveToUCI(MoveList.moves[move_count]))
+            return MoveList.moves[move_count];
+    }
+
+
+    // return empty move, if there was no move matching
+    return 0;
+}

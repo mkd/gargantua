@@ -24,6 +24,7 @@
 #include "bitboard.h"
 #include "position.h"
 #include "search.h"
+#include "uci.h"
 
 
 
@@ -50,7 +51,32 @@ int main(void)
     initSliderAttacks(Rook);
 
 
+
+    // test UCI
+    setPosition("r3k2r/p11pqpb1/bn2pnp1/2pPN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq c6 0 1 ");
+    printBoard();
+    int move = parseUCIMove("d5c6");
+    
+    // if move is legal
+    if (move)
+    {
+        // make it on board
+        saveBoard();
+
+        cout << "epsq = " << epsq << endl;
+
+        if (!makeMove(move, AllMoves))
+            takeBack();
+
+        cout << "epsq = " << epsq << endl;
+
+        printBoard();
+        cout << "epsq = " << epsq << endl;
+    }
+
+
     // test perft on different positions
+    /*
     cout << "Test 'startpos': " << endl;
     setPosition(FENPOS_STARTPOS);
     dperft(6);
@@ -74,6 +100,7 @@ int main(void)
     cout << "Test 'pos6': " << endl;
     setPosition(FENPOS_POS6);
     dperft(6);
+    */
 
 
 
