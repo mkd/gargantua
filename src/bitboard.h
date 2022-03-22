@@ -36,17 +36,17 @@ enum Side { White, Black, Both, NoColor };
 
 
 
-// Bishop and Rook
+// Slider pieces: Bishop and Rook
 enum Slider { Rook, Bishop };
 
 
 
-// Pieces
+// All Pieces: P=0, ..., k=11
 enum Pieces { P, N, B, R, Q, K, p, n, b, r, q, k };
 
 
 
-// List of board squares
+// List of board squares: a8=0, ..., h1=63, NoSq=64 (no-square)
 enum BoardSquares
 {
     a8, b8, c8, d8, e8, f8, g8, h8,
@@ -62,7 +62,9 @@ enum BoardSquares
 
 
 
-// Convert a square index (0..64) to a coordinate string:
+// Convert a square index (0..64) to a coordinate string. This is
+// the inverse array corresponding to BoardSquares and it can be
+// used to print out a square in a coordinate (readable) format.
 static const std::array<std::string, 65> SquareToCoordinates
 {
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
@@ -78,7 +80,10 @@ static const std::array<std::string, 65> SquareToCoordinates
 
 
 
-// board square masks, including different files, ranks and square groups
+// Board square masks, including different files, ranks and square groups.
+// These masks are really useful to test whether a certain piece is in a
+// given rank or file, or any other positional tests, using Bitboard
+// fast operations.
 static constexpr Bitboard AllSquares    = ~Bitboard(0);
 static constexpr Bitboard DarkSquares   = 0xAA55AA55AA55AA55ULL;
 static constexpr Bitboard LightSquares  = ~(0xAA55AA55AA55AA55ULL);
@@ -141,7 +146,8 @@ extern uint32_t rng32_state;
 
 
 
-// Bishop relevant occupancy bit count for every square on the board
+// Bishop relevant occupancy bit count for every square on the board. This
+// is used to pre-calculated Bishop attacks.
 static constexpr int BishopRelevantBits[64] =
 {
     6, 5, 5, 5, 5, 5, 5, 6, 
@@ -156,7 +162,8 @@ static constexpr int BishopRelevantBits[64] =
 
 
 
-// Rook relevant occupancy bit count for every square on the board
+// Rook relevant occupancy bit count for every square on the board. This
+// is used to pre-calculated Rook attacks.
 static constexpr int RookRelevantBits[64] =
 {
     12, 11, 11, 11, 11, 11, 11, 12, 

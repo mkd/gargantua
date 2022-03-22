@@ -21,6 +21,7 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
+#include <cassert>
 
 #include "search.h"
 
@@ -40,6 +41,10 @@ uint64_t nodes = 0ULL;
 // to debug possible errors within the move generator for a given root move.
 void dperft(int depth)
 {
+    // reliability checks
+    assert(depth < 0);
+
+
     // reset nodes count
     nodes = 0ULL;
    
@@ -78,26 +83,31 @@ void dperft(int depth)
         // cummulative nodes
         uint64_t cNodes = nodes;
 
+
         // call perft driver recursively
         perft(depth - 1);
+
         
         // old nodes
         uint64_t PrevNodes = nodes - cNodes;
+
         
         // undo move
         takeBack();
 
-        // print move
+
+        // print move and nodes under that move
         cout << prettyMove(MoveList.moves[move_count]) << ": " << PrevNodes << endl;
     }
 
 
-    // stop the timer
+    // stop the timer and measure time elapsed
     auto finish = chrono::high_resolution_clock::now();
-   
+    auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
+    assert(ns);
+
 
     // print results
-    auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
     cout << endl;
     cout << "    Depth: " << depth << endl;
     cout << "    Nodes: " << nodes << endl;

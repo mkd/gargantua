@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cassert>
 
 #include "bitboard.h"
 #include "position.h"
@@ -118,7 +119,8 @@ typedef struct {
 
 */
 
-// Castling rights update constants
+// Castling rights update constants. When a rook or the King are moved,
+// these rights are checked and the current castling rights are updated.
 static constexpr int CastlingRights[64] =
 {
      7, 15, 15, 15,  3, 15, 15, 11,
@@ -135,7 +137,6 @@ static constexpr int CastlingRights[64] =
 
 // Functionality to generate and manipulate chess moves.
 void generateMoves(MoveList_t &);
-void generate_moves(MoveList_t &);
 void printMoveList(MoveList_t &);
 
 
@@ -145,11 +146,15 @@ void printMoveList(MoveList_t &);
 // Generate a string with the move in UCI notation.
 static inline std::string prettyMove(int move)
 {
+    // string stream where to write the move to
     std::stringstream ss;
 
+
+    // UCI format: [source][target][promotion] e.g., e2e4, e7e8q
     ss << SquareToCoordinates[getMoveSource(move)]
        << SquareToCoordinates[getMoveTarget(move)]
        << PromoPieces[getPromo(move)];
+
 
     return ss.str();
 }
@@ -171,6 +176,10 @@ static inline void printMove(int move)
 // Add a move to a move list.
 static inline void addMove(MoveList_t &MoveList, int move)
 {
+    // reliability checks
+    assert(MoveList.count >= 0);
+
+
     // strore move
     MoveList.moves[MoveList.count] = move;
 
@@ -186,6 +195,11 @@ static inline void addMove(MoveList_t &MoveList, int move)
 // True if the given square is attacked by any piece an opponent's piece.
 static inline bool isSquareAttacked(int square, int side)
 {
+    // reliability checks
+    assert((side == White) || (side == Black));
+    assert((square >= a8) && (square <= h1));
+
+
     // square attacked by White or Black pawns
     if ((side == White) && (PawnAttacks[Black][square] & bitboards[P]))
         return true;
@@ -266,10 +280,15 @@ enum MoveType { AllMoves, CaptureMoves };
 //       makeMove(), if you then want to be able to use takeBack().
 static inline int makeMove(int move, int flag)
 {
+    //reliability checks
+    assert(move);
+    assert((sideToMove == White) || (sideToMove == Black));
+
+
     // Quiet moves:
     if (flag == AllMoves)
     {
-        // parse move elements
+        // parse move components
         int fromSq   = getMoveSource(move);
         int toSq     = getMoveTarget(move);
         int piece    = getMovePiece(move);
@@ -294,152 +313,6 @@ static inline int makeMove(int move, int flag)
         // update occupancies for the piece being moved
         popBit(occupancies[sideToMove], fromSq);
         setBit(occupancies[sideToMove], toSq);
-                    
-
-        // after the moving piece, also handle the captured piece, if any
-        if (capture)
-        {
-            // reset fifty move rule counter
-            //fifty = 0;
-
-            
-            // pick up bitboard piece index ranges depending on side
-            int start_piece, end_piece;
-           
-
-            // configure side to move (in order to reduce the piece)
-            if (sideToMove == White)
-            {
-                start_piece = p;
-                end_piece = k;
-            }
-            else
-            {
-                start_piece = P;
-                end_piece = K;
-            }
-
-            
-            // if there's a piece on the target, remove it from the bitboard
-            for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++)
-            {
-                if (getBit(bitboards[bb_piece], toSq))
-                {
-                    popBit(bitboards[bb_piece], toSq);
-
-                    // update occupancies for the piece just removed
-                    popBit(occupancies[Them], toSq);
-
-                    // remove the piece from hash key
-                    //hash_key ^= piece_keys[bb_piece][target_square];
-                    break;
-                }
-            }
-        }
-
-
-        // handle pawn promotions
-        if (promo)
-        {
-            // white to move
-            if (sideToMove == White)
-            {
-                // erase the pawn from the target square
-                popBit(bitboards[P], toSq);
-
-                // remove pawn from hash key
-                //hash_key ^= piece_keys[P][toSq];
-            }
-
-            
-            // black to move
-            else
-            {
-                // erase the pawn from the target square
-                popBit(bitboards[p], toSq);
-                
-                // remove pawn from hash key
-                //hash_key ^= piece_keys[p][toSq];
-            }
-
-            
-            // set promoted piece on the chess board
-            setBit(bitboards[promo], toSq);
-
-            
-            // add promoted piece into the hash key
-            //hash_key ^= piece_keys[promo][toSq];
-        }
-
-
-        // handle enpassant captures
-        if (ep)
-        {
-            // erase the pawn depending on side to move
-            (sideToMove == White) ? popBit(bitboards[p], toSq + 8) :
-                                    popBit(bitboards[P], toSq - 8);
-                     
-
-            // white to move
-            if (sideToMove == White)
-            {
-                // remove captured pawn
-                popBit(bitboards[p], toSq + 8);
-
-                // update occupancies
-                popBit(occupancies[Black], toSq + 8);
-
-                // remove pawn from hash key
-                //hash_key ^= piece_keys[p][toSq + 8];
-            }
-           
-
-            // black to move
-            else
-            {
-                // remove captured pawn
-                popBit(bitboards[P], toSq - 8);
-
-                // update occupancies
-                popBit(occupancies[White], toSq - 8);
-
-                // remove pawn from hash key
-                //hash_key ^= piece_keys[P][toSq - 8];
-            }
-        }
-
-
-        // hash enpassant if available (remove enpassant square from hash key)
-        //if (ep != NoSq) hash_key ^= enpassant_keys[ep];
-       
-
-        // reset enpassant square
-        epsq = NoSq;
-
-
-        // handle double pawn pushes
-        if (dpush)
-        {
-            // white to move
-            if (sideToMove == White)
-            {
-                // set enpassant square
-                epsq = toSq + 8;
-                
-                // hash enpassant
-                //hash_key ^= enpassant_keys[toSq + 8];
-            }
-            
-            // black to move
-            else
-            {
-                // set enpassant square
-                epsq = toSq - 8;
-                
-                // hash enpassant
-                //hash_key ^= enpassant_keys[target_square - 8];
-            }
-        }
 
 
         // handle castling moves
@@ -510,6 +383,148 @@ static inline int makeMove(int move, int flag)
                     //hash_key ^= piece_keys[r][a8];  // remove rook from a8 from hash key
                     //hash_key ^= piece_keys[r][d8];  // put rook on d8 into a hash key
                     break;
+            }
+        }
+                    
+
+        // after the moving piece, also handle the captured piece, if any
+        if (capture)
+        {
+            // reset fifty move rule counter
+            //fifty = 0;
+
+            
+            // pick up bitboard piece index ranges depending on side
+            int start_piece, end_piece;
+           
+
+            // configure side to move (in order to reduce the piece)
+            if (sideToMove == White)
+            {
+                start_piece = p;
+                end_piece = q;
+            }
+            else
+            {
+                start_piece = P;
+                end_piece = Q;
+            }
+
+            
+            // if there's a piece on the target, remove it from the bitboard
+            for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++)
+            {
+                if (getBit(bitboards[bb_piece], toSq))
+                {
+                    popBit(bitboards[bb_piece], toSq);
+
+                    // update occupancies for the piece just removed
+                    popBit(occupancies[Them], toSq);
+
+                    // remove the piece from hash key
+                    //hash_key ^= piece_keys[bb_piece][target_square];
+                    break;
+                }
+            }
+
+
+            // handle enpassant captures
+            if (ep)
+            {
+                // white to move
+                if (sideToMove == White)
+                {
+                    // remove captured pawn
+                    popBit(bitboards[p], toSq + 8);
+
+                    // update occupancies
+                    popBit(occupancies[Black], toSq + 8);
+
+                    // remove pawn from hash key
+                    //hash_key ^= piece_keys[p][toSq + 8];
+                }
+               
+
+                // black to move
+                else
+                {
+                    // remove captured pawn
+                    popBit(bitboards[P], toSq - 8);
+
+                    // update occupancies
+                    popBit(occupancies[White], toSq - 8);
+
+                    // remove pawn from hash key
+                    //hash_key ^= piece_keys[P][toSq - 8];
+                }
+            }
+        }
+
+
+        // handle pawn promotions
+        if (promo)
+        {
+            // white to move
+            if (sideToMove == White)
+            {
+                // erase the pawn from the target square
+                popBit(bitboards[P], toSq);
+
+                // remove pawn from hash key
+                //hash_key ^= piece_keys[P][toSq];
+            }
+
+            
+            // black to move
+            else
+            {
+                // erase the pawn from the target square
+                popBit(bitboards[p], toSq);
+                
+                // remove pawn from hash key
+                //hash_key ^= piece_keys[p][toSq];
+            }
+
+            
+            // set promoted piece on the chess board
+            setBit(bitboards[promo], toSq);
+
+            
+            // add promoted piece into the hash key
+            //hash_key ^= piece_keys[promo][toSq];
+        }
+
+
+
+        // hash enpassant if available (remove enpassant square from hash key)
+        //if (ep != NoSq) hash_key ^= enpassant_keys[ep];
+       
+
+        // reset enpassant square
+        epsq = NoSq;
+
+
+        // handle double pawn pushes
+        if (dpush)
+        {
+            // white to move
+            if (sideToMove == White)
+            {
+                // set enpassant square
+                epsq = toSq + 8;
+                
+                // hash enpassant
+                //hash_key ^= enpassant_keys[toSq + 8];
+            }
+            
+            // black to move
+            else
+            {
+                // set enpassant square
+                epsq = toSq - 8;
+                
+                // hash enpassant
+                //hash_key ^= enpassant_keys[target_square - 8];
             }
         }
 
