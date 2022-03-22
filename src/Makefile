@@ -58,9 +58,9 @@ DEPFILES  := $(SOURCES:.cpp=.d)
 
 
 ### Compilation flags
-CXXFLAGS := -Ofast -Wall -Wcast-qual -pedantic -std=c++20 -fno-exceptions -fno-rtti -m64 -mpopcnt -flto $(DEFINES)
+CXXFLAGS := -Ofast -Wall -Wcast-qual -pedantic -std=c++20 -fno-exceptions -fno-rtti -m64 -mpopcnt -flto -DNDEBUG $(DEFINES)
 DFLAGS   := -Wall -O0 -g -DDEBUG -std=c++20 $(DEFINES)
-WINFLAGS := -DWIN64 -static-libgcc -static-libstdc++ $(DEFINES)
+WINFLAGS := -DWIN64 -static-libgcc -static-libstdc++ -DNDEBUG $(DEFINES)
 
 
 
@@ -76,8 +76,7 @@ WINFLAGS := -DWIN64 -static-libgcc -static-libstdc++ $(DEFINES)
 	@echo ' Compiling         $@' && $(CC) $(CXXFLAGS) -c $< -o $@
 
 %.dbo: %.cpp
-#	@echo ' Compiling [debug] $@' && $(CC) $(DFLAGS) -c $< -o $@
-	$(CC) $(DFLAGS) -c $< -o $@
+	@echo ' Compiling [debug] $@' && $(CC) $(DFLAGS) -c $< -o $@
 
 %.obj: %.cpp
 	@echo ' Compiling [win64] $@' && $(WC) $(CXXFLAGS) $(WINFLAGS) -c $< -o $@ -lm

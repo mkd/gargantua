@@ -44,6 +44,10 @@ extern uint64_t nodes;
 // generated and counted.
 static inline void perft(int depth)
 {
+    // reliability checks
+    assert(depth >= 0);
+
+
     // escape at leaf nodes and increment node count
     if (depth == 0)
     {
@@ -65,9 +69,6 @@ static inline void perft(int depth)
     {   
         // preserve board state
         saveBoard();
-        //StateInfo newState = *st;
-        //newState.previous = st;
-        //st = &newState;
 
 
         // make move and, if illegal, skip to the next move

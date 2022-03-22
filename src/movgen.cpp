@@ -19,6 +19,7 @@
 */
 
 #include <iostream>
+#include <cassert>
 
 #include "bitboard.h"
 #include "position.h"
@@ -470,6 +471,10 @@ void generateMoves(MoveList_t &MoveList)
 // Print the list of generated pseudo-legal moves.
 void printMoveList(MoveList_t &MoveList)
 {
+    // reliability check
+    assert(MoveList.count < 0);
+
+
     // don't print anything when the move list is empty
     if (MoveList.count <= 0)
         return;

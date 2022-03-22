@@ -21,6 +21,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cstring>
+#include <cassert>
 
 #include "bitboard.h"
 
@@ -64,6 +65,11 @@ uint32_t rng32_state = 1804289383;
 // Generate a Bitboard with the push of a pawn at a given square.
 Bitboard genPawnPush(int side, int square)
 {
+    // reliability checks
+    assert((side == White) || (side == Black));
+    assert((square >= a8) && (square <= h1));
+
+
     // result pushes Bitboard
     Bitboard push = 0ULL;
 
@@ -78,16 +84,12 @@ Bitboard genPawnPush(int side, int square)
 
     // white pawns
     if (side == White)
-    {
         push |= (bb >> 8);
-    }
 
 
     // black pawns
     else if (side == Black)
-    {
         push |= (bb << 8);
-    }
 
 
     // return push map
@@ -101,6 +103,11 @@ Bitboard genPawnPush(int side, int square)
 // Generate a Bitboard with the double push of a pawn at a given square.
 Bitboard genPawnDoublePush(int side, int square)
 {
+    // reliability checks
+    assert((side == White) || (side == Black));
+    assert((square >= a8) && (square <= h1));
+
+
     // result pushes Bitboard
     Bitboard push = 0ULL;
 
@@ -140,6 +147,11 @@ Bitboard genPawnDoublePush(int side, int square)
 // Generate a Bitboard with all Pawn attacks from a given square.
 Bitboard maskPawnAttacks(int side, int square)
 {
+    // reliability checks
+    assert((side == White) || (side == Black));
+    assert((square >= a8) && (square <= h1));
+
+
     // result attacks Bitboard
     Bitboard attacks = 0ULL;
 
@@ -179,6 +191,10 @@ Bitboard maskPawnAttacks(int side, int square)
 // Generate a Bitboard with all Knight attacks from a given square.
 Bitboard maskKnightAttacks(int square)
 {
+    // reliability checks
+    assert((square >= a8) && (square <= h1));
+
+
     // result attacks bitboard
     Bitboard attacks = 0ULL;
 
@@ -213,6 +229,10 @@ Bitboard maskKnightAttacks(int square)
 // Generate a Bitboard with all King attacks from a given square.
 Bitboard maskKingAttacks(int square)
 {
+    // reliability checks
+    assert((square >= a8) && (square <= h1));
+
+
     // result attacks bitboard
     Bitboard attacks = 0ULL;
 
@@ -247,6 +267,10 @@ Bitboard maskKingAttacks(int square)
 // Generate a Bitboard with the occupancy bits of a bishop at a given square.
 Bitboard maskBishopAttacks(int square)
 {
+    // reliability checks
+    assert((square >= a8) && (square <= h1));
+
+
     // result attacks bitboard
     Bitboard attacks = 0ULL;
 
@@ -282,6 +306,10 @@ Bitboard maskBishopAttacks(int square)
 // Generate a Bitboard with the occupancy bits of a rook at a given square.
 Bitboard maskRookAttacks(int square)
 {
+    // reliability checks
+    assert((square >= a8) && (square <= h1));
+
+
     // result attacks bitboard
     Bitboard attacks = 0ULL;
 
@@ -318,6 +346,10 @@ Bitboard maskRookAttacks(int square)
 // blocking pieces.
 Bitboard genBishopAttacks(int square, Bitboard block)
 {
+    // reliability checks
+    assert((square >= a8) && (square <= h1));
+
+
     // result attacks bitboard
     Bitboard attacks = 0ULL;
 
@@ -370,6 +402,10 @@ Bitboard genBishopAttacks(int square, Bitboard block)
 // blocking pieces.
 Bitboard genRookAttacks(int square, Bitboard block)
 {
+    // reliability checks
+    assert((square >= a8) && (square <= h1));
+
+
     // result attacks bitboard
     Bitboard attacks = 0ULL;
   

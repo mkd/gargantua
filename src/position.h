@@ -39,7 +39,8 @@
 
 
 
-// ASCII piece strings lookup table
+// ASCII piece strings lookup table. This table returns a readable
+// string for each piece integer. E.g., 4=Q, 11=k, etc.
 static const std::array<std::string, 12> PieceStr
 {
     "P", "N", "B", "R", "Q", "K",
@@ -48,7 +49,8 @@ static const std::array<std::string, 12> PieceStr
 
 
 
-// Convert ASCII character pieces to encoded constants
+// Convert ASCII character pieces to encoded constants. This table
+// converts char values to the piece integer. E.g., 'R' = R = 3.
 static std::map<unsigned char, int> PieceConst =
 {
     {'P', P},
@@ -67,7 +69,8 @@ static std::map<unsigned char, int> PieceConst =
 
 
 
-// Get the color/side by looking at the piece
+// Table to lookup the color of a piece by using the piece itself as
+// an index.
 static std::map<int, Side> ColorFromPiece =
 {
     {P, White},

@@ -49,7 +49,7 @@ int main(void)
     initSliderAttacks(Bishop);
     initSliderAttacks(Rook);
 
-    
+
     // test perft on different positions
     cout << "Test 'startpos': " << endl;
     setPosition(FENPOS_STARTPOS);
