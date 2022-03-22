@@ -71,7 +71,6 @@ static inline void perft(int depth)
         st = &newState;
 
 
-
         // make move and, if illegal, skip to the next move
         if (!makeMove(MoveList.moves[move_count], AllMoves))
         {

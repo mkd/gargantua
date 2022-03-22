@@ -50,63 +50,60 @@ int main(void)
     initSliderAttacks(Rook);
 
     
-
-    setPosition(FENPOS_STARTPOS);
-    printBoard();
+    // init make/undo move stack
     StateInfo si;
+    si.castle = castle;
+    si.epsq = epsq;
     si.previous = st;
     st = &si;
-    dperft(4);
-    return 0;
-
-
-/*
-    MoveList_t moves;
-    generateMoves(moves);
-
-    for (int i = 0; i < moves.count; i++)
-    {
-        // save board state
-        StateInfo nsi = *st;
-        nsi.id = st->id + 1;
-        nsi.previous = st;
-        st = &nsi;
-        cout << "Saving board state; stID = " << st->id << endl;
-
-        // make move
-        if (!makeMove(moves.moves[i], AllMoves))
-        {
-            undoMove(moves.moves[i]);
-            continue;
-        }
-
-        undoMove(moves.moves[i]);
-        cout << "Restored board state; stID = " << st->id << endl;
-    }
-    return 0;
-    */
+    StateInfo nsi = *st;
 
 
     // test perft on different positions
     cout << "Test 'startpos': " << endl;
     setPosition(FENPOS_STARTPOS);
+    nsi.castle = castle;
+    nsi.epsq = epsq;
+    nsi.capturedPiece = -1;
+    nsi.previous = st;
+    st = &nsi;
     dperft(6);
 
     cout << "Test 'kiwipete': " << endl;
     setPosition(FENPOS_KIWIPETE);
+    nsi.castle = castle;
+    nsi.epsq = epsq;
+    nsi.capturedPiece = -1;
+    nsi.previous = st;
+    st = &nsi;
     dperft(6);
 
     cout << "Test 'pos3': " << endl;
     setPosition(FENPOS_POS3);
+    nsi.castle = castle;
+    nsi.epsq = epsq;
+    nsi.capturedPiece = -1;
+    nsi.previous = st;
+    st = &nsi;
     dperft(6);
 
     cout << "Test 'pos4': " << endl;
     setPosition(FENPOS_POS4);
+    nsi.castle = castle;
+    nsi.epsq = epsq;
+    nsi.capturedPiece = -1;
+    nsi.previous = st;
+    st = &nsi;
     dperft(6);
 
     cout << "Test 'pos5': " << endl;
     setPosition(FENPOS_POS5);
-    dperft(6);
+    nsi.castle = castle;
+    nsi.epsq = epsq;
+    nsi.capturedPiece = -1;
+    nsi.previous = st;
+    st = &nsi;
+    dperft(5);
 
     cout << "Test 'pos6': " << endl;
     setPosition(FENPOS_POS6);
