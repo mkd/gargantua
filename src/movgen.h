@@ -23,7 +23,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <cassert>
 
 #include "bitboard.h"
 #include "position.h"
@@ -331,9 +330,6 @@ static inline int makeMove(int move, int flag)
                     // update occupancies for the piece just removed
                     popBit(occupancies[Them], toSq);
 
-                    // StateInfo
-                    st->capturedPiece = bb_piece;
-
                     // remove the piece from hash key
                     //hash_key ^= piece_keys[bb_piece][target_square];
                     break;
@@ -393,8 +389,6 @@ static inline int makeMove(int move, int flag)
                 // update occupancies
                 popBit(occupancies[Black], toSq + 8);
 
-                st->capturedPiece = p;
-                
                 // remove pawn from hash key
                 //hash_key ^= piece_keys[p][toSq + 8];
             }
@@ -409,9 +403,6 @@ static inline int makeMove(int move, int flag)
                 // update occupancies
                 popBit(occupancies[White], toSq - 8);
 
-
-                st->capturedPiece = P;
-                
                 // remove pawn from hash key
                 //hash_key ^= piece_keys[P][toSq - 8];
             }
@@ -532,11 +523,6 @@ static inline int makeMove(int move, int flag)
         castle &= CastlingRights[toSq];
 
 
-        // update StateInfo
-        st->castle = castle;
-        st->epsq = epsq;
-
-
         // update all occupancies
         occupancies[Both] = occupancies[White] | occupancies[Black];
 
@@ -570,153 +556,6 @@ static inline int makeMove(int move, int flag)
 
     // return 0 as 'illegal move' if nothing happens
     return 0;
-}
-
-
-
-// undoMove
-//
-// Unmakes a move on the chess board. When it returns, the position should
-// be restored to exactly the same state as before the move was made.
-static inline void undoMove(int m)
-{
-    assert(st != NULL);
-
-    sideToMove ^= 1;
-
-    int fromSq   = getMoveSource(m);
-    int toSq     = getMoveTarget(m);
-    int piece    = getMovePiece(m);
-    int capture  = getMoveCapture(m);
-    int promo    = getPromo(m);
-    int ep       = getEp(m);
-    int castling = getCastle(m);
-
-
-    // undo promotions
-    if (promo)
-    {
-        // remove the promoted piece from the target
-        popBit(bitboards[promo], toSq);
-        popBit(occupancies[sideToMove], toSq);
-
-        // restore pawn to original square, and empty target square
-        if (sideToMove == White)
-            setBit(bitboards[P], fromSq);
-        else
-            setBit(bitboards[p], fromSq);
-        
-        setBit(occupancies[sideToMove], fromSq);
-
-
-        // restore the captured piece, if any
-        if (capture && (st->capturedPiece >= P) && (st->capturedPiece <= k))
-        {
-            // restore the piece
-            setBit(bitboards[st->capturedPiece], toSq);
-            setBit(occupancies[ColorFromPiece[st->capturedPiece]], toSq);
-        }
-    }
-
-
-    // undo castling
-    else if (castling)
-    {
-        // White castling
-        if (fromSq == e1)
-        {
-
-            // undo moving the King
-            popBit(bitboards[K], toSq);
-            popBit(occupancies[White], toSq);
-            setBit(bitboards[K], e1);
-            setBit(occupancies[White], e1);
-
-            // undo moving the Rook
-            if (toSq == g1)
-            {
-                popBit(bitboards[R], f1);
-                popBit(occupancies[White], f1);
-                setBit(bitboards[R], h1);
-                setBit(occupancies[White], h1);
-            }
-            else
-            {
-                popBit(bitboards[R], d1);
-                popBit(occupancies[White], d1);
-                setBit(bitboards[R], a1);
-                setBit(occupancies[White], a1);
-            }
-        }
-
-        // Black castling
-        else
-        {
-
-            // undo moving the King
-            popBit(bitboards[k], toSq);
-            popBit(occupancies[Black], toSq);
-            setBit(bitboards[k], e8);
-            setBit(occupancies[Black], e8);
-
-            // undo moving the Rook
-            if (toSq == g8)
-            {
-                popBit(bitboards[r], f8);
-                popBit(occupancies[Black], f8);
-                setBit(bitboards[r], h8);
-                setBit(occupancies[Black], h8);
-            }
-            else
-            {
-                popBit(bitboards[r], d8);
-                popBit(occupancies[Black], d8);
-                setBit(bitboards[r], a8);
-                setBit(occupancies[Black], a8);
-            }
-        }
-    }
-
-   
-    // undo any other moves (including captures)
-    else
-    {
-        // move piece from the target square to the original square
-        popBit(bitboards[piece], toSq);
-        popBit(occupancies[sideToMove], toSq);
-
-        setBit(bitboards[piece], fromSq);
-        setBit(occupancies[sideToMove], fromSq);
-
-
-        // restore the captured piece, if any
-        if (capture && (st->capturedPiece >= P) && (st->capturedPiece <= k))
-        {
-            int capsq = toSq;
-
-
-            if (ep)
-            {
-                if (sideToMove == White)
-                    capsq = toSq + 8;
-                else
-                    capsq = toSq - 8;
-            }
-
-
-            // restore the piece
-            setBit(bitboards[st->capturedPiece], capsq);
-            setBit(occupancies[ColorFromPiece[st->capturedPiece]], capsq);
-        }
-    }
-
-
-    occupancies[Both] = occupancies[White] | occupancies[Black];
-
-
-    // Finally point our state pointer back to the previous state
-    st = st->previous;
-    castle = st->castle;
 }
 
 

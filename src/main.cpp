@@ -50,59 +50,25 @@ int main(void)
     initSliderAttacks(Rook);
 
     
-    // init make/undo move stack
-    StateInfo si;
-    si.castle = castle;
-    si.epsq = epsq;
-    si.previous = st;
-    st = &si;
-    StateInfo nsi = *st;
-
-
     // test perft on different positions
     cout << "Test 'startpos': " << endl;
     setPosition(FENPOS_STARTPOS);
-    nsi.castle = castle;
-    nsi.epsq = epsq;
-    nsi.capturedPiece = -1;
-    nsi.previous = st;
-    st = &nsi;
     dperft(6);
 
     cout << "Test 'kiwipete': " << endl;
     setPosition(FENPOS_KIWIPETE);
-    nsi.castle = castle;
-    nsi.epsq = epsq;
-    nsi.capturedPiece = -1;
-    nsi.previous = st;
-    st = &nsi;
     dperft(6);
 
     cout << "Test 'pos3': " << endl;
     setPosition(FENPOS_POS3);
-    nsi.castle = castle;
-    nsi.epsq = epsq;
-    nsi.capturedPiece = -1;
-    nsi.previous = st;
-    st = &nsi;
     dperft(6);
 
     cout << "Test 'pos4': " << endl;
     setPosition(FENPOS_POS4);
-    nsi.castle = castle;
-    nsi.epsq = epsq;
-    nsi.capturedPiece = -1;
-    nsi.previous = st;
-    st = &nsi;
     dperft(6);
 
     cout << "Test 'pos5': " << endl;
     setPosition(FENPOS_POS5);
-    nsi.castle = castle;
-    nsi.epsq = epsq;
-    nsi.capturedPiece = -1;
-    nsi.previous = st;
-    st = &nsi;
     dperft(5);
 
     cout << "Test 'pos6': " << endl;

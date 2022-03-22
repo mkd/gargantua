@@ -64,18 +64,16 @@ static inline void perft(int depth)
     for (int move_count = 0; move_count < MoveList.count; move_count++)
     {   
         // preserve board state
-        //saveBoard();
-        assert(st != NULL);
-        StateInfo newState = *st;
-        newState.previous = st;
-        st = &newState;
+        saveBoard();
+        //StateInfo newState = *st;
+        //newState.previous = st;
+        //st = &newState;
 
 
         // make move and, if illegal, skip to the next move
         if (!makeMove(MoveList.moves[move_count], AllMoves))
         {
-            //takeBack();
-            undoMove(MoveList.moves[move_count]);
+            takeBack();
             continue;
         }
 
@@ -84,9 +82,8 @@ static inline void perft(int depth)
         perft(depth - 1);
 
         
-        // take back
-        //takeBack();
-        undoMove(MoveList.moves[move_count]);
+        // undo move
+        takeBack();
     }
 }
 
