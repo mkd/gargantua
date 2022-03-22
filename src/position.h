@@ -49,7 +49,8 @@ static const std::array<std::string, 12> PieceStr
 
 
 // Convert ASCII character pieces to encoded constants
-static std::map<unsigned char, int> PieceConst = {
+static std::map<unsigned char, int> PieceConst =
+{
     {'P', P},
     {'N', N},
     {'B', B},
@@ -62,6 +63,25 @@ static std::map<unsigned char, int> PieceConst = {
     {'r', r},
     {'q', q},
     {'k', k}
+};
+
+
+
+// Get the color/side by looking at the piece
+static std::map<int, Side> ColorFromPiece =
+{
+    {P, White},
+    {N, White},
+    {B, White},
+    {R, White},
+    {Q, White},
+    {K, White},
+    {p, Black},
+    {n, Black},
+    {b, Black},
+    {r, Black},
+    {q, Black},
+    {k, Black}
 };
 
 

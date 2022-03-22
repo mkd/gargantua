@@ -267,8 +267,6 @@ enum MoveType { AllMoves, CaptureMoves };
 //       makeMove(), if you then want to be able to use takeBack().
 static inline int makeMove(int move, int flag)
 {
-    assert(st != NULL);
-
     // Quiet moves:
     if (flag == AllMoves)
     {
@@ -394,6 +392,8 @@ static inline int makeMove(int move, int flag)
 
                 // update occupancies
                 popBit(occupancies[Black], toSq + 8);
+
+                st->capturedPiece = p;
                 
                 // remove pawn from hash key
                 //hash_key ^= piece_keys[p][toSq + 8];
@@ -408,6 +408,9 @@ static inline int makeMove(int move, int flag)
 
                 // update occupancies
                 popBit(occupancies[White], toSq - 8);
+
+
+                st->capturedPiece = P;
                 
                 // remove pawn from hash key
                 //hash_key ^= piece_keys[P][toSq - 8];
@@ -581,73 +584,48 @@ static inline void undoMove(int m)
 
     sideToMove ^= 1;
 
-    int fromSq = getMoveSource(m);
-    int toSq   = getMoveTarget(m);
-    int piece  = getMovePiece(m);
-    int promo  = getPromo(m);
+    int fromSq   = getMoveSource(m);
+    int toSq     = getMoveTarget(m);
+    int piece    = getMovePiece(m);
+    int capture  = getMoveCapture(m);
+    int promo    = getPromo(m);
+    int ep       = getEp(m);
+    int castling = getCastle(m);
 
 
     // undo promotions
-    if (getPromo(m))
+    if (promo)
     {
+        // remove the promoted piece from the target
+        popBit(bitboards[promo], toSq);
+        popBit(occupancies[sideToMove], toSq);
+
+        // restore pawn to original square, and empty target square
         if (sideToMove == White)
-        {
-            switch (promo)
-            {
-                case N: popBit(bitboards[N], toSq);
-                        break;
-
-                case B: popBit(bitboards[B], toSq);
-                        break;
-
-                case R: popBit(bitboards[R], toSq);
-                        break;
-
-                case Q: popBit(bitboards[Q], toSq);
-                        break;
-
-                default: break;
-            }
-
-            // restore pawn to original square, and empty target square
-            popBit(occupancies[White], toSq);
             setBit(bitboards[P], fromSq);
-            setBit(occupancies[White], fromSq);
-        }
-
         else
-        {
-            switch (promo)
-            {
-                case N: popBit(bitboards[n], toSq);
-                        break;
-
-                case B: popBit(bitboards[b], toSq);
-                        break;
-
-                case R: popBit(bitboards[r], toSq);
-                        break;
-
-                case Q: popBit(bitboards[q], toSq);
-                        break;
-
-                default: break;
-            }
-
-            // restore pawn to original square, and empty target square
-            popBit(occupancies[Black], toSq);
             setBit(bitboards[p], fromSq);
-            setBit(occupancies[Black], fromSq);
+        
+        setBit(occupancies[sideToMove], fromSq);
+
+
+        // restore the captured piece, if any
+        if (capture && (st->capturedPiece >= P) && (st->capturedPiece <= k))
+        {
+            // restore the piece
+            setBit(bitboards[st->capturedPiece], toSq);
+            setBit(occupancies[ColorFromPiece[st->capturedPiece]], toSq);
         }
     }
 
 
     // undo castling
-    else if (getCastle(m))
+    else if (castling)
     {
         // White castling
         if (fromSq == e1)
         {
+
             // undo moving the King
             popBit(bitboards[K], toSq);
             popBit(occupancies[White], toSq);
@@ -674,6 +652,7 @@ static inline void undoMove(int m)
         // Black castling
         else
         {
+
             // undo moving the King
             popBit(bitboards[k], toSq);
             popBit(occupancies[Black], toSq);
@@ -702,90 +681,21 @@ static inline void undoMove(int m)
     // undo any other moves (including captures)
     else
     {
-        switch (piece)
-        {
-            case P: popBit(bitboards[P], toSq);
-                    popBit(occupancies[White], toSq);
-                    setBit(bitboards[P], fromSq);
-                    setBit(occupancies[White], fromSq);
-                    break;
+        // move piece from the target square to the original square
+        popBit(bitboards[piece], toSq);
+        popBit(occupancies[sideToMove], toSq);
 
-            case N: popBit(bitboards[N], toSq);
-                    popBit(occupancies[White], toSq);
-                    setBit(bitboards[N], fromSq);
-                    setBit(occupancies[White], fromSq);
-                    break;
-
-            case B: popBit(bitboards[B], toSq);
-                    popBit(occupancies[White], toSq);
-                    setBit(bitboards[B], fromSq);
-                    setBit(occupancies[White], fromSq);
-                    break;
-
-            case R: popBit(bitboards[R], toSq);
-                    popBit(occupancies[White], toSq);
-                    setBit(bitboards[R], fromSq);
-                    setBit(occupancies[White], fromSq);
-                    break;
-
-            case Q: popBit(bitboards[Q], toSq);
-                    popBit(occupancies[White], toSq);
-                    setBit(bitboards[Q], fromSq);
-                    setBit(occupancies[White], fromSq);
-                    break;
-
-            case K: popBit(bitboards[K], toSq);
-                    popBit(occupancies[White], toSq);
-                    setBit(bitboards[K], fromSq);
-                    setBit(occupancies[White], fromSq);
-                    break;
-
-            case p: popBit(bitboards[p], toSq);
-                    popBit(occupancies[Black], toSq);
-                    setBit(bitboards[p], fromSq);
-                    setBit(occupancies[Black], fromSq);
-                    break;
-
-            case n: popBit(bitboards[n], toSq);
-                    popBit(occupancies[Black], toSq);
-                    setBit(bitboards[n], fromSq);
-                    setBit(occupancies[Black], fromSq);
-                    break;
-
-            case b: popBit(bitboards[b], toSq);
-                    popBit(occupancies[Black], toSq);
-                    setBit(bitboards[b], fromSq);
-                    setBit(occupancies[Black], fromSq);
-                    break;
-
-            case r: popBit(bitboards[r], toSq);
-                    popBit(occupancies[Black], toSq);
-                    setBit(bitboards[r], fromSq);
-                    setBit(occupancies[Black], fromSq);
-                    break;
-
-            case q: popBit(bitboards[q], toSq);
-                    popBit(occupancies[Black], toSq);
-                    setBit(bitboards[q], fromSq);
-                    setBit(occupancies[Black], fromSq);
-                    break;
-
-            case k: popBit(bitboards[k], toSq);
-                    popBit(occupancies[Black], toSq);
-                    setBit(bitboards[k], fromSq);
-                    setBit(occupancies[Black], fromSq);
-                    break;
-
-            default: break;
-        }
+        setBit(bitboards[piece], fromSq);
+        setBit(occupancies[sideToMove], fromSq);
 
 
         // restore the captured piece, if any
-        if ((st->capturedPiece >= P) && (st->capturedPiece <= k))
+        if (capture && (st->capturedPiece >= P) && (st->capturedPiece <= k))
         {
             int capsq = toSq;
 
-            if (getEp(m))
+
+            if (ep)
             {
                 if (sideToMove == White)
                     capsq = toSq + 8;
@@ -793,9 +703,13 @@ static inline void undoMove(int m)
                     capsq = toSq - 8;
             }
 
+
+            // restore the piece
             setBit(bitboards[st->capturedPiece], capsq);
+            setBit(occupancies[ColorFromPiece[st->capturedPiece]], capsq);
         }
     }
+
 
     occupancies[Both] = occupancies[White] | occupancies[Black];
 

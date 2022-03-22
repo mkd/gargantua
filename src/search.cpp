@@ -70,26 +70,13 @@ void dperft(int depth)
 
 
         // make move and, if illegal, skip to the next move
-        string ss;
         if (!makeMove(MoveList.moves[move_count], AllMoves))
         {
-            cout << "illegal -- continue" << endl;
-            printBoard();
-            cin >> ss;
             //takeBack();
             undoMove(MoveList.moves[move_count]);
             continue;
         }
 
-        cout << "=== BEFORE UNDO ===" << endl;
-        cout << "Board after move " << prettyMove(MoveList.moves[move_count]) << endl;
-        printBoard();
-
-        cout << "White pawns:" << endl;
-        printBitboard(bitboards[P]);
-
-        cout << "Black pawns:" << endl;
-        printBitboard(bitboards[p]);
 
         // cummulative nodes
         uint64_t cNodes = nodes;
@@ -101,18 +88,9 @@ void dperft(int depth)
         uint64_t PrevNodes = nodes - cNodes;
         
         // take back
-        //takeBack();
         undoMove(MoveList.moves[move_count]);
-        cout << "=== AFTER UNDO ===" << endl;
-        cout << "Board after move " << prettyMove(MoveList.moves[move_count]) << endl;
-        printBoard();
+        //takeBack();
 
-        cout << "White pawns:" << endl;
-        printBitboard(bitboards[P]);
-
-        cout << "Black pawns:" << endl;
-        printBitboard(bitboards[p]);
-        
         // print move
         cout << prettyMove(MoveList.moves[move_count]) << ": " << PrevNodes << endl;
     }
