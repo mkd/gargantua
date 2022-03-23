@@ -33,24 +33,25 @@
 // 2) UCI loop: interpreting commands from the user input and running them
 //
 // UCI protocol specs: http://wbec-ridderkerk.nl/html/UCIProtocol.html
-int main(void)
+int main(int argc, char *argv[])
 {
     // print engine info
-    // cout << EngineInfo() << endl;
+    cout << ENGINE_NAME << " " << ENGINE_VERSION <<
+            " by " << ENGINE_AUTHOR << endl << flush;
 
 
-    // init piece moves and data structures
+    // initializations
     initBitboards();
+    initSearch();
 
 
     // initialize neural network (NNUE) for evaluation
     nnue_init("nn-eba324f53044.nnue");
+    cout << endl << flush;
 
 
     // test UCI
-    UCI::position("fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves e2e4 e7e5 g1f3 e8f8");
-    printBoard();
-    UCI::go("go depth 7 wtime 10 infinite");
+    UCI::loop(argc, argv);
 
 
     // terminate program

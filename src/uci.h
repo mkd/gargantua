@@ -23,6 +23,18 @@
 
 
 
+// Engine information 
+#define ENGINE_NAME     "Gargantua"
+#define ENGINE_VERSION  "1.0"
+#define ENGINE_AUTHOR   "Claudio M. Camacho <claudiomkd@gmail.com>"
+#define ENGINE_URL      "http://github.com/mkd/gargantua"
+
+
+
+// XXX: define Options
+
+
+
 namespace UCI 
 {
 
@@ -30,8 +42,9 @@ namespace UCI
 // UCI interface functionality, including move parsing, UCI commands, etc.
 std::string moveToString(int m);
 int parseMove(std::string);
-void position(std::string);
-void go(std::string);
+void position(istringstream &);
+void go(istringstream &);
+void loop(int argc, char *argv[]);
 
 
 }  //  namespace UCI
