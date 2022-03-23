@@ -107,38 +107,55 @@ int UCI::parseMove(string str)
 // following move list ("moves").
 void UCI::position(string cmd)
 {
-    int m;
-    
+    // string variables to parse the command
     istringstream is(cmd);
     string token, fen;
 
+
+    // move variable to parse the move list
+    int m;
+
+
+    // get the sub-command (startpos or fen)
     is >> token;
 
+
+    // "startpos" sets the board to the initial position
     if (token == "startpos")
     {
         fen = FENPOS_STARTPOS;
         is >> token; // Consume "moves" token if any
     }
+
+
+    // "fen" sets the board to a given FEN position
     else if (token == "fen")
     {
         while (is >> token && token != "moves")
             fen += token + " ";
     }
+
+
+    // if none of "startpos" nor "fen", then return without doing anything
     else
     {
         return;
     }
 
-    std::cout << "fen = " << fen << std::endl;
 
+    // set up the position
     setPosition(fen);
 
-    // Parse move list (if any)
+
+    // parse move list, if any
     while ((is >> token) && ((m = UCI::parseMove(token)) != 0))
     {
         saveBoard();
+
+        // test whether the move is legal and make it on the board
         if (!makeMove(m, AllMoves))
         {
+            // undo move, if not legal
             takeBack();
         }
     }

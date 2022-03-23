@@ -28,10 +28,6 @@
 
 
 
-using namespace std;
-
-
-
 // The program's main application consists of two parts:
 // 1) inintialization of the necessary data structures
 // 2) UCI loop: interpreting commands from the user input and running them
@@ -39,51 +35,21 @@ using namespace std;
 // UCI protocol specs: http://wbec-ridderkerk.nl/html/UCIProtocol.html
 int main(void)
 {
-    // Initialize neural network
-    nnue_init("nn-eba324f53044.nnue");
-    cout << endl;
+    // print engine info
+    // cout << EngineInfo() << endl;
 
 
     // init piece moves and data structures
-    initBitmaps();
-    initLeaperAttacks();
-    initSliderAttacks(Bishop);
-    initSliderAttacks(Rook);
+    initBitboards();
 
+
+    // initialize neural network (NNUE) for evaluation
+    nnue_init("nn-eba324f53044.nnue");
 
 
     // test UCI
-    UCI::position("fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves e2e4 e7e5 g1f3");
+    UCI::position("fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves e2e4 e7e5 g1f3 e8f8");
     printBoard();
-
-
-    // test perft on different positions
-    /*
-    cout << "Test 'startpos': " << endl;
-    setPosition(FENPOS_STARTPOS);
-    dperft(6);
-
-    cout << "Test 'kiwipete': " << endl;
-    setPosition(FENPOS_KIWIPETE);
-    dperft(6);
-
-    cout << "Test 'pos3': " << endl;
-    setPosition(FENPOS_POS3);
-    dperft(6);
-
-    cout << "Test 'pos4': " << endl;
-    setPosition(FENPOS_POS4);
-    dperft(6);
-
-    cout << "Test 'pos5': " << endl;
-    setPosition(FENPOS_POS5);
-    dperft(5);
-
-    cout << "Test 'pos6': " << endl;
-    setPosition(FENPOS_POS6);
-    dperft(6);
-    */
-
 
 
     // terminate program
