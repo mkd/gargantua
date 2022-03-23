@@ -53,26 +53,8 @@ int main(void)
 
 
     // test UCI
-    setPosition("r3k2r/p11pqpb1/bn2pnp1/2pPN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq c6 0 1 ");
+    UCI::position("fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves e2e4 e7e5 g1f3");
     printBoard();
-    int move = parseUCIMove("d5c6");
-    
-    // if move is legal
-    if (move)
-    {
-        // make it on board
-        saveBoard();
-
-        cout << "epsq = " << epsq << endl;
-
-        if (!makeMove(move, AllMoves))
-            takeBack();
-
-        cout << "epsq = " << epsq << endl;
-
-        printBoard();
-        cout << "epsq = " << epsq << endl;
-    }
 
 
     // test perft on different positions
