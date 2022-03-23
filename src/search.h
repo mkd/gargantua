@@ -38,6 +38,31 @@ extern uint64_t nodes;
 
 
 
+// Limits_t is a structure that holds the configuration of the search.
+// This includes search depth, time to search, etc.
+//
+// The engine uses the global variable "limits" to set, edit and reset the
+// search configuration throught the entire lifecycle.
+typedef struct
+{
+    int wtime;
+    int btime;
+    int winc;
+    int binc;
+    int npmsec;
+    int movetime;
+    int movestogo;
+    int depth;
+    int mate;
+    int perft;
+    bool infinite;
+    int nodes;
+} Limits_t;
+
+extern Limits_t Limits;
+
+
+
 // perft
 //
 // Verify move generation. All the leaf nodes up to the given depth are
@@ -93,6 +118,9 @@ static inline void perft(int depth)
 // Functionality to search a position or perform an operation on the
 // nodes of a given position.
 void dperft(int);
+void search();
+void initSearch();
+void resetLimits();
 
 
 

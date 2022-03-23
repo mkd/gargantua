@@ -34,6 +34,11 @@ uint64_t nodes = 0ULL;
 
 
 
+// Limits holds the configuration of the search: time, search depth, etc.
+Limits_t Limits;
+
+
+
 // dperft
 //
 // Divide-perft is a perft() wrapper that divides a position into each
@@ -114,4 +119,58 @@ void dperft(int depth)
     cout << fixed << setprecision(3);
     cout << "    Time:  " << ns / 1000000.0 << "ms" << endl;
     cout << "   Speed:  " << nodes * 1000000 / ns << " Knps" << endl << endl;
+}
+
+
+
+// initSearch
+//
+// Intialize the search parameters to the default ones.
+void initSearch()
+{
+    resetLimits();
+}
+
+
+
+// resetLimits
+//
+// Reset all search limits to their initial configuration.
+void resetLimits()
+{
+    Limits.wtime = 0;
+    Limits.btime = 0;
+    Limits.winc = 0;
+    Limits.binc = 0;
+    Limits.npmsec = 0;
+    Limits.movetime = 0;
+    Limits.movestogo = 0;
+    Limits.depth = 0;
+    Limits.mate = 0;
+    Limits.perft = 0;
+    Limits.infinite = 0;
+    Limits.nodes = 0;
+}
+
+
+
+// search
+//
+// The search is started when the program receives the UCI 'go'
+// command. It searches from the root position and outputs the "bestmove".
+void search()
+{
+    // test
+    std::cout << "Limits.wtime = "      << Limits.wtime     << std::endl;
+    std::cout << "Limits.btime = "      << Limits.btime     << std::endl;
+    std::cout << "Limits.winc = "       << Limits.winc      << std::endl;
+    std::cout << "Limits.binc = "       << Limits.binc      << std::endl;
+    std::cout << "Limits.npmsec = "     << Limits.npmsec    << std::endl;
+    std::cout << "Limits.movetime = "   << Limits.movetime  << std::endl;
+    std::cout << "Limits.movestogo = "  << Limits.movestogo << std::endl;
+    std::cout << "Limits.depth = "      << Limits.depth     << std::endl;
+    std::cout << "Limits.mate = "       << Limits.mate      << std::endl;
+    std::cout << "Limits.perft = "      << Limits.perft     << std::endl;
+    std::cout << "Limits.infinite = "   << Limits.infinite  << std::endl;
+    std::cout << "Limits.nodes = "      << Limits.nodes     << std::endl;
 }

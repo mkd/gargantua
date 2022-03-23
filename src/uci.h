@@ -31,6 +31,7 @@ namespace UCI
 std::string moveToString(int m);
 int parseMove(std::string);
 void position(std::string);
+void go(std::string);
 
 
 }  //  namespace UCI

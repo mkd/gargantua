@@ -50,6 +50,7 @@ int main(void)
     // test UCI
     UCI::position("fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves e2e4 e7e5 g1f3 e8f8");
     printBoard();
+    UCI::go("go depth 7 wtime 10 infinite");
 
 
     // terminate program

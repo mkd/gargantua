@@ -23,6 +23,7 @@
 #include "bitboard.h"
 #include "movgen.h"
 #include "position.h"
+#include "search.h"
 #include "uci.h"
 
 
@@ -159,4 +160,39 @@ void UCI::position(string cmd)
             takeBack();
         }
     }
+}
+
+
+
+// UCI::go() is called when the engine receives the "go" UCI command. The
+// function sets the thinking time and other parameters from the input string,
+// then starts the search.
+void UCI::go(string cmd)
+{
+    // string variables to parse the command
+    istringstream is(cmd);
+    string token;
+
+
+    // reset search configuration before making a new search
+    resetLimits();
+
+
+    // parse sub-commands
+    while (is >> token)
+             if (token == "wtime")     is >> Limits.wtime;
+        else if (token == "btime")     is >> Limits.btime;
+        else if (token == "winc")      is >> Limits.winc;
+        else if (token == "binc")      is >> Limits.binc;
+        else if (token == "movestogo") is >> Limits.movestogo;
+        else if (token == "depth")     is >> Limits.depth;
+        else if (token == "nodes")     is >> Limits.nodes;
+        else if (token == "movetime")  is >> Limits.movetime;
+        else if (token == "mate")      is >> Limits.mate;
+        else if (token == "perft")     is >> Limits.perft;
+        else if (token == "infinite")  Limits.infinite = true;
+
+
+    // start the search
+    search();
 }
