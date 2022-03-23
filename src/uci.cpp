@@ -23,6 +23,7 @@
 #include "bitboard.h"
 #include "movgen.h"
 #include "position.h"
+#include "uci.h"
 
 
 
@@ -36,7 +37,7 @@ using namespace std;
 // The only special case is castling, where we print in the e1g1 notation in
 // normal chess mode, and in e1h1 notation in chess960 mode. Internally all
 // castling moves are always encoded as 'king captures rook'.
-string moveToUCI(int m)
+string UCI::moveToString(int m)
 {
     int fromSq = getMoveSource(m);
     int toSq   = getMoveTarget(m);
@@ -74,7 +75,7 @@ string moveToUCI(int m)
 // Note: the move will be considered legal if it is in the pseudo-legal moves
 //       list. That means you must take care of checking legality after parsing
 //       the move, before making it on the board; i.e, is King in check?
-int parseUCIMove(string str)
+int UCI::parseMove(string str)
 {
     // verify promotion and make sure it is in lower-case
     if (str.length() == 5)
@@ -89,11 +90,56 @@ int parseUCIMove(string str)
     // try to find the move in the list of pseudo-legal moves
     for (int move_count = 0; move_count < MoveList.count; move_count++)
     {
-        if (str == moveToUCI(MoveList.moves[move_count]))
+        if (str == moveToString(MoveList.moves[move_count]))
             return MoveList.moves[move_count];
     }
 
 
     // return empty move, if there was no move matching
     return 0;
+}
+
+
+
+// UCI::position() is called when engine receives the "position" UCI command.
+// The function sets up the position described in the given FEN string ("fen")
+// or the starting position ("startpos") and then makes the moves given in the
+// following move list ("moves").
+void UCI::position(string cmd)
+{
+    int m;
+    
+    istringstream is(cmd);
+    string token, fen;
+
+    is >> token;
+
+    if (token == "startpos")
+    {
+        fen = FENPOS_STARTPOS;
+        is >> token; // Consume "moves" token if any
+    }
+    else if (token == "fen")
+    {
+        while (is >> token && token != "moves")
+            fen += token + " ";
+    }
+    else
+    {
+        return;
+    }
+
+    std::cout << "fen = " << fen << std::endl;
+
+    setPosition(fen);
+
+    // Parse move list (if any)
+    while ((is >> token) && ((m = UCI::parseMove(token)) != 0))
+    {
+        saveBoard();
+        if (!makeMove(m, AllMoves))
+        {
+            takeBack();
+        }
+    }
 }

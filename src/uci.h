@@ -21,10 +21,22 @@
 #ifndef UCI_H
 #define UCI_H
 
+#include <iostream>
+
+
+
+namespace UCI 
+{
+
 
 // UCI interface functionality, including move parsing, UCI commands, etc.
-string moveToUCI(int m);
-int parseUCIMove(string);
+std::string moveToString(int m);
+int parseMove(std::string);
+void position(std::string);
+
+
+
+}  //  namespace UCI
 
 
 

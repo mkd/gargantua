@@ -502,7 +502,6 @@ static inline int makeMove(int move, int flag)
 
         // reset enpassant square
         epsq = NoSq;
-        std::cout << "reset epsq = " << NoSq << std::endl;
 
 
         // handle double pawn pushes
