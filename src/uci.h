@@ -21,8 +21,6 @@
 #ifndef UCI_H
 #define UCI_H
 
-#include <iostream>
-
 
 
 namespace UCI 
@@ -33,7 +31,6 @@ namespace UCI
 std::string moveToString(int m);
 int parseMove(std::string);
 void position(std::string);
-
 
 
 }  //  namespace UCI

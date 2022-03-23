@@ -331,6 +331,7 @@ Bitboard setOccupancy(int, int, Bitboard);
 void initBitmaps();
 void initLeaperAttacks();
 void initSliderAttacks(Slider);
+void initBitboards();
 
 
 

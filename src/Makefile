@@ -115,7 +115,7 @@ debug: $(DBG)
 
 $(EXE): $(WOBJECTS)
 	@echo ' Linking   [win64] $@'
-	$(WC) -o $@ $(WOBJECTS) $(WINFLAGS) $(LDFLAGS)
+	$(WC) -o $@ $(WOBJECTS) $(LDFLAGS)
 
 
 exe: $(EXE)

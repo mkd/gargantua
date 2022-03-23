@@ -621,3 +621,17 @@ void printBitboard(Bitboard bb)
     // print Bitboard details
     cout << endl << "Bitboard: " << bb << "ULL" << endl << endl;
 }
+
+
+
+// initBitboards
+//
+// Call all different functions that initialize fundamental data structures
+// and Bitboards to make the engine work.
+void initBitboards()
+{
+    initBitmaps();
+    initLeaperAttacks();
+    initSliderAttacks(Bishop);
+    initSliderAttacks(Rook);
+}
