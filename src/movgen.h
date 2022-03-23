@@ -33,7 +33,8 @@
 // MoveList_t is a structure holding a list of moves (up to 256, which is
 // enough for any legal chess position), and a pointer to the last element,
 // which can also be used as a counter of elements in the move list.
-typedef struct {
+typedef struct
+{
     int moves[256];
     int count;
 } MoveList_t;
