@@ -32,6 +32,11 @@ using namespace std;
 
 
 
+// Credit: Most of the UCI functionality is taken from Stockfish.
+// @see https://github.com/official-stockfish/Stockfish/blob/master/src/uci.cpp
+
+
+
 // UCI::moveToString converts a Move to a string in coordinate notation
 // (e.g., g1f3, a7a8q).
 //
@@ -106,10 +111,9 @@ int UCI::parseMove(string str)
 // The function sets up the position described in the given FEN string ("fen")
 // or the starting position ("startpos") and then makes the moves given in the
 // following move list ("moves").
-void UCI::position(string cmd)
+void UCI::position(istringstream& is)
 {
     // string variables to parse the command
-    istringstream is(cmd);
     string token, fen;
 
 
@@ -167,10 +171,9 @@ void UCI::position(string cmd)
 // UCI::go() is called when the engine receives the "go" UCI command. The
 // function sets the thinking time and other parameters from the input string,
 // then starts the search.
-void UCI::go(string cmd)
+void UCI::go(istringstream &is)
 {
     // string variables to parse the command
-    istringstream is(cmd);
     string token;
 
 
@@ -189,10 +192,133 @@ void UCI::go(string cmd)
         else if (token == "nodes")     is >> Limits.nodes;
         else if (token == "movetime")  is >> Limits.movetime;
         else if (token == "mate")      is >> Limits.mate;
-        else if (token == "perft")     is >> Limits.perft;
         else if (token == "infinite")  Limits.infinite = true;
+
+
+        // run "perft" test
+        else if (token == "perft")
+        {
+            is >> Limits.perft;
+            dperft(Limits.perft);
+            return;
+        }
 
 
     // start the search
     search();
+}
+
+
+
+// UCI::loop() waits for a command from stdin, parses it and calls the appropriate
+// function. Also intercepts EOF from stdin to ensure gracefully exiting if the
+// GUI dies unexpectedly. When called with some command line arguments, e.g. to
+// run 'bench', once the command is executed the function returns immediately.
+// In addition to the UCI ones, also some additional debug commands are supported.
+void UCI::loop(int argc, char* argv[])
+{
+    // string variables to process the commands
+    string token, cmd;
+
+
+    // set the starting position by default
+    setPosition(FENPOS_STARTPOS);
+
+
+    // prepare and take in commands from the command line, if any
+    for (int i = 1; i < argc; ++i)
+        cmd += std::string(argv[i]) + " ";
+
+
+    // main UCI loop
+    do
+    {
+        // block here waiting for input or EOF
+        if ((argc == 1) && !getline(cin, cmd))
+            cmd = "quit";
+
+
+        // transform the command into a stream to work with
+        istringstream is(cmd);
+
+
+        // avoid a stale if getline() returns empty or blank line
+        token.clear();
+
+
+        // start reading the command
+        is >> skipws >> token;
+
+
+        // "quit": stop the search and terminate the program
+        if ((token == "quit") || (token == "q"))
+            return;
+
+
+        // "stop": halt the search but keep the UCI loop open
+        else if (token == "stop") { }
+
+
+        // "uci": print engine information
+        else if (token == "uci")
+        {
+            cout << "id name "   << ENGINE_NAME << " " << ENGINE_VERSION << endl; 
+            cout << "id author " << ENGINE_AUTHOR << endl; 
+            //cout << Options << endl;
+            cout << "uciok" << endl << flush;
+        }
+
+
+        // "setoption": configure settings
+        else if (token == "setoption") {}
+            //UCI::setOption(is);
+
+
+        // "go": search
+        else if (token == "go")
+            UCI::go(is);
+
+
+        // "position": setup a FEN position and make moves
+        else if (token == "position")
+            UCI::position(is);
+
+
+        // "ucinewgame" command: start
+        else if (token == "ucinewgame")
+        {
+            setPosition(FENPOS_STARTPOS);
+            initSearch();
+        }
+
+
+        // "isready": respond to GUI that we are ready
+        else if (token == "isready")
+            cout << "readyok" << endl << flush;
+
+
+        // Additional custom non-UCI commands, mainly for debugging.
+        // Do not use these commands during a search!
+
+        // "flip": flip the board when being printed
+        else if (token == "flip")
+            flip = !flip;
+
+        //else if (token == "bench")    bench(pos, is, states);
+
+        // "d": show the current board
+        else if (token == "d")
+        {
+            printBoard();
+            cout << flush;
+        }
+
+        // else if (token == "eval") trace_eval(pos);
+
+        // "unknown command"
+        else if (!token.empty() && token[0] != '#')
+            cout << "Unknown command: " << cmd << endl << flush;
+
+    }
+    while ((token != "quit") && (argc == 1)); // Command line args are one-shot
 }
