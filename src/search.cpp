@@ -47,7 +47,7 @@ Limits_t Limits;
 void dperft(int depth)
 {
     // reliability checks
-    assert(depth < 0);
+    //assert(depth < 0);
 
 
     // reset nodes count
@@ -59,7 +59,8 @@ void dperft(int depth)
 
     
     // generate moves
-    generateMoves(MoveList);
+    //generateMoves(MoveList);
+    gen2(MoveList);
 
 
     

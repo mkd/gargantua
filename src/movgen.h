@@ -139,6 +139,7 @@ static constexpr int CastlingRights[64] =
 // Functionality to generate and manipulate chess moves.
 void generateMoves(MoveList_t &);
 void printMoveList(MoveList_t &);
+void gen2(MoveList_t &);
 
 
 

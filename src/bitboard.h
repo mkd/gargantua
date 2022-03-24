@@ -628,5 +628,15 @@ static inline uint64_t rng64()
 }
 
 
+/// pop_lsb() finds and clears the least significant bit in a non-zero bitboard
+static inline int popLsb(Bitboard& b) {
+  assert(b);
+  const int s = ls1b(b);
+  //b &= b - 1;
+  b ^= SqBB[s];
+  return s;
+}
+
+
 
 #endif  //  BITBOARD_H
