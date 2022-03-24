@@ -18,38 +18,36 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef UCI_H
-#define UCI_H
+#ifndef EVAL_H
+#define EVAL_H
+
+#include "bitboard.h"
+#include "nnue.h"
 
 
 
-// Engine information 
-#define ENGINE_NAME     "Gargantua"
-#define ENGINE_VERSION  "1.0"
-#define ENGINE_AUTHOR   "Claudio M. Camacho <claudiomkd@gmail.com>"
-#define ENGINE_URL      "http://github.com/mkd/gargantua"
+// convert BBC piece code to Stockfish piece codes
+constexpr int nnue_pieces[12] = { 6, 5, 4, 3, 2, 1, 12, 11, 10, 9, 8, 7 };
 
 
 
-// XXX: define Options
+// convert BBC square indices to Stockfish indices
+constexpr int nnue_squares[64] = {
+    a1, b1, c1, d1, e1, f1, g1, h1,
+	a2, b2, c2, d2, e2, f2, g2, h2,
+	a3, b3, c3, d3, e3, f3, g3, h3,
+	a4, b4, c4, d4, e4, f4, g4, h4,
+	a5, b5, c5, d5, e5, f5, g5, h5,
+	a6, b6, c6, d6, e6, f6, g6, h6,
+	a7, b7, c7, d7, e7, f7, g7, h7,
+	a8, b8, c8, d8, e8, f8, g8, h8
+};
 
 
 
-namespace UCI 
-{
-
-
-// UCI interface functionality, including move parsing, UCI commands, etc.
-std::string moveToString(int m);
-int parseMove(std::string);
-void position(istringstream &);
-void go(istringstream &);
-void traceEval();
-void loop(int argc, char *argv[]);
-
-
-}  //  namespace UCI
+// evaluate() returns an absolute score from the NNUE evaluation.
+int evaluate();
 
 
 
-#endif  //  UCI_H
+#endif  //  EVAL_H
