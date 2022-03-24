@@ -139,7 +139,6 @@ static constexpr int CastlingRights[64] =
 // Functionality to generate and manipulate chess moves.
 void generateMoves(MoveList_t &);
 void printMoveList(MoveList_t &);
-void gen2(MoveList_t &);
 
 
 
@@ -404,12 +403,12 @@ static inline int makeMove(int move, int flag)
             if (sideToMove == White)
             {
                 start_piece = p;
-                end_piece = q;
+                end_piece = k;
             }
             else
             {
                 start_piece = P;
-                end_piece = Q;
+                end_piece = K;
             }
 
             
@@ -418,6 +417,7 @@ static inline int makeMove(int move, int flag)
             {
                 if (getBit(bitboards[bb_piece], toSq))
                 {
+                    // remove the captured piece from the target square
                     popBit(bitboards[bb_piece], toSq);
 
                     // update occupancies for the piece just removed

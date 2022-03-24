@@ -49,28 +49,6 @@ int main(int argc, char *argv[])
     nnue_init("nn-eba324f53044.nnue");
     cout << endl << flush;
 
-/*    cout << "Test 'startpos': " << endl;
-    setPosition(FENPOS_STARTPOS);
-    dperft(6);
-    cout << "Test 'kiwipete': " << endl;
-    setPosition(FENPOS_KIWIPETE);
-    dperft(6);
-    cout << "Test 'pos3': " << endl;
-    setPosition(FENPOS_POS3);
-    dperft(6);
-    cout << "Test 'pos4': " << endl;
-    setPosition(FENPOS_POS4);
-    dperft(6);
-    cout << "Test 'pos5': " << endl;
-    setPosition(FENPOS_POS5);
-    dperft(5);
-    cout << "Test 'pos6': " << endl;
-    setPosition(FENPOS_POS6);
-    dperft(6);
-
-    return 0;
-    */
-
 
     // enter UCI loop
     UCI::loop(argc, argv);
