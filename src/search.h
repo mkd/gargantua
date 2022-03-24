@@ -86,8 +86,7 @@ static inline void perft(int depth)
 
     
     // generate moves
-    //generateMoves(MoveList);
-    gen2(MoveList);
+    generateMoves(MoveList);
 
     
     // loop over generated moves

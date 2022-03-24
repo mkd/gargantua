@@ -47,7 +47,7 @@ Limits_t Limits;
 void dperft(int depth)
 {
     // reliability checks
-    //assert(depth < 0);
+    assert(depth > 0);
 
 
     // reset nodes count
@@ -59,9 +59,7 @@ void dperft(int depth)
 
     
     // generate moves
-    //generateMoves(MoveList);
-    gen2(MoveList);
-
+    generateMoves(MoveList);
 
     
     // init start time
@@ -73,9 +71,6 @@ void dperft(int depth)
     {   
         // preserve board state
         saveBoard();
-        //StateInfo newState = *st;
-        //newState.previous = st;
-        //st = &newState;
 
 
         // make move and, if illegal, skip to the next move
