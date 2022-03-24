@@ -18,6 +18,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
+#include <iomanip>
 #include <string>
 
 #include "bitboard.h"
@@ -25,6 +27,7 @@
 #include "position.h"
 #include "search.h"
 #include "uci.h"
+#include "eval.h"
 
 
 
@@ -210,7 +213,27 @@ void UCI::go(istringstream &is)
 
 
 
-// UCI::loop() waits for a command from stdin, parses it and calls the appropriate
+// UCI::traceEval
+//
+// Print the evaluation for the current position.
+void UCI::traceEval()
+{
+    // display current board
+    printBoard();
+
+    // print evaluaton in user-friendly format; e.g., -1.28
+    cout << showpos << fixed << setprecision(2) << "NNUE evaluation: "
+         << evaluate() / 100.0f << endl << endl << flush;
+
+    // reset formating
+    cout << resetiosflags(std::cout.flags());
+}
+
+
+
+// UCI::loop
+//
+// Wait for a command from stdin, parses it and calls the appropriate
 // function. Also intercepts EOF from stdin to ensure gracefully exiting if the
 // GUI dies unexpectedly. When called with some command line arguments, e.g. to
 // run 'bench', once the command is executed the function returns immediately.
@@ -313,7 +336,8 @@ void UCI::loop(int argc, char* argv[])
             cout << flush;
         }
 
-        // else if (token == "eval") trace_eval(pos);
+        else if (token == "eval")
+            traceEval();
 
         // "unknown command"
         else if (!token.empty() && token[0] != '#')
