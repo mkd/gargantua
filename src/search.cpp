@@ -445,3 +445,22 @@ void dperft(int depth)
     cout << "    Time:  " << ns / 1000000.0 << "ms" << endl;
     cout << "   Speed:  " << nodes * 1000000 / ns << " Knps" << endl << endl;
 }
+
+
+
+// printMoveScores
+//
+// This function is for testing move scoring and ordering.
+void printMoveScores(MoveList_t &MoveList)
+{
+    cout << "     Move scores:" << endl << endl;
+       
+
+    // loop over moves within a move list
+    for (int count = 0; count <= MoveList.count; count++)
+    {
+        cout << "     move: ";
+        cout << prettyMove(MoveList.moves[count]);
+        cout << " score: " << scoreMove(MoveList.moves[count]) << endl;
+    }
+}
