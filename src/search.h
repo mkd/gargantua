@@ -45,6 +45,7 @@ using namespace std;
 #define DRAWSCORE      0
 #define MATEVALUE  49000
 #define MATESCORE  48000
+#define INFINITY   50000
 
 
 
@@ -136,6 +137,7 @@ static inline void perft(int depth)
 // nodes of a given position.
 void dperft(int);
 void search();
+int  qsearch(int, int);
 void initSearch();
 void resetLimits();
 

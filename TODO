@@ -1,3 +1,16 @@
 TODO
 ====
-Write this TODO...
+- MVV/LVA
+- move scoring (for ordering)
+- move ordering (incl. captures)
+- killer and history heuristics
+- collecting Principal Variation (PV)
+- iterative deepening
+- sorting PV moves
+- PV search
+- LMR
+- Null move pruning
+- aspiration window
+- time controls
+- transposition tables
+- 3-fold repetition

@@ -45,86 +45,6 @@ int bestmove;
 
 
 
-// dperft
-//
-// Divide-perft is a perft() wrapper that divides a position into each
-// root move and calls perft() for each of them. This is very useful
-// to debug possible errors within the move generator for a given root move.
-void dperft(int depth)
-{
-    // reliability checks
-    assert(depth > 0);
-
-
-    // reset nodes count
-    nodes = 0ULL;
-   
-
-    // create move list instance
-    MoveList_t MoveList;
-
-    
-    // generate moves
-    generateMoves(MoveList);
-
-    
-    // init start time
-    auto start = chrono::high_resolution_clock::now();
-   
-
-    // loop over generated moves
-    for (int move_count = 0; move_count < MoveList.count; move_count++)
-    {   
-        // preserve board state
-        saveBoard();
-
-
-        // make move and, if illegal, skip to the next move
-        if (!makeMove(MoveList.moves[move_count], AllMoves))
-        {
-            takeBack();
-            continue;
-        }
-
-
-        // cummulative nodes
-        uint64_t cNodes = nodes;
-
-
-        // call perft driver recursively
-        perft(depth - 1);
-
-        
-        // old nodes
-        uint64_t PrevNodes = nodes - cNodes;
-
-        
-        // undo move
-        takeBack();
-
-
-        // print move and nodes under that move
-        cout << prettyMove(MoveList.moves[move_count]) << ": " << PrevNodes << endl;
-    }
-
-
-    // stop the timer and measure time elapsed
-    auto finish = chrono::high_resolution_clock::now();
-    auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
-    assert(ns);
-
-
-    // print results
-    cout << endl;
-    cout << "    Depth: " << depth << endl;
-    cout << "    Nodes: " << nodes << endl;
-    cout << fixed << setprecision(3);
-    cout << "    Time:  " << ns / 1000000.0 << "ms" << endl;
-    cout << "   Speed:  " << nodes * 1000000 / ns << " Knps" << endl << endl;
-}
-
-
-
 // initSearch
 //
 // Intialize the search parameters to the default ones.
@@ -172,9 +92,13 @@ void resetLimits()
 // The score returned by the algorithm is always from calling qsearch().
 int negamax(int alpha, int beta, int depth)
 {
+    // reliability check
+    assert(depth >= 0);
+
+
     // leaf node: return static evaluation
     if (depth == 0)
-        return evaluate();
+        return qsearch(alpha, beta);
 
     
     // increment nodes count
@@ -285,8 +209,9 @@ int negamax(int alpha, int beta, int depth)
     
     // found better move
     if (old_alpha != alpha)
-        // init best move
+    {
         bestmove = best_sofar;
+    }
 
     
     // node (move) fails low
@@ -302,7 +227,7 @@ int negamax(int alpha, int beta, int depth)
 void search()
 {
     // find best move within a given position
-    int score = negamax(-50000, 50000, Limits.depth);
+    int score = negamax(-INFINITY, INFINITY, Limits.depth);
 
     
     if (bestmove)
@@ -312,4 +237,211 @@ void search()
 
         cout << "bestmove " << prettyMove(bestmove) << endl << flush;
     }
+}
+
+
+
+// qsearch
+//
+// Called by the main search, this is a function with zero depth. qsearch()
+// performs an indefinite search until all the following conditions are met:
+//
+// a) no more possible captures
+// b) no more pawn promotions
+// c) depth is too deep or time (from a running timer) is up
+int qsearch(int alpha, int beta)
+{
+    // check the clock and the input status
+    //if((nodes & 2047 ) == 0)
+		//communicate();
+
+
+    // increment nodes count
+    nodes++;
+
+
+    // we are too deep, hence there's an overflow of arrays relying on max ply constant
+    //if (ply > max_ply - 1)
+        // evaluate position
+    //    return evaluate();
+
+    // calculate "stanidng pat" to stabilize the quiescent search
+    int val = evaluate();
+
+    if (val >= beta)
+    {
+        // node (position) fails high
+        return beta;
+    }
+    
+    // found a better move
+    if (val > alpha)
+    {
+        // PV node (position)
+        alpha = val;
+    }
+
+    
+    // create move list instance
+    MoveList_t MoveList;
+
+    
+    // generate moves
+    generateCapturesAndPromotions(MoveList);
+
+    
+    // sort moves
+    //sortMoves(MoveList, 0);
+
+    
+    // loop over moves within a movelist
+    for (int count = 0; count < MoveList.count; count++)
+    {
+        // preserve board state
+        saveBoard();
+       
+
+        // increment ply
+        ply++;
+
+        
+        // increment repetition index & store hash key
+        //repetition_index++;
+        //repetition_table[repetition_index] = hash_key;
+
+        
+        // make sure to make only legal moves
+        if (!makeMove(MoveList.moves[count], AllMoves))
+        {
+            // decrement ply
+            ply--;
+            
+            // decrement repetition index
+            //repetition_index--;
+
+            takeBack();
+            
+            // skip to next move
+            continue;
+        }
+
+
+        // score current move
+        val = -qsearch(-beta, -alpha);
+       
+
+        // decrement ply
+        ply--;
+
+        
+        // decrement repetition index
+        //repetition_index--;
+
+
+        // take move back
+        takeBack();
+
+
+        // reutrn 0 if time is up
+        //if (stopped == 1) return 0;
+
+       
+        // found a better move
+        if (val > alpha)
+        {
+            // PV node (position)
+            alpha = val;
+            
+            // fail-hard beta cutoff
+            if (val >= beta)
+            {
+                // node (position) fails high
+                return beta;
+            }
+        }
+    }
+   
+
+    // node (position) fails low
+    return alpha;
+}
+
+
+
+// dperft
+//
+// Divide-perft is a perft() wrapper that divides a position into each
+// root move and calls perft() for each of them. This is very useful
+// to debug possible errors within the move generator for a given root move.
+void dperft(int depth)
+{
+    // reliability checks
+    assert(depth > 0);
+
+
+    // reset nodes count
+    nodes = 0ULL;
+   
+
+    // create move list instance
+    MoveList_t MoveList;
+
+    
+    // generate moves
+    generateMoves(MoveList);
+
+    
+    // init start time
+    auto start = chrono::high_resolution_clock::now();
+   
+
+    // loop over generated moves
+    for (int move_count = 0; move_count < MoveList.count; move_count++)
+    {   
+        // preserve board state
+        saveBoard();
+
+
+        // make move and, if illegal, skip to the next move
+        if (!makeMove(MoveList.moves[move_count], AllMoves))
+        {
+            takeBack();
+            continue;
+        }
+
+
+        // cummulative nodes
+        uint64_t cNodes = nodes;
+
+
+        // call perft driver recursively
+        perft(depth - 1);
+
+        
+        // old nodes
+        uint64_t PrevNodes = nodes - cNodes;
+
+        
+        // undo move
+        takeBack();
+
+
+        // print move and nodes under that move
+        cout << prettyMove(MoveList.moves[move_count]) << ": " << PrevNodes << endl;
+    }
+
+
+    // stop the timer and measure time elapsed
+    auto finish = chrono::high_resolution_clock::now();
+    auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
+    assert(ns);
+
+
+    // print results
+    cout << endl;
+    cout << "    Depth: " << depth << endl;
+    cout << "    Nodes: " << nodes << endl;
+    cout << fixed << setprecision(3);
+    cout << "    Time:  " << ns / 1000000.0 << "ms" << endl;
+    cout << "   Speed:  " << nodes * 1000000 / ns << " Knps" << endl << endl;
 }

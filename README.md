@@ -124,6 +124,6 @@ work in progress or not started at all.
 - **Universal Chess Interface (UCI) protocol:**
   http://wbec-ridderkerk.nl/html/UCIProtocol.html
 
-- **NNUE evaulation function:** an evaluation function based on a neural
-  network trained with milliones of games played by Stockfish 11 at a
+- **NNUE evaluation function:** an evaluation function based on a neural
+  network trained with millions of games played by Stockfish 11 at a
   moderate depth. More here: https://www.chessprogramming.org/NNUE
