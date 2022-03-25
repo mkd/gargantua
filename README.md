@@ -18,9 +18,9 @@ This distribution of Gargantua consists of the following files:
   text file containing the GNU General Public License version 3.
 - [TODO](https://github.com/mkd/gargantua/blob/master/TODO), a list of
   improvements and future features (i.e., a backlog).
-- [Changelog](https://github.com/mkd/chess0/blob/master/Changelog), a readable
+- [Changelog](https://github.com/mkd/gargantua/blob/master/Changelog), a readable
   list of changes introduced in every version.
-- [src](https://github.com/mkd/chess0/blob/master/src), a subdirectory
+- [src](https://github.com/mkd/gargantua/blob/master/src), a subdirectory
   containing the full source code, including a Makefile that can be used
   to compile Gargantua.
 - [src/nn-eba324f53044.nnue](https://github.com/mkd/gargantua/blob/master/src/nn-eba324f53044.nnue),
@@ -34,7 +34,7 @@ This distribution of Gargantua consists of the following files:
 
 
 # Building Gargantua
-The default [Makefile](https://github.com/gargantua/chess0/blob/master/src/Makefile)
+The default [Makefile](https://github.com/gargantua/blob/master/src/Makefile)
 in [src](https://github.com/mkd/gargantua/blob/master/src) contains the
 instructions to build Gargantua, with build targets for macOS, GNU/Linux,
 Unix systems in general, as well as Windows 64-bit.
