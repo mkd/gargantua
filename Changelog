@@ -2,6 +2,6 @@ Initial release v1.0
 ====================
 - Basic NNUE evaluation
 - Basic UCI protocol support
-- Negamax search algorithm
+- Negamax with quiescent search
 - Cross-compilation for Win64 platforms
 - Fully Bitboard-based implementation

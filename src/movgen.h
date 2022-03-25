@@ -138,6 +138,7 @@ static constexpr int CastlingRights[64] =
 
 // Functionality to generate and manipulate chess moves.
 void generateMoves(MoveList_t &);
+void generateCapturesAndPromotions(MoveList_t &);
 void printMoveList(MoveList_t &);
 
 
@@ -558,7 +559,7 @@ static inline int makeMove(int move, int flag)
 
     
     // Capture moves
-    else
+    else if (flag == CaptureMoves)
     {
         // make sure move is the capture
         if (getMoveCapture(move))

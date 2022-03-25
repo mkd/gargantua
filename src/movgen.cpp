@@ -481,6 +481,341 @@ void generateMoves(MoveList_t &MoveList)
 
 
 
+// generateCapturesAndPromotions
+//
+// Generate all pseudo-legal captures and promotions for the current position.
+// This is typically used by the quiescence search.
+void generateCapturesAndPromotions(MoveList_t &MoveList)
+{
+    int fromSq, toSq;
+    Bitboard captures = 0ULL;
+
+
+    // Bitboard containing the pieces for the side on move
+    Bitboard Us = occupancies[sideToMove];
+
+
+    // start with an empty move list
+    MoveList.count = 0;
+
+
+    // iterate over all the pieces from the side on move
+    while (Us)
+    {
+        // get next piece and its location, then clean it from the "Us" Bitboard
+        fromSq = popLsb(Us);
+
+
+        // White Pawns
+        if (SqBB[fromSq] & bitboards[P])
+        {
+            // init target square
+            toSq = fromSq - 8;
+
+            // generate pawn promotions
+            if (!(toSq < a8) && !getBit(occupancies[Both], toSq))
+            {
+                // pawn promotions
+                if (SqBB[toSq] & Rank8_Mask)
+                {                            
+                    addMove(MoveList, encodeMove(fromSq, toSq, P, Q, 0, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, P, R, 0, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, P, B, 0, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, P, N, 0, 0, 0, 0));
+                }
+            }
+                    
+            // init pawn attacks bitboard
+            captures = PawnAttacks[White][fromSq] & occupancies[Black];
+            
+            // generate pawn captures
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);
+                
+                // pawn promotions with capture
+                if (SqBB[toSq] & Rank8_Mask)
+                {
+                    addMove(MoveList, encodeMove(fromSq, toSq, P, Q, 1, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, P, R, 1, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, P, B, 1, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, P, N, 1, 0, 0, 0));
+                }
+                
+                // regular capture (without promotion)
+                else
+                    addMove(MoveList, encodeMove(fromSq, toSq, P, 0, 1, 0, 0, 0));
+            }
+                    
+            // generate enpassant captures
+            if (epsq != NoSq)
+            {
+                // lookup pawn attacks and bitwise AND with enpassant square (bit)
+                Bitboard ep_captures = PawnAttacks[White][fromSq] & (1ULL << epsq);
+                        
+                // make sure enpassant capture available
+                if (ep_captures)
+                {
+                    // init enpassant capture target square
+                    int target_enpassant = ls1b(ep_captures);
+                    addMove(MoveList, encodeMove(fromSq, target_enpassant, P, 0, 1, 0, 1, 0));
+                }
+            }
+        }
+
+        // Black Pawns
+        else if (SqBB[fromSq] & bitboards[p])
+        {
+            // init target square
+            toSq = fromSq + 8;
+            
+            // generate pawn promotions
+            if (!(toSq > h1) && !getBit(occupancies[Both], toSq))
+            {
+                // pawn promotions
+                if (SqBB[toSq] & Rank1_Mask)
+                {
+                    addMove(MoveList, encodeMove(fromSq, toSq, p, q, 0, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, p, r, 0, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, p, b, 0, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, p, n, 0, 0, 0, 0));
+                }
+            }
+            
+            // init pawn attacks bitboard
+            captures = PawnAttacks[Black][fromSq] & occupancies[White];
+            
+            // generate pawn captures
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);
+                
+                // pawn promotions with capture
+                if (SqBB[toSq] & Rank1_Mask)
+                {
+                    addMove(MoveList, encodeMove(fromSq, toSq, p, q, 1, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, p, r, 1, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, p, b, 1, 0, 0, 0));
+                    addMove(MoveList, encodeMove(fromSq, toSq, p, n, 1, 0, 0, 0));
+                }
+                
+                // regular capture (without promotion)
+                else
+                    addMove(MoveList, encodeMove(fromSq, toSq, p, 0, 1, 0, 0, 0));
+            }
+
+            // generate enpassant captures
+            if (epsq != NoSq)
+            {
+                // lookup pawn attacks and bitwise AND with enpassant square (bit)
+                Bitboard ep_captures = PawnAttacks[Black][fromSq] & (1ULL << epsq);
+                
+                // make sure enpassant capture available
+                if (ep_captures)
+                {
+                    // init enpassant capture target square
+                    int target_enpassant = ls1b(ep_captures);
+                    addMove(MoveList, encodeMove(fromSq, target_enpassant, p, 0, 1, 0, 1, 0));
+                }
+            }
+        }
+
+
+        // White Knights
+        else if (SqBB[fromSq] & bitboards[N])
+        {
+            // init piece attacks in order to get set of target squares
+            captures = KnightAttacks[fromSq] & occupancies[Black];
+            
+            // loop over target squares available from generated attacks
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);    
+                
+                // capture move
+                if (occupancies[Black] & SqBB[toSq])
+                    addMove(MoveList, encodeMove(fromSq, toSq, N, 0, 1, 0, 0, 0));
+            }
+        }
+
+
+        // Black Knights
+        else if (SqBB[fromSq] & bitboards[n])
+        {
+            // init piece attacks in order to get set of target squares
+            captures = KnightAttacks[fromSq] & occupancies[White];
+            
+            // loop over target squares available from generated attacks
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);    
+                
+                // capture move
+                if (occupancies[White] & SqBB[toSq])
+                    addMove(MoveList, encodeMove(fromSq, toSq, n, 0, 1, 0, 0, 0));
+            }
+        }
+
+
+        // White Bishops
+        else if (SqBB[fromSq] & bitboards[B])
+        {
+            // init piece attacks in order to get set of target squares
+            captures = getBishopAttacks(fromSq, occupancies[Both]) & occupancies[Black];
+            
+            // loop over target squares available from generated attacks
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);    
+                
+                // capture move
+                if (occupancies[Black] & SqBB[toSq])
+                    addMove(MoveList, encodeMove(fromSq, toSq, B, 0, 1, 0, 0, 0));
+            }
+        }
+
+
+        // Black Bishops
+        else if (SqBB[fromSq] & bitboards[b])
+        {
+            // init piece attacks in order to get set of target squares
+            captures = getBishopAttacks(fromSq, occupancies[Both]) & occupancies[White];
+            
+            // loop over target squares available from generated attacks
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);    
+                
+                // capture move
+                if (occupancies[White] & SqBB[toSq])
+                    addMove(MoveList, encodeMove(fromSq, toSq, b, 0, 1, 0, 0, 0));
+            }
+        }
+
+
+        // White Rooks
+        else if (SqBB[fromSq] & bitboards[R])
+        {
+            // init piece attacks in order to get set of target squares
+            captures = getRookAttacks(fromSq, occupancies[Both]) & occupancies[Black];
+            
+            // loop over target squares available from generated attacks
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);    
+                
+                // capture move
+                if (occupancies[Black] & SqBB[toSq])
+                    addMove(MoveList, encodeMove(fromSq, toSq, R, 0, 1, 0, 0, 0));
+            }
+        }
+
+
+        // Black Rooks
+        else if (SqBB[fromSq] & bitboards[r])
+        {
+            // init piece attacks in order to get set of target squares
+            captures = getRookAttacks(fromSq, occupancies[Both]) & occupancies[White];
+            
+            // loop over target squares available from generated attacks
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);    
+                
+                // capture move
+                if (occupancies[White] & SqBB[toSq])
+                    addMove(MoveList, encodeMove(fromSq, toSq, r, 0, 1, 0, 0, 0));
+            }
+        }
+
+
+        // White Queens
+        else if (SqBB[fromSq] & bitboards[Q])
+        {
+            // init piece attacks in order to get set of target squares
+            captures = getQueenAttacks(fromSq, occupancies[Both]) & occupancies[Black];
+            
+            // loop over target squares available from generated attacks
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);    
+                
+                // capture move
+                if (occupancies[Black] & SqBB[toSq])
+                    addMove(MoveList, encodeMove(fromSq, toSq, Q, 0, 1, 0, 0, 0));
+            }
+        }
+
+
+        // Black Queens
+        else if (SqBB[fromSq] & bitboards[q])
+        {
+            // init piece attacks in order to get set of target squares
+            captures = getQueenAttacks(fromSq, occupancies[Both]) & occupancies[White];
+            
+            // loop over target squares available from generated attacks
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);    
+                
+                // capture move
+                if (occupancies[White] & SqBB[toSq])
+                    addMove(MoveList, encodeMove(fromSq, toSq, q, 0, 1, 0, 0, 0));
+            }
+        }
+
+
+        // White King
+        else if (SqBB[fromSq] & bitboards[K])
+        {
+            // init piece attacks in order to get set of target squares
+            captures = KingAttacks[fromSq] & occupancies[Black];
+            
+            // loop over target squares available from generated attacks
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);    
+                
+                // capture move
+                if (occupancies[Black] & SqBB[toSq])
+                    addMove(MoveList, encodeMove(fromSq, toSq, K, 0, 1, 0, 0, 0));
+            }
+        }
+
+
+        // Black King
+        else if (SqBB[fromSq] & bitboards[k])
+        {
+            // init piece attacks in order to get set of target squares
+            captures = KingAttacks[fromSq] & occupancies[White];
+            
+            // loop over target squares available from generated attacks
+            while (captures)
+            {
+                // init target square
+                toSq = popLsb(captures);    
+                
+                // capture move
+                if (occupancies[White] & SqBB[toSq])
+                    addMove(MoveList, encodeMove(fromSq, toSq, k, 0, 1, 0, 0, 0));
+            }
+        }
+    }
+}
+
+
+
 // printMoveList
 //
 // Print the list of generated pseudo-legal moves.
