@@ -31,6 +31,23 @@ using namespace std;
 
 
 
+
+// Default settings for search, when no settings are specified by the user:
+//
+// DEFAULT_SEARCH_DEPTH: depth limit used by the search
+// DEFAULT_SEARCH_MOVETIME_MS: time limit used by the search (in milliseconds)
+#define DEFAULT_SEARCH_DEPTH          16
+#define DEFAULT_SEARCH_MOVETIME_MS  5000
+
+
+
+// Search definitions, including alpha-beta bounds, mating scores, etc.
+#define DRAWSCORE      0
+#define MATEVALUE  49000
+#define MATESCORE  48000
+
+
+
 // 'nodes' is a global variable holding the number of nodes analyzed
 // or searched. It is used by negamax() but also other performance test
 // functions such as perft().

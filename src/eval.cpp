@@ -82,7 +82,7 @@ int evaluate()
 
     // pieces and squares current index to write next piece square pair at
     int index = 2;
-   
+
 
     // loop over piece bitboards
     for (int bb_piece = P; bb_piece <= k; bb_piece++)
@@ -130,8 +130,8 @@ int evaluate()
     // set zero terminating characters at the end of pieces & squares arrays
     pieces[index] = 0;
     squares[index] = 0;
-    
-    
+
+
     // We need to make sure that fifty rule move counter gives a penalty
     // to the evaluation, otherwise it won't be capable of mating in
     // simple endgames like KQK or KRK! This expression is used:
