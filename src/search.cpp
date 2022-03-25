@@ -24,6 +24,7 @@
 #include <cassert>
 
 #include "search.h"
+#include "eval.h"
 
 
 
@@ -36,6 +37,11 @@ uint64_t nodes = 0ULL;
 
 // Limits holds the configuration of the search: time, search depth, etc.
 Limits_t Limits;
+
+
+
+// TODO: ditch when implementing iterative-deepening framework
+int bestmove;
 
 
 
@@ -141,11 +147,150 @@ void resetLimits()
     Limits.npmsec = 0;
     Limits.movetime = 0;
     Limits.movestogo = 0;
-    Limits.depth = 0;
+    Limits.depth = DEFAULT_SEARCH_DEPTH;
     Limits.mate = 0;
     Limits.perft = 0;
     Limits.infinite = 0;
     Limits.nodes = 0;
+}
+
+
+
+// negamax
+//
+// Main alphabeta algorithm (Negamax) which relies on a Principal Variation
+// search. This algorithm uses the following steps:
+//
+//  1. static null move pruning
+//  2. null move pruning
+//  3. razoring
+//  2. sort moves (score based on historic appearance, capture gain, etc)
+//  3. look up move hash (from previous searches)
+//  4. late move reductions (LMR)
+//  8. start full search
+//
+// The score returned by the algorithm is always from calling qsearch().
+int negamax(int alpha, int beta, int depth)
+{
+    // leaf node: return static evaluation
+    if (depth == 0)
+        return evaluate();
+
+    
+    // increment nodes count
+    nodes++;
+
+
+    // is king in check
+    int inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
+                                                           ls1b(bitboards[k]),
+                                                           sideToMove ^ 1);
+
+    
+    // number of legal moves found
+    int legal = 0;
+
+    
+    // best move so far
+    int best_sofar;
+
+    
+    // old value of alpha
+    int old_alpha = alpha;
+
+
+    // create move list instance
+    MoveList_t MoveList;
+   
+
+    // generate moves
+    generateMoves(MoveList);
+
+    
+    // loop over moves within a movelist
+    for (int count = 0; count < MoveList.count; count++)
+    {
+        // preserve board state
+        saveBoard();
+       
+
+        // increment ply
+        ply++;
+       
+
+        // make sure to make only legal moves
+        if (!makeMove(MoveList.moves[count], AllMoves))
+        {
+            // decrement ply
+            ply--;
+
+            // undo move
+            takeBack();
+            
+            // skip to next move
+            continue;
+        }
+
+
+        // increment legal moves
+        legal++;
+
+        
+        // get score for the current move
+        int score = -negamax(-beta, -alpha, depth - 1);
+
+        
+        // decrement ply
+        ply--;
+
+
+        // undo move
+        takeBack();
+
+        
+        // fail-hard beta cutoff
+        if (score >= beta)
+        {
+            // node (move) fails high
+            return beta;
+        }
+
+        
+        // found a better move (improves alpha)
+        if (score > alpha)
+        {
+            // PV node (move)
+            alpha = score;
+            
+            // if root move
+            if (ply == 0)
+                // associate best move with the best score
+                best_sofar = MoveList.moves[count];
+        }
+    }
+
+
+    // checkmate or stalemate detection
+    if (legal == 0)
+    {
+        // king is in check: return mating score (closest distance to mate)
+        if (inCheck)
+            return -MATEVALUE + ply;
+        
+        // king not in check: stalemate
+        else
+            return DRAWSCORE;
+    }
+
+    
+    // found better move
+    if (old_alpha != alpha)
+        // init best move
+        bestmove = best_sofar;
+
+    
+    // node (move) fails low
+    return alpha;
 }
 
 
@@ -156,17 +301,15 @@ void resetLimits()
 // command. It searches from the root position and outputs the "bestmove".
 void search()
 {
-    // test
-    std::cout << "Limits.wtime = "      << Limits.wtime     << std::endl;
-    std::cout << "Limits.btime = "      << Limits.btime     << std::endl;
-    std::cout << "Limits.winc = "       << Limits.winc      << std::endl;
-    std::cout << "Limits.binc = "       << Limits.binc      << std::endl;
-    std::cout << "Limits.npmsec = "     << Limits.npmsec    << std::endl;
-    std::cout << "Limits.movetime = "   << Limits.movetime  << std::endl;
-    std::cout << "Limits.movestogo = "  << Limits.movestogo << std::endl;
-    std::cout << "Limits.depth = "      << Limits.depth     << std::endl;
-    std::cout << "Limits.mate = "       << Limits.mate      << std::endl;
-    std::cout << "Limits.perft = "      << Limits.perft     << std::endl;
-    std::cout << "Limits.infinite = "   << Limits.infinite  << std::endl;
-    std::cout << "Limits.nodes = "      << Limits.nodes     << std::endl;
+    // find best move within a given position
+    int score = negamax(-50000, 50000, Limits.depth);
+
+    
+    if (bestmove)
+    {
+        cout << "info score cp " << score << " depth " << Limits.depth
+             << " nodes " <<  nodes << endl << flush;
+
+        cout << "bestmove " << prettyMove(bestmove) << endl << flush;
+    }
 }

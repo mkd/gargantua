@@ -39,11 +39,15 @@ using namespace std;
 // 2. The side to move
 // 3. The enpassant capture square
 // 4. The castling rights
+// 5. The 50-move rule (50 moves without captures, pawn moves nor promotions)
+// 6. A ply counter (to separate root moves from the rest)
 Bitboard bitboards[12];
 Bitboard occupancies[3];
 int sideToMove = White;
 int epsq = NoSq; 
 int castle;
+int fifty = 0;
+int ply = 0;
 
 
 

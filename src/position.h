@@ -115,6 +115,8 @@ extern Bitboard occupancies[3];
 extern int sideToMove;
 extern int epsq;
 extern int castle;
+extern int fifty;
+extern int ply;
 
 
 
