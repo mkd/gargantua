@@ -81,6 +81,50 @@ extern Limits_t Limits;
 
 
 
+// Most Valuable Victim / Less Valuable Attacker (MVV/LVA) lookup table
+/*
+                          
+    (Victims) Pawn Knight Bishop   Rook  Queen   King
+  (Attackers)
+        Pawn   105    205    305    405    505    605
+      Knight   104    204    304    404    504    604
+      Bishop   103    203    303    403    503    603
+        Rook   102    202    302    402    502    602
+       Queen   101    201    301    401    501    601
+        King   100    200    300    400    500    600
+*/
+
+// MVV LVA [attacker][victim]
+static constexpr int mvv_lva[12][12] =
+{
+ 	{105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605},
+	{104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604},
+	{103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603},
+	{102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602},
+	{101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601},
+	{100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600},
+
+	{105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605},
+	{104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604},
+	{103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603},
+	{102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602},
+	{101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601},
+	{100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600}
+};
+
+
+
+// Functionality to search a position or perform an operation on the
+// nodes of a given position.
+void dperft(int);
+void search();
+int  qsearch(int, int);
+void initSearch();
+void resetLimits();
+void printMoveScores(MoveList_t &);
+
+
+
 // perft
 //
 // Verify move generation. All the leaf nodes up to the given depth are
@@ -133,13 +177,59 @@ static inline void perft(int depth)
 
 
 
-// Functionality to search a position or perform an operation on the
-// nodes of a given position.
-void dperft(int);
-void search();
-int  qsearch(int, int);
-void initSearch();
-void resetLimits();
+// scoreMove
+//
+// Assign a score to a move.
+static inline int scoreMove(int move)
+{
+    // score capture move
+    if (getMoveCapture(move))
+    {
+        // init target piece
+        int target_piece = P;
+        int toSq = getMoveTarget(move);
+
+        
+        // pick up bitboard piece index ranges depending on side
+        int start_piece, end_piece;
+
+        
+        // pick up side to move
+        if (sideToMove == White)
+        {
+            start_piece = p;
+            end_piece = k;
+        }
+        else
+        {
+            start_piece = P;
+            end_piece = K;
+        }
+
+        
+        // loop over the opponent's bitboards
+        for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++)
+        {
+            // if there's a piece on the target square
+            if (getBit(bitboards[bb_piece], toSq))
+            {
+                // remove it from corresponding bitboard
+                target_piece = bb_piece;
+                break;
+            }
+        }
+                
+        // score move by MVV LVA lookup [source piece][target piece]
+        return mvv_lva[getMovePiece(move)][target_piece];
+    }
+    
+    // score quiet move
+    //else
+    //{ }
+   
+
+    return 0;
+}
 
 
 
