@@ -111,6 +111,11 @@ int negamax(int alpha, int beta, int depth)
                                                            sideToMove ^ 1);
 
     
+    // check extension: increase search depth if king is in check
+    if (inCheck)
+        depth++;
+
+    
     // number of legal moves found
     int legal = 0;
 
