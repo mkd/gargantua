@@ -230,10 +230,15 @@ int negamax(int alpha, int beta, int depth)
 // command. It searches from the root position and outputs the "bestmove".
 void search()
 {
+    // reset nodes counter
+    nodes = 0;
+
+
     // find best move within a given position
     int score = negamax(-INFINITY, INFINITY, Limits.depth);
 
-    
+
+    // print best move, if any
     if (bestmove)
     {
         cout << "info score cp " << score << " depth " << Limits.depth

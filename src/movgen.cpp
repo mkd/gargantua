@@ -844,28 +844,31 @@ void printMoveList(MoveList_t &MoveList)
 
         
         // print move and piece
-        cout << "     " << SquareToCoordinates[getMoveSource(move)]
-                        << SquareToCoordinates[getMoveTarget(move)]
-                        << PromoPieces[getPromo(move)] << "   "
-                        << PieceStr[getMovePiece(move)] << "        ";
+        cout << "     " << prettyMove(move) << "       ";
+        if (!getPromo(move))
+            cout << " ";
+
+
+        // print piece being moved
+        cout << PieceStr[getMovePiece(move)] << "          ";
 
 
         // print capture flag
         if (getMoveCapture(move)) cout << "1";
         else cout << "0";
-        cout << "          ";
+        cout << "         ";
 
 
         // print double pawn push flag
         if (getDoublePush(move)) cout << "1";
         else cout << "0";
-        cout << "         ";
+        cout << "     ";
 
 
         // print enpassant flag
         if (getEp(move)) cout << "1";
         else cout << "0";
-        cout << "     ";
+        cout << "         ";
 
 
         // print castling flag
