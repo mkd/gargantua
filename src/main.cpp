@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     // initialize neural network (NNUE) for evaluation
     nnue_init("nn-eba324f53044.nnue");
     cout << endl << flush;
-
+    
 
     // enter UCI loop
     UCI::loop(argc, argv);
