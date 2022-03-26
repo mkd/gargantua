@@ -130,6 +130,10 @@ int negamax(int alpha, int beta, int depth)
     // generate moves
     generateMoves(MoveList);
 
+
+    // sort moves from best to worst
+    sortMoves(MoveList);
+
     
     // loop over moves within a movelist
     for (int count = 0; count < MoveList.count; count++)
@@ -291,7 +295,7 @@ int qsearch(int alpha, int beta)
 
     
     // sort moves
-    //sortMoves(MoveList, 0);
+    sortMoves(MoveList);
 
     
     // loop over moves within a movelist
@@ -448,6 +452,44 @@ void dperft(int depth)
 
 
 
+// sortMoves
+//
+// Take a MoveList_t and sort it in descending order by move score.
+//
+// sortMoves() works in a way that goes through every move in the move
+// list, gets a score for every move (based on MVV/LVA, PV node, and
+// other heuristics), and sorts the list from bigger score to smaller 
+// score. In other words, sortMoves() tries to bring the best move to
+// the front.
+void sortMoves(MoveList_t &MoveList)
+{
+    // reliability checks
+    assert(MoveList.count > 0);
+    assert(MoveList.count < 256);
+
+
+    // associative array linking moves and scores
+    pair<int, int> pairt[256];
+
+
+    // find the score for every move
+    for (int i = 0; i < MoveList.count; i++) 
+    {
+        pairt[i].first  = scoreMove(MoveList.moves[i]);
+        pairt[i].second = MoveList.moves[i];
+    }
+  
+    // sort the associative array based on the move score
+    sort(pairt, pairt + MoveList.count, greater<pair<int, int>>());
+     
+
+    // re-write the MoveList ordered by move score in descending order
+    for (int i = 0; i < MoveList.count; i++) 
+        MoveList.moves[i] = pairt[i].second;
+}
+
+
+
 // printMoveScores
 //
 // This function is for testing move scoring and ordering.
@@ -457,10 +499,47 @@ void printMoveScores(MoveList_t &MoveList)
        
 
     // loop over moves within a move list
-    for (int count = 0; count <= MoveList.count; count++)
+    for (int count = 0; count < MoveList.count; count++)
     {
         cout << "     move: ";
         cout << prettyMove(MoveList.moves[count]);
         cout << " score: " << scoreMove(MoveList.moves[count]) << endl;
+    }
+}
+
+
+
+// sort moves in descending order
+void sortMoves_slow(MoveList_t &MoveList)
+{
+    // move scores
+    int move_scores[MoveList.count];
+
+
+    // score all the moves within a move list
+    for (int count = 0; count < MoveList.count; count++)
+        // score move
+        move_scores[count] = scoreMove(MoveList.moves[count]);
+    
+    // loop over current move within a move list
+    for (int current_move = 0; current_move < MoveList.count; current_move++)
+    {
+        // loop over next move within a move list
+        for (int next_move = current_move + 1; next_move < MoveList.count; next_move++)
+        {
+            // compare current and next move scores
+            if (move_scores[current_move] < move_scores[next_move])
+            {
+                // swap scores
+                int temp_score = move_scores[current_move];
+                move_scores[current_move] = move_scores[next_move];
+                move_scores[next_move] = temp_score;
+                
+                // swap moves
+                int temp_move = MoveList.moves[current_move];
+                MoveList.moves[current_move] = MoveList.moves[next_move];
+                MoveList.moves[next_move] = temp_move;
+            }
+        }
     }
 }

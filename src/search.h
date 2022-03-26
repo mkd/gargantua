@@ -31,7 +31,6 @@ using namespace std;
 
 
 
-
 // Default settings for search, when no settings are specified by the user:
 //
 // DEFAULT_SEARCH_DEPTH: depth limit used by the search
@@ -121,6 +120,7 @@ void search();
 int  qsearch(int, int);
 void initSearch();
 void resetLimits();
+void sortMoves(MoveList_t &);
 void printMoveScores(MoveList_t &);
 
 
