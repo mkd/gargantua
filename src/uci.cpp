@@ -327,7 +327,29 @@ void UCI::loop(int argc, char* argv[])
         else if (token == "flip")
             flip = !flip;
 
+
+        // "moves": print the list of pseudo-legal moves, non-sorted
+        else if (token == "moves")
+        {
+            MoveList_t MoveList;
+            generateMoves(MoveList);
+            sortMoves(MoveList);
+            printMoveList(MoveList);
+        }
+
+
+        // "smoves": print the list of pseudo-legal moves, sorted by score
+        else if (token == "smoves")
+        {
+            MoveList_t MoveList;
+            generateMoves(MoveList);
+            sortMoves(MoveList);
+            printMoveScores(MoveList);
+        }
+
+
         //else if (token == "bench")    bench(pos, is, states);
+
 
         // "d": show the current board
         else if (token == "d")
@@ -336,8 +358,11 @@ void UCI::loop(int argc, char* argv[])
             cout << flush;
         }
 
+
+        // "eval": print the static evaluation for the current position
         else if (token == "eval")
             traceEval();
+
 
         // "unknown command"
         else if (!token.empty() && token[0] != '#')

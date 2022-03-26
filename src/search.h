@@ -46,6 +46,8 @@ using namespace std;
 #define MATESCORE  48000
 #define INFINITY   50000
 
+#define MOVESCORE_PROMO_QUIET  10
+
 
 
 // 'nodes' is a global variable holding the number of nodes analyzed
@@ -221,6 +223,13 @@ static inline int scoreMove(int move)
                 
         // score move by MVV LVA lookup [source piece][target piece]
         return mvv_lva[getMovePiece(move)][target_piece];
+    }
+
+
+    // quiet promotions are also scored
+    else if (getPromo(move))
+    {
+        return MOVESCORE_PROMO_QUIET;
     }
     
     // score quiet move
