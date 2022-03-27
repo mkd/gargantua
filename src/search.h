@@ -35,7 +35,7 @@ using namespace std;
 //
 // DEFAULT_SEARCH_DEPTH: depth limit used by the search
 // DEFAULT_SEARCH_MOVETIME_MS: time limit used by the search (in milliseconds)
-#define DEFAULT_SEARCH_DEPTH          16
+#define DEFAULT_SEARCH_DEPTH           6
 #define DEFAULT_SEARCH_MOVETIME_MS  5000
 
 

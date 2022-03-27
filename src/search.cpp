@@ -240,14 +240,19 @@ void search()
 
 
     // find best move within a given position
+    auto start = chrono::high_resolution_clock::now();
     int score = negamax(-INFINITY, INFINITY, Limits.depth);
+    auto finish = chrono::high_resolution_clock::now();
+    auto ms = chrono::duration_cast<chrono::milliseconds>(finish-start).count();
+    auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
 
 
     // print best move, if any
     if (bestmove)
     {
-        cout << "info score cp " << score << " depth " << Limits.depth
-             << " nodes " <<  nodes << endl << flush;
+        cout << "info depth " << Limits.depth << " score cp " << score
+             << " nodes " <<  nodes << " nps " << nodes * 1000000000 / ns
+             << " time " << ms << endl << flush;
 
         cout << "bestmove " << prettyMove(bestmove) << endl << flush;
     }
@@ -265,9 +270,18 @@ void search()
 // c) depth is too deep or time (from a running timer) is up
 int qsearch(int alpha, int beta)
 {
+    int val, score;
+
+
     // check the clock and the input status
     //if((nodes & 2047 ) == 0)
 		//communicate();
+
+
+    // is king in check
+    int inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
+                                                           ls1b(bitboards[k]),
+                                                           sideToMove ^ 1);
 
 
     // increment nodes count
@@ -275,25 +289,35 @@ int qsearch(int alpha, int beta)
 
 
     // we are too deep, hence there's an overflow of arrays relying on max ply constant
-    //if (ply > max_ply - 1)
-        // evaluate position
-    //    return evaluate();
+    //if (ply > MaxPly - 1)
+    //  return evaluate();
 
-    // calculate "stanidng pat" to stabilize the quiescent search
-    int val = evaluate();
 
-    if (val >= beta)
+    // check for an immediate draw
+    //if (isDraw())
+    // return DRAWSCORE;
+
+
+    // calculate "stand-pat" to stabilize the qsearch, only if not in check
+    if (!inCheck)
     {
+        val = evaluate();
+
         // node (position) fails high
-        return beta;
+        if (val >= beta)
+            return beta;
+        
+        // found a better move (PV node position)
+        if (val > alpha)
+            alpha = val;
     }
     
-    // found a better move
-    if (val > alpha)
-    {
-        // PV node (position)
-        alpha = val;
-    }
+
+    // This check extension must be commented out, if it already exists within
+    // negamax(). Otherwise, it creates an infinite loop and the program
+    // crashes:
+    //else
+    //    return negamax(alpha, beta, 1);
 
     
     // create move list instance
@@ -341,7 +365,7 @@ int qsearch(int alpha, int beta)
 
 
         // score current move
-        val = -qsearch(-beta, -alpha);
+        score = -qsearch(-beta, -alpha);
        
 
         // decrement ply
@@ -361,13 +385,13 @@ int qsearch(int alpha, int beta)
 
        
         // found a better move
-        if (val > alpha)
+        if (score > alpha)
         {
             // PV node (position)
-            alpha = val;
+            alpha = score;
             
             // fail-hard beta cutoff
-            if (val >= beta)
+            if (score >= beta)
             {
                 // node (position) fails high
                 return beta;
