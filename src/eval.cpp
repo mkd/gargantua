@@ -137,6 +137,5 @@ int evaluate()
     // simple endgames like KQK or KRK! This expression is used:
     //                    nnue_score * (100 - fifty) / 100
 
-    //return (nnue_evaluate(sideToMove, pieces, squares) * (100 - fifty) / 100);
-    return (nnue_evaluate(sideToMove, pieces, squares));
+    return (nnue_evaluate(sideToMove, pieces, squares) * (100 - fifty) / 100);
 }

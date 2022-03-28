@@ -249,11 +249,12 @@ static inline bool isSquareAttacked(int square, int side)
 // Implemented as a macro, it's job is to preserve the current board state
 // in temporary variables.
 #define saveBoard()                                                       \
-    Bitboard bitboards_copy[12], occupancies_copy[3];                          \
-    int side_copy, enpassant_copy, castle_copy;                           \
+    Bitboard bitboards_copy[12], occupancies_copy[3];                     \
+    int side_copy, enpassant_copy, castle_copy, fifty_copy;               \
     memcpy(bitboards_copy, bitboards, sizeof(bitboards));                 \
-    memcpy(occupancies_copy, occupancies, sizeof(occupancies));            \
+    memcpy(occupancies_copy, occupancies, sizeof(occupancies));           \
     side_copy = sideToMove, enpassant_copy = epsq, castle_copy = castle;  \
+    fifty_copy = fifty;                                                   \
 
 
 
@@ -266,6 +267,7 @@ static inline bool isSquareAttacked(int square, int side)
     memcpy(bitboards, bitboards_copy, sizeof(bitboards));                 \
     memcpy(occupancies, occupancies_copy, sizeof(occupancies));           \
     sideToMove = side_copy, epsq = enpassant_copy, castle = castle_copy;  \
+    fifty = fifty_copy;                                                   \
 
 
 
@@ -318,6 +320,11 @@ static inline int makeMove(int move, int flag)
         // update occupancies for the piece being moved
         popBit(occupancies[sideToMove], fromSq);
         setBit(occupancies[sideToMove], toSq);
+
+
+        // increment fifty move rule counter
+        if ((piece != P) && (piece != p))
+            fifty++;
 
 
         // handle castling moves
@@ -396,7 +403,7 @@ static inline int makeMove(int move, int flag)
         if (capture)
         {
             // reset fifty move rule counter
-            //fifty = 0;
+            fifty = 0;
 
             
             // pick up bitboard piece index ranges depending on side

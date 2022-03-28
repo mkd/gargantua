@@ -79,7 +79,7 @@ void resetBoard()
 
 
     // reset fifty move rule counter
-    //fifty = 0;
+    fifty = 0;
 
 
     // reset repetition table
@@ -212,7 +212,7 @@ void setPosition(const string &fenStr)
 
 
     // 5-6. Halfmove clock and fullmove number
-    //ss >> skipws >> fifty >> gamePly;
+    ss >> skipws >> fifty;
 
 
     // populate white occupancy bitboard
@@ -308,10 +308,135 @@ void printBoard()
 
 
     // print board status
-    cout << "      Side on move:   " << ((sideToMove == White) ? "White" : "Black") << endl;
-    cout << "      Enpassant sq:   " << ((epsq != NoSq) ? SquareToCoordinates[epsq] : "-") << endl;
-    cout << "      Castling:       " << ((castle & wk) ? "K" : "-") <<
-                                        ((castle & wq) ? "Q" : "-") <<
-                                        ((castle & bk) ? "k" : "-") <<
-                                        ((castle & bq) ? "q" : "-") << endl << endl;
+    cout << "  Fen:    " << getFEN() << endl;
+    cout << "  Side:   " << ((sideToMove == White) ? "White" : "Black") << endl;
+    cout << "  Epsq:   " << ((epsq != NoSq) ? SquareToCoordinates[epsq] : "-") << endl;
+    cout << "  Castle: " << ((castle & wk) ? "K" : "-") <<
+                            ((castle & wq) ? "Q" : "-") <<
+                            ((castle & bk) ? "k" : "-") <<
+                            ((castle & bq) ? "q" : "-") << endl;
+
+    cout << endl;
+}
+
+
+
+// getFEN
+//
+// Return a FEN representation of the current position.
+string getFEN()
+{
+    int emptyCnt = 0;
+    int fromSq, rank, file;
+    ostringstream ss;
+
+
+    // 64-square board where to place the pieces for processing
+    int board[8][8] = {
+        {-1, -1, -1, -1, -1, -1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1},
+        {-1, -1, -1, -1, -1, -1, -1, -1}
+    };
+
+
+    // serialize all pieces into a board structure
+    Bitboard bb = occupancies[Both];
+    while (bb)
+    {
+        fromSq = popLsb(bb);
+
+        if (SqBB[fromSq] & bitboards[P])
+            board[fromSq % 8][fromSq / 8] = P;
+        else if (SqBB[fromSq] & bitboards[N])
+            board[fromSq % 8][fromSq / 8] = N;
+        else if (SqBB[fromSq] & bitboards[B])
+            board[fromSq % 8][fromSq / 8] = B;
+        else if (SqBB[fromSq] & bitboards[R])
+            board[fromSq % 8][fromSq / 8] = R;
+        else if (SqBB[fromSq] & bitboards[Q])
+            board[fromSq % 8][fromSq / 8] = Q;
+        else if (SqBB[fromSq] & bitboards[K])
+            board[fromSq % 8][fromSq / 8] = K;
+        else if (SqBB[fromSq] & bitboards[p])
+            board[fromSq % 8][fromSq / 8] = p;
+        else if (SqBB[fromSq] & bitboards[n])
+            board[fromSq % 8][fromSq / 8] = n;
+        else if (SqBB[fromSq] & bitboards[b])
+            board[fromSq % 8][fromSq / 8] = b;
+        else if (SqBB[fromSq] & bitboards[r])
+            board[fromSq % 8][fromSq / 8] = r;
+        else if (SqBB[fromSq] & bitboards[q])
+            board[fromSq % 8][fromSq / 8] = q;
+        else if (SqBB[fromSq] & bitboards[k])
+            board[fromSq % 8][fromSq / 8] = k;
+    }
+
+
+    // translate pieces on the board into FEN notation
+    for (rank = 0; rank <= 7; ++rank)
+    {
+        for (file = 0; file <= 7; file++)
+        {
+            for (emptyCnt = 0; (file <= 7) && (board[file][rank] == -1); file++)
+                emptyCnt++;
+
+            if (emptyCnt)
+                ss << emptyCnt;
+
+            if (file <= 7)
+               ss << PieceStr[board[file][rank]];
+        }
+
+        if (rank < 7)
+            ss << '/';
+    }
+
+
+    // side to move
+    ss << (sideToMove == White ? " w " : " b ");
+
+
+    // castling rights
+    if (castle & wk)
+        ss << 'K';
+
+    if (castle & wq)
+        ss << 'Q';
+
+    if (castle & bk)
+        ss << 'k';
+
+    if (castle & bq)
+        ss << 'q';
+
+    if (!castle)
+        ss << '-';
+
+    ss << " ";
+
+
+    // enpassant square
+    if (epsq && (epsq == NoSq))
+        ss << "-";
+    else
+        ss << SquareToCoordinates[epsq];
+
+    ss << " ";
+
+
+    // fifty rule
+    ss << fifty << " ";
+
+
+    // ply
+    ss << 1 + (ply - (sideToMove == Black)) / 2;
+
+
+    // return FEN string
+    return ss.str();
 }

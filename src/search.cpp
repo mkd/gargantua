@@ -272,6 +272,7 @@ void search()
 // c) depth is too deep or time (from a running timer) is up
 int qsearch(int alpha, int beta)
 {
+    // start searching a score from the beginning (= -INFINITY)
     int val, score;
 
 
@@ -292,6 +293,17 @@ int qsearch(int alpha, int beta)
     // check for an immediate draw
     //if (isDraw())
     // return DRAWSCORE;
+    // is king in check?
+    //bool inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
+    //                                                        ls1b(bitboards[k]),
+    //                                                        sideToMove ^ 1);
+
+
+    // Extend the search depth by one if we're in check, so that we're less
+    // likely to make a tactical mistake. I.e., don't call quiescence search
+    // while in check.
+    //if (inCheck)
+    //    return negamax(alpha, beta, 1);
 
 
     // calculate "stand-pat" to stabilize the qsearch
@@ -539,6 +551,7 @@ void printMoveScores(MoveList_t &MoveList)
 
 
 // sort moves in descending order
+/*
 void sortMoves_slow(MoveList_t &MoveList)
 {
     // move scores
@@ -572,3 +585,4 @@ void sortMoves_slow(MoveList_t &MoveList)
         }
     }
 }
+*/

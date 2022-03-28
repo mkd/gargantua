@@ -151,6 +151,7 @@ enum CastlingRights { wk = 1, wq = 2, bk = 4, bq = 8 };
 void resetBoard();
 void printBoard();
 void setPosition(const std::string &);
+std::string getFEN();
 
 
 
