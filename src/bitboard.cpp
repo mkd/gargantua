@@ -59,7 +59,6 @@ uint32_t rng32_state = 1804289383;
 
 
 
-
 // genPawnPush
 //
 // Generate a Bitboard with the push of a pawn at a given square.

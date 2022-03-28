@@ -328,12 +328,16 @@ void UCI::loop(int argc, char* argv[])
             flip = !flip;
 
 
+        // "help": print a list of non-UCI commands
+        else if (token == "help")
+            printHelp();
+
+
         // "moves": print the list of pseudo-legal moves, non-sorted
         else if (token == "moves")
         {
             MoveList_t MoveList;
             generateMoves(MoveList);
-            sortMoves(MoveList);
             printMoveList(MoveList);
         }
 
@@ -367,7 +371,32 @@ void UCI::loop(int argc, char* argv[])
         // "unknown command"
         else if (!token.empty() && token[0] != '#')
             cout << "Unknown command: " << cmd << endl << flush;
-
     }
     while ((token != "quit") && (argc == 1)); // Command line args are one-shot
+}
+
+
+
+// UCI::printHelp
+//
+// Print a brief list of (non-UCI) commands available and what they do.
+void UCI::printHelp()
+{
+    cout << endl << endl;
+    cout << "Help:" << endl;
+
+    cout << "- d: display the current position on the board";
+    cout << endl;
+
+    cout << "- eval: print the static evaluation for the current position";
+    cout << endl;
+
+    cout << "- flip: flip the board when being printed";
+    cout << endl;
+
+    cout << "- moves: print the list of pseudo-legal moves, without being sorted";
+    cout << endl;
+
+    cout << "- smoves: print the list of pseudo-legal moves, sorted by score";
+    cout << endl << endl;
 }

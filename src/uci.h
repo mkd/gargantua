@@ -46,6 +46,7 @@ void position(istringstream &);
 void go(istringstream &);
 void traceEval();
 void loop(int argc, char *argv[]);
+void printHelp();
 
 
 }  //  namespace UCI
