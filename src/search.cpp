@@ -96,26 +96,28 @@ int negamax(int alpha, int beta, int depth)
     assert(depth >= 0);
 
 
-    // leaf node: return static evaluation
-    if (depth == 0)
-        return qsearch(alpha, beta);
-
-    
     // increment nodes count
     nodes++;
 
 
-    // is king in check
-    int inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
-                                                           ls1b(bitboards[k]),
-                                                           sideToMove ^ 1);
+    // is king in check?
+    bool inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
+                                                            ls1b(bitboards[k]),
+                                                            sideToMove ^ 1);
 
-    
-    // check extension: increase search depth if king is in check
+
+    // Extend the search depth by one if we're in check, so that we're less
+    // likely to make a tactical mistake. I.e., don't call quiescence search
+    // while in check.
     if (inCheck)
         depth++;
 
-    
+
+    // leaf node: return static evaluation
+    if (depth == 0)
+        return qsearch(alpha, beta);
+
+
     // number of legal moves found
     int legal = 0;
 
@@ -278,12 +280,6 @@ int qsearch(int alpha, int beta)
 		//communicate();
 
 
-    // is king in check
-    int inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
-                                                           ls1b(bitboards[k]),
-                                                           sideToMove ^ 1);
-
-
     // increment nodes count
     nodes++;
 
@@ -298,20 +294,19 @@ int qsearch(int alpha, int beta)
     // return DRAWSCORE;
 
 
-    // calculate "stand-pat" to stabilize the qsearch, only if not in check
-    if (!inCheck)
-    {
-        val = evaluate();
+    // calculate "stand-pat" to stabilize the qsearch
+    val = evaluate();
 
-        // node (position) fails high
-        if (val >= beta)
-            return beta;
-        
-        // found a better move (PV node position)
-        if (val > alpha)
-            alpha = val;
-    }
+
+    // beta-cutoff
+    if (val >= beta)
+        return beta;
+
     
+    // found a better move (PV node position)
+    if (val > alpha)
+        alpha = val;
+   
 
     // This check extension must be commented out, if it already exists within
     // negamax(). Otherwise, it creates an infinite loop and the program
