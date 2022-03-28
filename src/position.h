@@ -91,7 +91,6 @@ static std::map<int, Side> ColorFromPiece =
 
 // Array of promoted pieces, encoded from integer to character
 static std::map<int, unsigned char> PromoPieces = {
-    {0, '\0'},
     {Q, 'q'},
     {R, 'r'},
     {B, 'b'},

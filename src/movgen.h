@@ -154,10 +154,13 @@ static inline std::string prettyMove(int move)
 
     // UCI format: [source][target][promotion] e.g., e2e4, e7e8q
     ss << SquareToCoordinates[getMoveSource(move)]
-       << SquareToCoordinates[getMoveTarget(move)]
-       << PromoPieces[getPromo(move)];
+       << SquareToCoordinates[getMoveTarget(move)];
+
+    if (getPromo(move))
+        ss << PromoPieces[getPromo(move)];
 
 
+    // return a string containing the move in UCI format
     return ss.str();
 }
 
