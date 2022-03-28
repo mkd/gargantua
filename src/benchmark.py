@@ -139,7 +139,7 @@ fen_positions = [ "r1bq1rk1/2p1bppp/p1np1n2/4p3/Pp2P3/1BN2N2/1PPP1PPP/R1BQR1K1 w
 
 
 # depth of each test: use 15-20 for really strong engines, 5-8 for slow/weak engines
-depthlimit = 5
+depthlimit = 6
 
 
 # data to collect throughout the tests
@@ -169,7 +169,7 @@ for fen in fen_positions:
     timeTotal += time
     nps   = nodes / time / 1000
 
-    print("Test " + str(count).rjust(2, "0") + "/" + str(len(fen_positions)) + " -- nodes=" + str(nodes) + "; time=" + str(time) + "s; nps=" + "{:.0f}".format(nps) + " knps")
+    print("Test " + str(count).rjust(2, "0") + "/" + str(len(fen_positions)) + " -- depth=" + str(depthlimit) + "; nodes=" + str(nodes) + "; time=" + str(time) + "s; nps=" + "{:.0f}".format(nps) + " knps")
 
 
 # final results, including total nodes, time and averages
