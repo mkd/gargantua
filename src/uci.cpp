@@ -48,17 +48,9 @@ using namespace std;
 // castling moves are always encoded as 'king captures rook'.
 string UCI::moveToString(int m)
 {
+    // get source and target square coordinates
     int fromSq = getMoveSource(m);
     int toSq   = getMoveTarget(m);
-
-
-    //if (m == MOVE_NULL)
-    //    return "0000";
-
-
-    // castling
-    //if (getCastle(m))
-    //    toSq = make_square(to > from ? FILE_G : FILE_C, rank_of(from));
 
 
     // compose move in UCI mode: origin square + target square (e.g., e2e4)
@@ -161,7 +153,7 @@ void UCI::position(istringstream& is)
         saveBoard();
 
         // test whether the move is legal and make it on the board
-        if (!makeMove(m, AllMoves))
+        if (!makeMove(m))
         {
             // undo move, if not legal
             takeBack();

@@ -154,7 +154,7 @@ int negamax(int alpha, int beta, int depth)
        
 
         // make sure to make only legal moves
-        if (!makeMove(MoveList.moves[count], AllMoves))
+        if (!makeMove(MoveList.moves[count]))
         {
             // decrement ply
             ply--;
@@ -237,6 +237,10 @@ int negamax(int alpha, int beta, int depth)
 // command. It searches from the root position and outputs the "bestmove".
 void search()
 {
+    // reliability checks
+    assert(Limits.depth >= 0);
+
+
     // reset nodes counter
     nodes = 0;
 
@@ -356,7 +360,7 @@ int qsearch(int alpha, int beta)
 
         
         // make sure to make only legal moves
-        if (!makeMove(MoveList.moves[count], AllMoves))
+        if (!makeMove(MoveList.moves[count]))
         {
             // decrement ply
             ply--;
@@ -448,7 +452,7 @@ void dperft(int depth)
 
 
         // make move and, if illegal, skip to the next move
-        if (!makeMove(MoveList.moves[move_count], AllMoves))
+        if (!makeMove(MoveList.moves[move_count]))
         {
             takeBack();
             continue;
@@ -546,43 +550,5 @@ void printMoveScores(MoveList_t &MoveList)
         cout << prettyMove(MoveList.moves[count]);
         cout << " score: " << scoreMove(MoveList.moves[count]) << endl;
     }
+    cout << endl << endl;
 }
-
-
-
-// sort moves in descending order
-/*
-void sortMoves_slow(MoveList_t &MoveList)
-{
-    // move scores
-    int move_scores[MoveList.count];
-
-
-    // score all the moves within a move list
-    for (int count = 0; count < MoveList.count; count++)
-        // score move
-        move_scores[count] = scoreMove(MoveList.moves[count]);
-    
-    // loop over current move within a move list
-    for (int current_move = 0; current_move < MoveList.count; current_move++)
-    {
-        // loop over next move within a move list
-        for (int next_move = current_move + 1; next_move < MoveList.count; next_move++)
-        {
-            // compare current and next move scores
-            if (move_scores[current_move] < move_scores[next_move])
-            {
-                // swap scores
-                int temp_score = move_scores[current_move];
-                move_scores[current_move] = move_scores[next_move];
-                move_scores[next_move] = temp_score;
-                
-                // swap moves
-                int temp_move = MoveList.moves[current_move];
-                MoveList.moves[current_move] = MoveList.moves[next_move];
-                MoveList.moves[next_move] = temp_move;
-            }
-        }
-    }
-}
-*/

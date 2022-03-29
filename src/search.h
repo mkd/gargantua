@@ -46,7 +46,7 @@ using namespace std;
 #define MATESCORE  48000
 #define INFINITY   50000
 
-#define MOVESCORE_PROMO_QUIET  10
+#define MOVESCORE_PROMO_QUIET  100
 
 
 
@@ -161,7 +161,7 @@ static inline void perft(int depth)
 
 
         // make move and, if illegal, skip to the next move
-        if (!makeMove(MoveList.moves[move_count], AllMoves))
+        if (!makeMove(MoveList.moves[move_count]))
         {
             takeBack();
             continue;
@@ -220,7 +220,8 @@ static inline int scoreMove(int move)
                 break;
             }
         }
-                
+               
+
         // score move by MVV LVA lookup [source piece][target piece]
         return mvv_lva[getMovePiece(move)][target_piece];
     }
@@ -237,6 +238,7 @@ static inline int scoreMove(int move)
     //{ }
    
 
+    // by default, don't add a score to the move
     return 0;
 }
 

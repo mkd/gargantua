@@ -509,6 +509,19 @@ static inline unsigned int ls1b(Bitboard bb)
 
 
 
+// popLsb
+//
+// Find and clear the least significant bit in a non-zero bitboard.
+static inline int popLsb(Bitboard& b) {
+  assert(b);
+  const int s = ls1b(b);
+  //b &= b - 1;
+  b ^= SqBB[s];
+  return s;
+}
+
+
+
 // getBishopAttacks
 //
 // Generate a Bitboard with the pseudo-legal Bishop attacks.
@@ -626,16 +639,6 @@ static inline uint64_t rng64()
 
     // return random number
     return (uint64_t) (n1 | (n2 << 16) | (n3 << 32) | (n4 << 48));
-}
-
-
-/// pop_lsb() finds and clears the least significant bit in a non-zero bitboard
-static inline int popLsb(Bitboard& b) {
-  assert(b);
-  const int s = ls1b(b);
-  //b &= b - 1;
-  b ^= SqBB[s];
-  return s;
 }
 
 

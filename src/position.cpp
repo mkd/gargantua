@@ -236,91 +236,6 @@ void setPosition(const string &fenStr)
 
 
 
-// printBoard
-//
-// Convert the internal representation of the board into a human-readable string
-// (capable of being shown and represented as a Board in ASCII) and show it on
-// the screen.
-void printBoard()
-{
-    cout << endl << endl;
-    cout << "    +----+----+----+----+----+----+----+----+" << endl;
-
-
-    // loop over board squares
-    for (int rank = 0; rank < 8; rank++)
-    {
-        // show board from Black's perspective
-        if (flip)
-            cout << setw(3) << rank + 1 <<  " |";
-        // show board form White's perspectivwe
-        else
-            cout << setw(3) << 8 - rank <<  " |";
-
-
-        // loop over board files
-        for (int file = 0; file < 8; file++)
-        {
-            // convert file & rank into square index:
-            // flip takes care of the board's perspective (Black or White)
-            int square = NoSq;
-            if (flip)
-                square = ((7 - rank) * 8) + (7 - file);
-            else
-                square = (rank * 8) + file;
-
-
-            // loop over all piece bitboards
-            int piece = -1;
-            Side color = NoColor;
-            for (int bb_piece = P; bb_piece <= k; bb_piece++)
-            {
-                if (getBit(bitboards[bb_piece], square))
-                    piece = bb_piece;
-
-                switch (piece)
-                {
-                    case p: 
-                    case n: 
-                    case b: 
-                    case r: 
-                    case q: 
-                    case k: color = Black;
-                            break;
-                    default: color = White;
-                }
-            }
-
-
-            // print bit state (either 1 or 0)
-            cout << " " << ((piece == -1) ? " " : PieceStr[piece]);
-            cout << ((color == White) ? " " : "*") << " |";
-        }
-
-
-        // print new line every rank
-        cout << endl << "    +----+----+----+----+----+----+----+----+" << endl;
-    }
-
-
-    // print board files
-    cout << "      a    b    c    d    e    f    g    h" << endl << endl;
-
-
-    // print board status
-    cout << "  Fen:    " << getFEN() << endl;
-    cout << "  Side:   " << ((sideToMove == White) ? "White" : "Black") << endl;
-    cout << "  Epsq:   " << ((epsq != NoSq) ? SquareToCoordinates[epsq] : "-") << endl;
-    cout << "  Castle: " << ((castle & wk) ? "K" : "-") <<
-                            ((castle & wq) ? "Q" : "-") <<
-                            ((castle & bk) ? "k" : "-") <<
-                            ((castle & bq) ? "q" : "-") << endl;
-
-    cout << endl;
-}
-
-
-
 // getFEN
 //
 // Return a FEN representation of the current position.
@@ -439,4 +354,89 @@ string getFEN()
 
     // return FEN string
     return ss.str();
+}
+
+
+
+// printBoard
+//
+// Convert the internal representation of the board into a human-readable string
+// (capable of being shown and represented as a Board in ASCII) and show it on
+// the screen.
+void printBoard()
+{
+    cout << endl << endl;
+    cout << "    +----+----+----+----+----+----+----+----+" << endl;
+
+
+    // loop over board squares
+    for (int rank = 0; rank < 8; rank++)
+    {
+        // show board from Black's perspective
+        if (flip)
+            cout << setw(3) << rank + 1 <<  " |";
+        // show board form White's perspectivwe
+        else
+            cout << setw(3) << 8 - rank <<  " |";
+
+
+        // loop over board files
+        for (int file = 0; file < 8; file++)
+        {
+            // convert file & rank into square index:
+            // flip takes care of the board's perspective (Black or White)
+            int square = NoSq;
+            if (flip)
+                square = ((7 - rank) * 8) + (7 - file);
+            else
+                square = (rank * 8) + file;
+
+
+            // loop over all piece bitboards
+            int piece = -1;
+            Side color = NoColor;
+            for (int bb_piece = P; bb_piece <= k; bb_piece++)
+            {
+                if (getBit(bitboards[bb_piece], square))
+                    piece = bb_piece;
+
+                switch (piece)
+                {
+                    case p: 
+                    case n: 
+                    case b: 
+                    case r: 
+                    case q: 
+                    case k: color = Black;
+                            break;
+                    default: color = White;
+                }
+            }
+
+
+            // print bit state (either 1 or 0)
+            cout << " " << ((piece == -1) ? " " : PieceStr[piece]);
+            cout << ((color == White) ? " " : "*") << " |";
+        }
+
+
+        // print new line every rank
+        cout << endl << "    +----+----+----+----+----+----+----+----+" << endl;
+    }
+
+
+    // print board files
+    cout << "      a    b    c    d    e    f    g    h" << endl << endl;
+
+
+    // print board status
+    cout << "  Fen:    " << getFEN() << endl;
+    cout << "  Side:   " << ((sideToMove == White) ? "White" : "Black") << endl;
+    cout << "  Epsq:   " << ((epsq != NoSq) ? SquareToCoordinates[epsq] : "-") << endl;
+    cout << "  Castle: " << ((castle & wk) ? "K" : "-") <<
+                            ((castle & wq) ? "Q" : "-") <<
+                            ((castle & bk) ? "k" : "-") <<
+                            ((castle & bq) ? "q" : "-") << endl;
+
+    cout << endl;
 }

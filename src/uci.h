@@ -40,8 +40,8 @@ namespace UCI
 
 
 // UCI interface functionality, including move parsing, UCI commands, etc.
-std::string moveToString(int m);
-int parseMove(std::string);
+string moveToString(int m);
+int parseMove(string);
 void position(istringstream &);
 void go(istringstream &);
 void traceEval();
