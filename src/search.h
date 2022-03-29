@@ -101,6 +101,8 @@ extern Limits_t Limits;
 // beta cut-offs, where a move killer moves [id][ply]
 //
 // Note: storing exactly 2 killer moves is best for efficiency/performance.
+//
+// @see https://www.chessprogramming.org/Killer_Heuristic
 extern int killers[2][MAXPLY];
 
 
@@ -109,7 +111,54 @@ extern int killers[2][MAXPLY];
 //
 // History is a table where to store moves that have produced an improvement in
 // the score of previous searches. In other words, they have raised alpha.
+//
+// @see https://www.chessprogramming.org/History_Heuristic
 extern int history[12][64];
+
+
+
+
+/*
+      ================================
+            Triangular PV table
+      --------------------------------
+        PV line: e2e4 e7e5 g1f3 b8c6
+      ================================
+
+           0    1    2    3    4    5
+      
+      0    m1   m2   m3   m4   m5   m6
+      
+      1    0    m2   m3   m4   m5   m6 
+      
+      2    0    0    m3   m4   m5   m6
+      
+      3    0    0    0    m4   m5   m6
+       
+      4    0    0    0    0    m5   m6
+      
+      5    0    0    0    0    0    m6
+*/
+
+// PV length [ply]
+//
+// An array of Principal Variations indexed by ply (distance to root). This is
+// employed to collect the principal variation of best moves inside the
+// alpha-beta or principal variation search, with the best score moves
+// propagated up to the root.
+//
+// @see https://www.chessprogramming.org/Triangular_PV-Table
+extern int pv_length[MAXPLY];
+
+
+
+// PV table [ply][ply]
+extern int pv_table[MAXPLY][MAXPLY];
+
+
+
+// follow PV & score PV move
+extern int FollowPV, ScorePV;
 
 
 
@@ -127,6 +176,16 @@ extern int history[12][64];
 */
 
 // MVV LVA [attacker][victim]
+//
+// A simple heuristic to generate or sort capture moves in a reasonable order.
+// Inside a so called find-victim cycle, one first look up the potential
+// victim of all attacked opponent pieces, in the order of the most valuable
+// first, thus queen, rook, bishop, knight and pawn. After the most valuable
+// victim is found, the find-aggressor cycle loops over the potential aggressors
+// that may capture the victim in inverse order, from pawn, knight, bishop, rook,
+// queen to king. 
+//
+// @see https://www.chessprogramming.org/MVV-LVA
 static constexpr int mvv_lva[12][12] =
 {
  	{105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605},
@@ -162,6 +221,8 @@ void printMoveScores(MoveList_t &);
 //
 // Verify move generation. All the leaf nodes up to the given depth are
 // generated and counted.
+// 
+// @see https://www.chessprogramming.org/Perft
 static inline void perft(int depth)
 {
     // reliability checks
