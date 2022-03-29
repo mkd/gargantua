@@ -123,6 +123,7 @@ void generateMoves(MoveList_t &MoveList)
             }
         }
 
+
         // Black Pawns
         else if (SqBB[fromSq] & bitboards[p])
         {
@@ -563,6 +564,7 @@ void generateCapturesAndPromotions(MoveList_t &MoveList)
                 }
             }
         }
+
 
         // Black Pawns
         else if (SqBB[fromSq] & bitboards[p])

@@ -38,7 +38,6 @@
 
 
 
-
 // ASCII piece strings lookup table. This table returns a readable
 // string for each piece integer. E.g., 4=Q, 11=k, etc.
 static const std::array<std::string, 12> PieceStr
@@ -89,7 +88,7 @@ static std::map<int, Side> ColorFromPiece =
 
 
 
-// Array of promoted pieces, encoded from integer to character
+// Array of promoted pieces, encoded from integer to character.
 static std::map<int, unsigned char> PromoPieces = {
     {Q, 'q'},
     {R, 'r'},
@@ -109,6 +108,7 @@ static std::map<int, unsigned char> PromoPieces = {
 // 2. The side to move
 // 3. The enpassant capture square
 // 4. The castling rights
+// 5. The 50-move rule counter
 extern Bitboard bitboards[12];
 extern Bitboard occupancies[3];
 extern int sideToMove;

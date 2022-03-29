@@ -31,6 +31,7 @@
 // The program's main application consists of two parts:
 // 1) inintialization of the necessary data structures
 // 2) UCI loop: interpreting commands from the user input and running them
+//    on the engine
 //
 // UCI protocol specs: http://wbec-ridderkerk.nl/html/UCIProtocol.html
 int main(int argc, char *argv[])
