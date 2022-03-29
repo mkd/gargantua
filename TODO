@@ -1,6 +1,5 @@
 TODO
 ====
-- killer and history heuristics
 - collecting Principal Variation (PV)
 - iterative deepening
 - sorting PV moves
@@ -11,16 +10,3 @@ TODO
 - time controls
 - transposition tables
 - 3-fold repetition
-
-
-
-Current no. of nodes
-====================
-Position        Depth   Nodes       Time
---------        -----   -----       ----
-startpos          7     5835056     4123
-kiwipete          7     6489138     4312
-pos3              7     1348716      596
-pos4              7    12694110     8234
-pos5              7     4713860     2784
-pos6              7    47140331    31972

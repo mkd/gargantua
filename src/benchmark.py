@@ -167,16 +167,18 @@ for fen in fen_positions:
     nodesTotal += nodes
     time  = info["time"]
     timeTotal += time
+    if time <= 0:
+        time = 1
     nps   = nodes / time / 1000
 
-    print("Test " + str(count).rjust(2, "0") + "/" + str(len(fen_positions)) + " -- depth=" + str(depthlimit) + "; nodes=" + str(nodes) + "; time=" + str(time) + "s; nps=" + "{:.0f}".format(nps) + " knps")
+    print("Test " + str(count).rjust(2, "0") + "/" + str(len(fen_positions)) + " -- depth=" + str(depthlimit) + "; nodes=" + str(nodes) + "; time=" + str(time) + "s; nps=" + "{:.0f}".format(nps) + " knps", flush=True)
 
 
 # final results, including total nodes, time and averages
 npsAvg = nodesTotal / timeTotal / 1000
-print("========================================================================")
-print("Total nodes=" + str(nodesTotal) + "; time=" + "{:0.2f}".format(timeTotal) + "s")
-print("Avg. nodes=" + "{:.0f}".format(nodesTotal / count) + "; avg. time=" + "{:0.2f}".format(timeTotal / count) + "s; nps=" + "{:.0f}".format(npsAvg) + " knps")
+print("========================================================================", flush=True)
+print("Total nodes=" + str(nodesTotal) + "; time=" + "{:0.2f}".format(timeTotal) + "s", flush=True)
+print("Avg. nodes=" + "{:.0f}".format(nodesTotal / count) + "; avg. time=" + "{:0.2f}".format(timeTotal / count) + "s; nps=" + "{:.0f}".format(npsAvg) + " knps", flush=True)
 
 
 # stop engine before terminating

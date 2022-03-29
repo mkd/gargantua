@@ -41,12 +41,23 @@ using namespace std;
 
 
 // Search definitions, including alpha-beta bounds, mating scores, etc.
-#define DRAWSCORE      0
-#define MATEVALUE  49000
-#define MATESCORE  48000
-#define INFINITY   50000
+#define DRAWSCORE           0
+#define MATEVALUE       49000
+#define MATESCORE       48000
+#define VALUE_INFINITE  50000
 
-#define MOVESCORE_PROMO_QUIET  100
+
+
+// Maximum depth at which we try to search
+#define MAXPLY       128
+
+
+
+// Score assigned to non-capture promotions. This is used for
+// sorting moves based on their likeliness to be good.
+//
+// @see scoreMove() and sortMoves()
+#define MOVESCORE_PROMO_QUIET   10000
 
 
 
@@ -79,6 +90,26 @@ typedef struct
 } Limits_t;
 
 extern Limits_t Limits;
+
+
+
+// killers [id][ply] 
+//
+// Killers is a table where the two best (quiet) moves are
+// systematically stored for later searches. This is based on the
+// fact that a move producing a beta cut-off must be a good one.
+// beta cut-offs, where a move killer moves [id][ply]
+//
+// Note: storing exactly 2 killer moves is best for efficiency/performance.
+extern int killers[2][MAXPLY];
+
+
+
+// history [piece][square]
+//
+// History is a table where to store moves that have produced an improvement in
+// the score of previous searches. In other words, they have raised alpha.
+extern int history[12][64];
 
 
 
@@ -223,7 +254,7 @@ static inline int scoreMove(int move)
                
 
         // score move by MVV LVA lookup [source piece][target piece]
-        return mvv_lva[getMovePiece(move)][target_piece];
+        return mvv_lva[getMovePiece(move)][target_piece] + 10000;
     }
 
 
@@ -232,10 +263,23 @@ static inline int scoreMove(int move)
     {
         return MOVESCORE_PROMO_QUIET;
     }
-    
+   
+
     // score quiet move
-    //else
-    //{ }
+    else
+    {
+        // score 1st killer move
+        if (killers[0][ply] == move)
+            return 9000;
+        
+        // score 2nd killer move
+        else if (killers[1][ply] == move)
+            return 8000;
+        
+        // score history move
+        else
+            return history[getMovePiece(move)][getMoveTarget(move)];
+    }
    
 
     // by default, don't add a score to the move

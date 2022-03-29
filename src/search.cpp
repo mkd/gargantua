@@ -40,6 +40,26 @@ Limits_t Limits;
 
 
 
+// killers [id][ply] 
+//
+// Killers is a table where the two best (quiet) moves are
+// systematically stored for later searches. This is based on the
+// fact that a move producing a beta cut-off must be a good one.
+// beta cut-offs, where a move killer moves [id][ply]
+//
+// Note: storing exactly 2 killer moves is best for efficiency/performance.
+int killers[2][MAXPLY];
+
+
+
+// history [piece][square]
+//
+// History is a table where to store moves that have produced an improvement in
+// the score of previous searches. In other words, they have raised alpha.
+int history[12][64];
+
+
+
 // TODO: ditch when implementing iterative-deepening framework
 int bestmove;
 
@@ -186,6 +206,11 @@ int negamax(int alpha, int beta, int depth)
         // fail-hard beta cutoff
         if (score >= beta)
         {
+            // store killer moves
+            killers[1][ply] = killers[0][ply];
+            killers[0][ply] = MoveList.moves[count];
+
+
             // node (move) fails high
             return beta;
         }
@@ -194,8 +219,13 @@ int negamax(int alpha, int beta, int depth)
         // found a better move (improves alpha)
         if (score > alpha)
         {
+            // store history moves
+            history[getMovePiece(MoveList.moves[count])][getMoveTarget(MoveList.moves[count])] += depth;
+
+
             // PV node (move)
             alpha = score;
+
             
             // if root move
             if (ply == 0)
@@ -241,13 +271,29 @@ void search()
     assert(Limits.depth >= 0);
 
 
+    // start the timer as soon as possible
+    auto start = chrono::high_resolution_clock::now();
+
+
+    // reset data structures for a new search
+    memset(killers, 0, sizeof(killers));
+    memset(history, 0, sizeof(history));
+
+
+    // define initial alpha beta bounds
+    int alpha = -VALUE_INFINITE;
+    int beta  =  VALUE_INFINITE;
+
+
     // reset nodes counter
     nodes = 0;
 
 
     // find best move within a given position
-    auto start = chrono::high_resolution_clock::now();
-    int score = negamax(-INFINITY, INFINITY, Limits.depth);
+    int score = negamax(alpha, beta, Limits.depth);
+
+
+    // stop the timer and measure time elapsed
     auto finish = chrono::high_resolution_clock::now();
     auto ms = chrono::duration_cast<chrono::milliseconds>(finish-start).count();
     auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
@@ -276,7 +322,7 @@ void search()
 // c) depth is too deep or time (from a running timer) is up
 int qsearch(int alpha, int beta)
 {
-    // start searching a score from the beginning (= -INFINITY)
+    // start searching a score from the beginning (= -VALUE_INFINITE)
     int val, score;
 
 
@@ -290,8 +336,8 @@ int qsearch(int alpha, int beta)
 
 
     // we are too deep, hence there's an overflow of arrays relying on max ply constant
-    //if (ply > MaxPly - 1)
-    //  return evaluate();
+    if (ply > MAXPLY - 1)
+        return evaluate();
 
 
     // check for an immediate draw
