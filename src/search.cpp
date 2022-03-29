@@ -206,9 +206,16 @@ int negamax(int alpha, int beta, int depth)
         // fail-hard beta cutoff
         if (score >= beta)
         {
-            // store killer moves
-            killers[1][ply] = killers[0][ply];
-            killers[0][ply] = MoveList.moves[count];
+            // store hash entry with the score equal to beta
+            //write_hash_entry(beta, best_move, depth, hash_flag_beta);
+           
+
+            // store killer moves (only for quiet moves)
+            if (!getMoveCapture(MoveList.moves[count]))
+            {
+                killers[1][ply] = killers[0][ply];
+                killers[0][ply] = MoveList.moves[count];
+            }
 
 
             // node (move) fails high
@@ -219,8 +226,9 @@ int negamax(int alpha, int beta, int depth)
         // found a better move (improves alpha)
         if (score > alpha)
         {
-            // store history moves
-            history[getMovePiece(MoveList.moves[count])][getMoveTarget(MoveList.moves[count])] += depth;
+            // store history moves (only for quiet moves)
+            if (!getMoveCapture(MoveList.moves[count]))
+                history[getMovePiece(MoveList.moves[count])][getMoveTarget(MoveList.moves[count])] += depth;
 
 
             // PV node (move)
