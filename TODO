@@ -1,6 +1,5 @@
 TODO
 ====
-- collecting Principal Variation (PV)
 - iterative deepening
 - sorting PV moves
 - PV search

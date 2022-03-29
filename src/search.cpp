@@ -60,8 +60,18 @@ int history[12][64];
 
 
 
-// TODO: ditch when implementing iterative-deepening framework
-int bestmove;
+// PV length [ply]
+int pv_length[MAXPLY];
+
+
+
+// PV table [ply][ply]
+int pv_table[MAXPLY][MAXPLY];
+
+
+
+// follow PV & score PV move
+int FollowPV, ScorePV;
 
 
 
@@ -116,6 +126,10 @@ int negamax(int alpha, int beta, int depth)
     assert(depth >= 0);
 
 
+    // init PV length
+    pv_length[ply] = ply;
+
+
     // increment nodes count
     nodes++;
 
@@ -142,14 +156,6 @@ int negamax(int alpha, int beta, int depth)
     int legal = 0;
 
     
-    // best move so far
-    int best_sofar;
-
-    
-    // old value of alpha
-    int old_alpha = alpha;
-
-
     // create move list instance
     MoveList_t MoveList;
    
@@ -234,11 +240,18 @@ int negamax(int alpha, int beta, int depth)
             // PV node (move)
             alpha = score;
 
+
+            // write PV move
+            pv_table[ply][ply] = MoveList.moves[count];
+
             
-            // if root move
-            if (ply == 0)
-                // associate best move with the best score
-                best_sofar = MoveList.moves[count];
+            // copy moves from deeper ply into current ply's line
+            for (int next_ply = ply + 1; next_ply < pv_length[ply + 1]; next_ply++)
+                pv_table[ply][next_ply] = pv_table[ply + 1][next_ply];
+           
+
+            // adjust PV length
+            pv_length[ply] = pv_length[ply + 1];            
         }
     }
 
@@ -253,13 +266,6 @@ int negamax(int alpha, int beta, int depth)
         // king not in check: stalemate
         else
             return DRAWSCORE;
-    }
-
-    
-    // found better move
-    if (old_alpha != alpha)
-    {
-        bestmove = best_sofar;
     }
 
     
@@ -286,6 +292,8 @@ void search()
     // reset data structures for a new search
     memset(killers, 0, sizeof(killers));
     memset(history, 0, sizeof(history));
+    memset(pv_table, 0, sizeof(pv_table));
+    memset(pv_length, 0, sizeof(pv_length));
 
 
     // define initial alpha beta bounds
@@ -307,15 +315,21 @@ void search()
     auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
 
 
-    // print best move, if any
-    if (bestmove)
-    {
-        cout << "info depth " << Limits.depth << " score cp " << score
-             << " nodes " <<  nodes << " nps " << nodes * 1000000000 / ns
-             << " time " << ms << endl << flush;
+    // print bestmove and PV line
+    cout << "info depth " << Limits.depth
+         << " score cp " << score
+         << " nodes " <<  nodes
+         << " nps " << nodes * 1000000000 / ns
+         << " time " << ms
+         << " pv ";
+    
+    // print PV line
+    for (int count = 0; count < pv_length[0]; count++)
+        cout << prettyMove(pv_table[0][count]) << " ";
 
-        cout << "bestmove " << prettyMove(bestmove) << endl << flush;
-    }
+    cout << endl << flush;
+
+    cout << "bestmove " << prettyMove(pv_table[0][0]) << endl << flush;
 }
 
 
