@@ -35,7 +35,7 @@ using namespace std;
 //
 // DEFAULT_SEARCH_DEPTH: depth limit used by the search
 // DEFAULT_SEARCH_MOVETIME_MS: time limit used by the search (in milliseconds)
-#define DEFAULT_SEARCH_DEPTH          64
+#define DEFAULT_SEARCH_DEPTH           7
 #define DEFAULT_SEARCH_MOVETIME_MS  5000
 
 
@@ -158,7 +158,7 @@ extern int pv_table[MAXPLY][MAXPLY];
 
 
 // follow PV & score PV move
-extern int FollowPV, ScorePV;
+extern bool followPV, scorePV;
 
 
 
@@ -271,13 +271,38 @@ static inline void perft(int depth)
 
 
 
+/*  =======================
+         Move ordering
+    =======================
+    
+    1. PV move
+    2. Captures in MVV/LVA
+    3. Promotions
+    4. 1st killer move
+    5. 2nd killer move
+    6. History moves
+    7. Unsorted moves
+*/
+
 // scoreMove
 //
 // Assign a score to a move.
 static inline int scoreMove(int move)
 {
+    // if PV move scoring is allowed
+    // if PV move and scoring allowed, assign it the highest score
+    if (scorePV && (pv_table[0][ply] == move))
+    {
+        // disable score PV flag
+        scorePV = false;
+         
+        // give PV move the highest score to search it first
+        return 20000;
+    }
+
+
     // score capture move
-    if (getMoveCapture(move))
+    else if (getMoveCapture(move))
     {
         // init target piece
         int target_piece = P;
@@ -345,6 +370,30 @@ static inline int scoreMove(int move)
 
     // by default, don't add a score to the move
     return 0;
+}
+
+
+
+// enablePV_scoring
+//
+// Allow scoring PV moves.
+static inline void enablePV_scoring(MoveList_t &MoveList)
+{
+    // disable following PV
+    followPV = false;
+
+    
+    // loop over the moves within a move list
+    for (int count = 0; count < MoveList.count; count++)
+    {
+        // make sure we hit PV move
+        if (pv_table[0][ply] == MoveList.moves[count])
+        {
+            // enable move scoring and follow PV again
+            scorePV  = true;
+            followPV = true;
+        }
+    }
 }
 
 
