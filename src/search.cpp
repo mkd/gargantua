@@ -127,9 +127,17 @@ int negamax(int alpha, int beta, int depth)
     assert(depth >= 0);
 
 
+    // score from negamax() call
+    int score;
+
+
     // we're too deep in the search, evaluate and quit
     if (ply > MAXPLY)
         return evaluate();
+
+
+    // define find PV node variable
+    bool foundPV = false;
 
 
     // init PV length
@@ -207,9 +215,31 @@ int negamax(int alpha, int beta, int depth)
         // increment legal moves
         legal++;
 
-        
-        // get score for the current move
-        int score = -negamax(-beta, -alpha, depth - 1);
+
+        // follow PV search
+        if (foundPV)
+        {
+            // Once you've found a move with a score that is between alpha and beta,
+            // the rest of the moves are searched with the goal of proving that they are all bad.
+            // It's possible to do this a bit faster than a search that worries that one
+            // of the remaining moves might be good. */
+            score = -negamax(-alpha - 1, -alpha, depth-1);
+
+            // If the algorithm finds out that it was wrong, and that one of the
+            // subsequent moves was better than the first PV move, it has to search again,
+            // in the normal alpha-beta manner.  This happens sometimes, and it's a waste of time,
+            // but generally not often enough to counteract the savings gained from doing the
+            // "bad move proof" search referred to earlier.
+            if((score > alpha) && (score < beta))
+                score = -negamax(-beta, -alpha, depth-1);
+        }
+
+
+        // normal alpha-beta search
+        else 
+        {
+            score = -negamax(-beta, -alpha, depth - 1);
+        }
 
         
         // decrement ply
@@ -250,6 +280,7 @@ int negamax(int alpha, int beta, int depth)
 
             // PV node (move)
             alpha = score;
+            foundPV = true;
 
 
             // write PV move
@@ -307,8 +338,8 @@ void search()
     // reset data structures for a new search
     memset(killers, 0, sizeof(killers));
     memset(history, 0, sizeof(history));
-    memset(pv_table, 0, sizeof(pv_table));
-    memset(pv_length, 0, sizeof(pv_length));
+    //memset(pv_table, 0, sizeof(pv_table));
+    //memset(pv_length, 0, sizeof(pv_length));
 
 
     // reset follow PV flags
@@ -328,6 +359,11 @@ void search()
     // iterative deepening framework
     for (int current_depth = 1; current_depth <= Limits.depth; current_depth++)
     {
+        // reset PV line for each iteration
+        memset(pv_table, 0, sizeof(pv_table));
+        memset(pv_length, 0, sizeof(pv_length));
+
+
         // enable follow PV flag
         followPV = true;
    
