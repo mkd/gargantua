@@ -71,7 +71,8 @@ int pv_table[MAXPLY][MAXPLY];
 
 
 // follow PV & score PV move
-int FollowPV, ScorePV;
+bool followPV = false;
+bool scorePV  = false;
 
 
 
@@ -148,6 +149,9 @@ int negamax(int alpha, int beta, int depth)
 
 
     // leaf node: return static evaluation
+    //
+    // XXX: should qsearch() be called before check extension? It's faster, but
+    //      we might run qsearch() while there are checks. Which one plays better?
     if (depth == 0)
         return qsearch(alpha, beta);
 
@@ -162,6 +166,11 @@ int negamax(int alpha, int beta, int depth)
 
     // generate moves
     generateMoves(MoveList);
+
+
+    // if we are following PV line, enable PV move scoring
+    if (followPV)
+        enablePV_scoring(MoveList);
 
 
     // sort moves from best to worst
@@ -300,6 +309,11 @@ void search()
     memset(pv_length, 0, sizeof(pv_length));
 
 
+    // reset follow PV flags
+    followPV = false;
+    scorePV  = false;
+
+
     // define initial alpha beta bounds
     int alpha = -VALUE_INFINITE;
     int beta  =  VALUE_INFINITE;
@@ -312,8 +326,8 @@ void search()
     // iterative deepening framework
     for (int current_depth = 1; current_depth <= Limits.depth; current_depth++)
     {
-        // reset nodes counter for each iteration
-        //nodes = 0;
+        // enable follow PV flag
+        followPV = true;
    
 
         // find best move within a given position
