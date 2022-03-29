@@ -285,6 +285,10 @@ void search()
     assert(Limits.depth >= 0);
 
 
+    // define best score
+    int score;
+
+
     // start the timer as soon as possible
     auto start = chrono::high_resolution_clock::now();
 
@@ -302,33 +306,45 @@ void search()
 
 
     // reset nodes counter
-    nodes = 0;
+    nodes = 0ULL;
 
 
-    // find best move within a given position
-    int score = negamax(alpha, beta, Limits.depth);
+    // iterative deepening framework
+    for (int current_depth = 1; current_depth <= Limits.depth; current_depth++)
+    {
+        // reset nodes counter for each iteration
+        //nodes = 0;
+   
+
+        // find best move within a given position
+        score = negamax(alpha, beta, current_depth);
 
 
-    // stop the timer and measure time elapsed
-    auto finish = chrono::high_resolution_clock::now();
-    auto ms = chrono::duration_cast<chrono::milliseconds>(finish-start).count();
-    auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
-
-
-    // print bestmove and PV line
-    cout << "info depth " << Limits.depth
-         << " score cp " << score
-         << " nodes " <<  nodes
-         << " nps " << nodes * 1000000000 / ns
-         << " time " << ms
-         << " pv ";
+        // stop the timer and measure time elapsed
+        auto finish = chrono::high_resolution_clock::now();
+        auto ms = chrono::duration_cast<chrono::milliseconds>(finish-start).count();
+        auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
+        
     
-    // print PV line
-    for (int count = 0; count < pv_length[0]; count++)
-        cout << prettyMove(pv_table[0][count]) << " ";
+        // print bestmove and PV line
+        cout << "info depth " << current_depth
+             << " score cp " << score
+             << " nodes " <<  nodes
+             << " nps " << nodes * 1000000000 / ns
+             << " time " << ms
+             << " pv ";
+        
+        // print PV line
+        for (int count = 0; count < pv_length[0]; count++)
+            cout << prettyMove(pv_table[0][count]) << " ";
 
-    cout << endl << flush;
 
+        // new line before next depth
+        cout << endl << flush;
+    }
+
+
+    // print bestmove
     cout << "bestmove " << prettyMove(pv_table[0][0]) << endl << flush;
 }
 
