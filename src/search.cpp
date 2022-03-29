@@ -127,6 +127,11 @@ int negamax(int alpha, int beta, int depth)
     assert(depth >= 0);
 
 
+    // we're too deep in the search, evaluate and quit
+    if (ply > MAXPLY)
+        return evaluate();
+
+
     // init PV length
     pv_length[ply] = ply;
 
@@ -149,9 +154,6 @@ int negamax(int alpha, int beta, int depth)
 
 
     // leaf node: return static evaluation
-    //
-    // XXX: should qsearch() be called before check extension? It's faster, but
-    //      we might run qsearch() while there are checks. Which one plays better?
     if (depth == 0)
         return qsearch(alpha, beta);
 
