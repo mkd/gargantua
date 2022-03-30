@@ -1,7 +1,5 @@
 TODO
 ====
-- PV search
-- LMR
 - Null move pruning
 - aspiration window
 - time controls
