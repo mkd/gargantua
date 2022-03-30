@@ -127,7 +127,7 @@ int negamax(int alpha, int beta, int depth)
     assert(depth >= 0);
 
 
-    // score from negamax() call
+    // variable holding the calculatd score from negamax()
     int score;
 
 
@@ -157,8 +157,8 @@ int negamax(int alpha, int beta, int depth)
     // Extend the search depth by one if we're in check, so that we're less
     // likely to make a tactical mistake. I.e., don't call quiescence search
     // while in check.
-    if (inCheck)
-        depth++;
+    //if (inCheck)
+    //    depth++;
 
 
     // leaf node: return static evaluation
@@ -170,11 +170,8 @@ int negamax(int alpha, int beta, int depth)
     int legal = 0;
 
     
-    // create move list instance
+    // create a new move list and generate the moves
     MoveList_t MoveList;
-   
-
-    // generate moves
     generateMoves(MoveList);
 
 
@@ -186,8 +183,12 @@ int negamax(int alpha, int beta, int depth)
     // sort moves from best to worst
     sortMoves(MoveList);
 
+
+    // number of moves searched so far, within a move list
+    int moves_searched = 0;
+
     
-    // loop over moves within a movelist
+    // loop over moves and search the score for each move
     for (int count = 0; count < MoveList.count; count++)
     {
         // preserve board state
@@ -198,7 +199,7 @@ int negamax(int alpha, int beta, int depth)
         ply++;
        
 
-        // make sure to make only legal moves
+        // make the move and check if it is illegal - skip it if so
         if (!makeMove(MoveList.moves[count]))
         {
             // decrement ply
@@ -207,7 +208,7 @@ int negamax(int alpha, int beta, int depth)
             // undo move
             takeBack();
             
-            // skip to next move
+            // skip to the next move
             continue;
         }
 
@@ -216,14 +217,14 @@ int negamax(int alpha, int beta, int depth)
         legal++;
 
 
-        // follow PV search
+        // 1. Principal Variation Search
         if (foundPV)
         {
             // Once you've found a move with a score that is between alpha and beta,
             // the rest of the moves are searched with the goal of proving that they are all bad.
             // It's possible to do this a bit faster than a search that worries that one
             // of the remaining moves might be good. */
-            score = -negamax(-alpha - 1, -alpha, depth-1);
+            score = -negamax(-alpha - 1, -alpha, depth - 1);
 
             // If the algorithm finds out that it was wrong, and that one of the
             // subsequent moves was better than the first PV move, it has to search again,
@@ -231,14 +232,55 @@ int negamax(int alpha, int beta, int depth)
             // but generally not often enough to counteract the savings gained from doing the
             // "bad move proof" search referred to earlier.
             if((score > alpha) && (score < beta))
-                score = -negamax(-beta, -alpha, depth-1);
+                score = -negamax(-beta, -alpha, depth - 1);
         }
 
 
-        // normal alpha-beta search
-        else 
+        // non-PV search
+        else
         {
-            score = -negamax(-beta, -alpha, depth - 1);
+            // normal alpha-beta search at full depth
+            if (moves_searched == 0)
+                score = -negamax(-beta, -alpha, depth - 1);
+
+            
+            // 2. Late Move Reductions (LMR)
+            //
+            // Configure late-move reductions (LMR): assuming that the moves in the
+            // list are ordered from potential best to potential worst, analyzing 
+            // the first moves is more critical than the last ones. Therefore, 
+            // using LMR we analyze the first 3 moves in full-depth, but cut down
+            // the analysis depth for the rest of moves.
+            else
+            {
+                if(
+                    moves_searched >= LMR_FULLDEPTH_MOVES &&
+                    depth >= LMR_REDUCTION_LIMIT &&
+                    !inCheck && 
+                    !getMoveCapture(MoveList.moves[count]) &&
+                    !getPromo(MoveList.moves[count])
+                  )
+                {
+                    score = -negamax(-alpha - 1, -alpha, depth - 2);
+                }
+
+                
+                // hack to ensure that full-depth search is done
+                else
+                    score = alpha + 1;
+               
+
+                // if found a better move during LMR
+                if (score > alpha)
+                {
+                    // re-search at full depth but with narrowed score bandwith
+                    score = -negamax(-alpha - 1, -alpha, depth - 1);
+                
+                    // if LMR fails re-search at full depth and full score width
+                    if ((score > alpha) && (score < beta))
+                        score = -negamax(-beta, -alpha, depth - 1);
+                }
+            }
         }
 
         
@@ -268,6 +310,10 @@ int negamax(int alpha, int beta, int depth)
             // node (move) fails high
             return beta;
         }
+
+
+        // increment the counter of moves searched so far
+        moves_searched++;
 
         
         // found a better move (improves alpha)
@@ -338,8 +384,8 @@ void search()
     // reset data structures for a new search
     memset(killers, 0, sizeof(killers));
     memset(history, 0, sizeof(history));
-    //memset(pv_table, 0, sizeof(pv_table));
-    //memset(pv_length, 0, sizeof(pv_length));
+    memset(pv_table, 0, sizeof(pv_table));
+    memset(pv_length, 0, sizeof(pv_length));
 
 
     // reset follow PV flags
@@ -359,9 +405,8 @@ void search()
     // iterative deepening framework
     for (int current_depth = 1; current_depth <= Limits.depth; current_depth++)
     {
-        // reset PV line for each iteration
-        memset(pv_table, 0, sizeof(pv_table));
-        memset(pv_length, 0, sizeof(pv_length));
+        //memset(pv_table, 0, sizeof(pv_table));
+        //memset(pv_length, 0, sizeof(pv_length));
 
 
         // enable follow PV flag
@@ -433,17 +478,19 @@ int qsearch(int alpha, int beta)
     // check for an immediate draw
     //if (isDraw())
     // return DRAWSCORE;
+
+
     // is king in check?
-    //bool inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
-    //                                                        ls1b(bitboards[k]),
-    //                                                        sideToMove ^ 1);
+    bool inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
+                                                            ls1b(bitboards[k]),
+                                                            sideToMove ^ 1);
 
 
     // Extend the search depth by one if we're in check, so that we're less
     // likely to make a tactical mistake. I.e., don't call quiescence search
     // while in check.
-    //if (inCheck)
-    //    return negamax(alpha, beta, 1);
+    if (inCheck)
+        return negamax(alpha, beta, 1);
 
 
     // calculate "stand-pat" to stabilize the qsearch
@@ -460,22 +507,9 @@ int qsearch(int alpha, int beta)
         alpha = val;
    
 
-    // This check extension must be commented out, if it already exists within
-    // negamax(). Otherwise, it creates an infinite loop and the program
-    // crashes:
-    //else
-    //    return negamax(alpha, beta, 1);
-
-    
-    // create move list instance
+    // generate a new move list and sort it
     MoveList_t MoveList;
-
-    
-    // generate moves
     generateCapturesAndPromotions(MoveList);
-
-    
-    // sort moves
     sortMoves(MoveList);
 
     

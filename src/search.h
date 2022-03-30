@@ -35,8 +35,12 @@ using namespace std;
 //
 // DEFAULT_SEARCH_DEPTH: depth limit used by the search
 // DEFAULT_SEARCH_MOVETIME_MS: time limit used by the search (in milliseconds)
-#define DEFAULT_SEARCH_DEPTH           7
+// LMR_FULLDEPTH_MOVES: at what move (in the sorted move list) we start LMR
+// LMR_REDUCTION_LIMIT: below what depth we don't apply LMR
+#define DEFAULT_SEARCH_DEPTH           8
 #define DEFAULT_SEARCH_MOVETIME_MS  5000
+#define LMR_FULLDEPTH_MOVES            4
+#define LMR_REDUCTION_LIMIT            3
 
 
 
