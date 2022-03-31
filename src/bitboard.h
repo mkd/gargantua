@@ -86,8 +86,8 @@ static const std::array<std::string, 65> SquareToCoordinates
 // given rank or file, or any other positional tests, using Bitboard
 // fast operations.
 static constexpr Bitboard AllSquares    = ~Bitboard(0);
-static constexpr Bitboard DarkSquares   = 0xAA55AA55AA55AA55ULL;
-static constexpr Bitboard LightSquares  = ~(0xAA55AA55AA55AA55ULL);
+static constexpr Bitboard LightSquares  = 0xAA55AA55AA55AA55ULL;
+static constexpr Bitboard DarkSquares   = ~(0xAA55AA55AA55AA55ULL);
 
 static constexpr Bitboard FileA_Mask = 0x0101010101010101ULL;
 static constexpr Bitboard FileB_Mask = FileA_Mask << 1;
