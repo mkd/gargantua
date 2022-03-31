@@ -71,8 +71,13 @@ int pv_table[MAXPLY][MAXPLY];
 
 
 // follow PV & score PV move
-bool followPV = false;
-bool scorePV  = false;
+bool followPV  = false;
+bool scorePV   = false;
+
+
+
+// allow Null move pruning
+bool allowNull = true;
 
 
 
@@ -168,6 +173,76 @@ int negamax(int alpha, int beta, int depth)
 
     // number of legal moves found
     int legal = 0;
+
+
+    // Step 1. Null Move Pruning
+    //
+	// If our opponet is given a free move, can they improve their position? If
+    // we do a quick search after giving our opponet this free move and we still
+    // find a move with a score better than beta, our opponet can't improve
+    // their position and they wouldn't take this path, so we have a beta
+    // cut-off and can prune  this branch.                      
+    if (allowNull && (depth >= 3)
+                  && !inCheck
+                  && !followPV
+                  && !noMajorsOrMinors())
+    {
+        // R: is the reduction factor. The larger the R, the shallower the
+        //    search is and the faster (but likely less reliable) the pruning
+        //    estimate is.
+        //
+        // We use a dynamic reduction limit here (based on Blunder Chess Engine).
+        // 
+        // @see https://github.com/algerbrex/blunder/blob/main/engine/search.go
+        int R = 3 + depth/6;
+
+        // preserve board state
+        saveBoard();
+        
+        // increment ply
+        ply++;
+        
+        // increment repetition index & store hash key
+        //repetition_index++;
+        //repetition_table[repetition_index] = hash_key;
+        
+        // hash enpassant if available
+        //if (epsq != NoSq) hash_key ^= enpassant_keys[epsq];
+        
+        // reset enpassant capture square
+        epsq = NoSq;
+        
+        // switch the side, literally giving opponent an extra move to make
+        sideToMove ^= 1;
+        
+        // hash the side
+        //hash_key ^= side_key;
+
+        // avoid doing 2 null moves in sequence
+        allowNull = false;
+                
+        // search moves with reduced depth to find beta cutoffs
+        score = -negamax(-beta, -beta + 1, depth - R);
+
+        // restore allowNull
+        allowNull = true;
+
+        // decrement ply
+        ply--;
+        
+        // decrement repetition index
+        //repetition_index--;
+            
+        // restore board state
+        takeBack();
+
+        // reutrn 0 if time is up
+        //if (stopped == 1) return 0;
+
+        // fail-hard beta cutoff
+        if (score >= beta)
+            return beta;
+    }
 
     
     // create a new move list and generate the moves
@@ -389,8 +464,9 @@ void search()
 
 
     // reset follow PV flags
-    followPV = false;
-    scorePV  = false;
+    followPV   = false;
+    scorePV    = false;
+    allowNull  = true;
 
 
     // define initial alpha beta bounds
