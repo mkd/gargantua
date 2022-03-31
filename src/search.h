@@ -31,16 +31,13 @@ using namespace std;
 
 
 
-// Default settings for search, when no settings are specified by the user:
-//
-// DEFAULT_SEARCH_DEPTH: depth limit used by the search
-// DEFAULT_SEARCH_MOVETIME_MS: time limit used by the search (in milliseconds)
-// LMR_FULLDEPTH_MOVES: at what move (in the sorted move list) we start LMR
-// LMR_REDUCTION_LIMIT: below what depth we don't apply LMR
+// Default settings and configuration for the search, as well as 
+// tuning parameters for search extensions and reductions:
 #define DEFAULT_SEARCH_DEPTH         256
 #define DEFAULT_SEARCH_MOVETIME_MS  5000
 #define LMR_FULLDEPTH_MOVES            4
 #define LMR_REDUCTION_LIMIT            3
+#define ASPIRATION_WINDOW_SIZE        60
 
 
 
