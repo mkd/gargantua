@@ -139,7 +139,7 @@ fen_positions = [ "r1bq1rk1/2p1bppp/p1np1n2/4p3/Pp2P3/1BN2N2/1PPP1PPP/R1BQR1K1 w
 
 
 # depth of each test: use 15-20 for really strong engines, 5-8 for slow/weak engines
-depthlimit = 7
+depthlimit = 6
 
 
 # data to collect throughout the tests

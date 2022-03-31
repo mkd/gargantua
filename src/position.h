@@ -155,4 +155,108 @@ std::string getFEN();
 
 
 
+// isDraw
+//
+// Check if the current position is a draw given the following conditions:
+// 1. Draw by 3-fold repetition
+// 2. Draw by 50-move rule
+// 3. Draw due to insufficient material
+// 3.1 K-K ending
+// 3.2 Kminor-K ending
+// 3.3 KNN-K ending (not forced mate)
+// 3.4 Kminor-Kminor ending 
+// 3.5 KB-KB ending (all bishops on same-color squares)
+// 3.6 KBN-Kminor
+static inline bool isDraw()
+{
+    // 3-fold repetition
+    // TODO
+
+
+    // 50-move rule
+    if (fifty > 99)
+        return true;
+
+
+    // calculate the number of pieces on the board
+    int total_pieces  = countBits(occupancies[Both]);
+    int white_knights = countBits(bitboards[N]);
+    int black_knights = countBits(bitboards[n]);
+    int white_bishops = countBits(bitboards[B]);
+    int black_bishops = countBits(bitboards[b]);
+
+    
+    // K-K ending
+    if (total_pieces == 2)
+        return true;
+
+
+    // Kminor-K ending
+    if (total_pieces == 3)
+        if (white_knights || black_knights || white_bishops || black_bishops)
+            return true;
+
+
+    // KNN-K ending
+    if (total_pieces == 4)
+    {
+        if (white_knights == 2)
+            return true;
+
+        else if (black_knights == 2)
+            return true;
+
+        // Kminor-Kminor ending
+        else if ((white_knights || white_bishops) &&
+                 (black_knights || black_bishops))
+        {
+            return true;
+        }
+    }
+
+
+    // KB-KB ending (all bishops on same-color squares)
+    if (((bitboards[B] | bitboards[b]) & LightSquares) ||
+        ((bitboards[B] | bitboards[b]) & DarkSquares))
+    {
+        if ((bitboards[N] | bitboards[R] | bitboards[Q] | bitboards[P] |
+             bitboards[n] | bitboards[r] | bitboards[q] | bitboards[p]) == 0)
+        {
+            return true;
+        }
+    }
+
+
+    // Kminorminor-Kminor ending
+    if ((total_pieces == 5) &&
+        ((white_bishops + white_knights + black_bishops + black_knights) == 3))
+    {
+        // Strong bishop pair vs. Knight is not a draw
+        if (white_bishops == 2)
+        {
+            if (((bitboards[B] & LightSquares) != bitboards[B]) &&
+                (((bitboards[B] & DarkSquares) != bitboards[B])))
+            return false;
+        }
+
+        if (black_bishops == 2)
+        {
+            if (((bitboards[b] & LightSquares) != bitboards[b]) &&
+                (((bitboards[b] & DarkSquares) != bitboards[b])))
+            return false;
+        }
+
+
+        // any other Kminor+minor vs. Kminor combination
+        else
+            return true;
+    }
+
+
+    // in any other case, it is not a draw
+    return false;
+}
+
+
+
 #endif  //  POSITIION_H

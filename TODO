@@ -5,3 +5,6 @@ TODO
 - time controls
 - transposition tables
 - 3-fold repetition
+
+- bug: when found a mating distance, search keeps deepening and slow.
+  Should return almost immediately!

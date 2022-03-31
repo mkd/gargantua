@@ -157,8 +157,8 @@ int negamax(int alpha, int beta, int depth)
     // Extend the search depth by one if we're in check, so that we're less
     // likely to make a tactical mistake. I.e., don't call quiescence search
     // while in check.
-    //if (inCheck)
-    //    depth++;
+    if (inCheck)
+        depth++;
 
 
     // leaf node: return static evaluation
@@ -466,6 +466,11 @@ int qsearch(int alpha, int beta)
 		//communicate();
 
 
+    // check for an immediate draw
+    if (isDraw())
+        return DRAWSCORE;
+
+
     // increment nodes count
     nodes++;
 
@@ -473,24 +478,6 @@ int qsearch(int alpha, int beta)
     // we are too deep, hence there's an overflow of arrays relying on max ply constant
     if (ply > MAXPLY - 1)
         return evaluate();
-
-
-    // check for an immediate draw
-    //if (isDraw())
-    // return DRAWSCORE;
-
-
-    // is king in check?
-    bool inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
-                                                            ls1b(bitboards[k]),
-                                                            sideToMove ^ 1);
-
-
-    // Extend the search depth by one if we're in check, so that we're less
-    // likely to make a tactical mistake. I.e., don't call quiescence search
-    // while in check.
-    if (inCheck)
-        return negamax(alpha, beta, 1);
 
 
     // calculate "stand-pat" to stabilize the qsearch
