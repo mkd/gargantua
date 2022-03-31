@@ -37,7 +37,7 @@ using namespace std;
 #define DEFAULT_SEARCH_MOVETIME_MS  5000
 #define LMR_FULLDEPTH_MOVES            4
 #define LMR_REDUCTION_LIMIT            3
-#define ASPIRATION_WINDOW_SIZE        60
+#define ASPIRATION_WINDOW_SIZE        70
 
 
 

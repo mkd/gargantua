@@ -141,10 +141,6 @@ int negamax(int alpha, int beta, int depth)
         return evaluate();
 
 
-    // define find PV node variable
-    bool foundPV = false;
-
-
     // init PV length
     pv_length[ply] = ply;
 
@@ -292,69 +288,52 @@ int negamax(int alpha, int beta, int depth)
         legal++;
 
 
-        // 1. Principal Variation Search
-        if (foundPV)
-        {
-            // Once you've found a move with a score that is between alpha and beta,
-            // the rest of the moves are searched with the goal of proving that they are all bad.
-            // It's possible to do this a bit faster than a search that worries that one
-            // of the remaining moves might be good. */
-            score = -negamax(-alpha - 1, -alpha, depth - 1);
+        // Step 2. Full-width and full-depth search, if no moves searched yet
+        if (moves_searched == 0)
+            score = -negamax(-beta, -alpha, depth - 1);
 
-            // If the algorithm finds out that it was wrong, and that one of the
-            // subsequent moves was better than the first PV move, it has to search again,
-            // in the normal alpha-beta manner.  This happens sometimes, and it's a waste of time,
-            // but generally not often enough to counteract the savings gained from doing the
-            // "bad move proof" search referred to earlier.
-            if((score > alpha) && (score < beta))
-                score = -negamax(-beta, -alpha, depth - 1);
-        }
-
-
-        // non-PV search
+        
         else
         {
-            // normal alpha-beta search at full depth
-            if (moves_searched == 0)
-                score = -negamax(-beta, -alpha, depth - 1);
-
-            
-            // 2. Late Move Reductions (LMR)
+            // 3. Late Move Reductions (LMR)
             //
             // Configure late-move reductions (LMR): assuming that the moves in the
             // list are ordered from potential best to potential worst, analyzing 
             // the first moves is more critical than the last ones. Therefore, 
             // using LMR we analyze the first 3 moves in full-depth, but cut down
             // the analysis depth for the rest of moves.
-            else
-            {
-                if(
-                    moves_searched >= LMR_FULLDEPTH_MOVES &&
-                    depth >= LMR_REDUCTION_LIMIT &&
-                    !inCheck && 
-                    !getMoveCapture(MoveList.moves[count]) &&
-                    !getPromo(MoveList.moves[count])
-                  )
-                {
-                    score = -negamax(-alpha - 1, -alpha, depth - 2);
-                }
+            if(
+                moves_searched >= LMR_FULLDEPTH_MOVES &&
+                depth >= LMR_REDUCTION_LIMIT &&
+                !inCheck && 
+                !getMoveCapture(MoveList.moves[count]) &&
+                !getPromo(MoveList.moves[count])
+              )
+                score = -negamax(-alpha - 1, -alpha, depth - 2);
 
-                
-                // hack to ensure that full-depth search is done
-                else
-                    score = alpha + 1;
+            
+            // hack to ensure that full-depth search is done next
+            else
+                score = alpha + 1;
                
 
-                // if found a better move during LMR
-                if (score > alpha)
-                {
-                    // re-search at full depth but with narrowed score bandwith
-                    score = -negamax(-alpha - 1, -alpha, depth - 1);
-                
-                    // if LMR fails re-search at full depth and full score width
-                    if ((score > alpha) && (score < beta))
-                        score = -negamax(-beta, -alpha, depth - 1);
-                }
+            // Step 4. Principal Variation Search
+            if (score > alpha)
+            {
+                // Once you've found a move with a score that is between alpha and beta,
+                // the rest of the moves are searched with the goal of proving that they are all bad.
+                // It's possible to do this a bit faster than a search that worries that one
+                // of the remaining moves might be good. */
+                score = -negamax(-alpha - 1, -alpha, depth - 1);
+        
+
+                // If the algorithm finds out that it was wrong, and that one of the
+                // subsequent moves was better than the first PV move, it has to search again,
+                // in the normal alpha-beta manner.  This happens sometimes, and it's a waste of time,
+                // but generally not often enough to counteract the savings gained from doing the
+                // "bad move proof" search referred to earlier.
+                if ((score > alpha) && (score < beta))
+                    score = -negamax(-beta, -alpha, depth - 1);
             }
         }
 
@@ -401,7 +380,6 @@ int negamax(int alpha, int beta, int depth)
 
             // PV node (move)
             alpha = score;
-            foundPV = true;
 
 
             // write PV move
