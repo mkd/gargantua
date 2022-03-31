@@ -259,4 +259,14 @@ static inline bool isDraw()
 
 
 
+// noMajorsOrMinors
+//
+// Return true if there are no major nor minor pieces left on the board.
+static inline bool noMajorsOrMinors()
+{
+    return !(countBits(occupancies[Both]) - countBits(bitboards[P]) - countBits(bitboards[p]) - 2);
+}
+
+
+
 #endif  //  POSITIION_H
