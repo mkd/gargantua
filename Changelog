@@ -7,3 +7,5 @@ Initial release v1.0
 - Fully Bitboard-based implementation
 - Principal Search Variation
 - Late Move Reductions (LMR)
+- Null moving pruning
+- Aspiration window
