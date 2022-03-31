@@ -493,6 +493,23 @@ void search()
         score = negamax(alpha, beta, current_depth);
 
 
+        // Aspiration Window: search with a narrow window, keep narrowing it
+        // after each iteration. However, if the score falls outside the window,
+        // we must try again with a full-width window (and the same depth).
+        if ((score <= alpha) || (score >= beta))
+        {
+            alpha = -VALUE_INFINITE;
+            beta  =  VALUE_INFINITE;
+            current_depth--;
+            continue;
+        }
+
+        
+        // set up the window for the next iteration best=150 (22,8M)
+        alpha = score - ASPIRATION_WINDOW_SIZE;
+        beta  = score + ASPIRATION_WINDOW_SIZE;
+
+
         // stop the timer and measure time elapsed
         auto finish = chrono::high_resolution_clock::now();
         auto ms = chrono::duration_cast<chrono::milliseconds>(finish-start).count();

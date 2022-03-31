@@ -4,6 +4,9 @@ TODO
 - time controls
 - transposition tables
 - 3-fold repetition
+- razoring
+- static null move pruning (does it help? or much slower due to double NNUE?)
+- futility pruning (e.g., Blunder)
 
 - bug: when found a mating distance, search keeps deepening and slow.
   Should return almost immediately!
