@@ -22,6 +22,7 @@
 #define SEARCH_H
 
 #include <cassert>
+#include <chrono>
 
 #include "movgen.h"
 
@@ -33,11 +34,13 @@ using namespace std;
 
 // Default settings and configuration for the search, as well as 
 // tuning parameters for search extensions and reductions:
-#define DEFAULT_SEARCH_DEPTH         256
+#define DEFAULT_SEARCH_DEPTH          10
+#define MAX_SEARCH_DEPTH             256 
 #define DEFAULT_SEARCH_MOVETIME_MS  5000
 #define LMR_FULLDEPTH_MOVES            4
 #define LMR_REDUCTION_LIMIT            3
 #define ASPIRATION_WINDOW_SIZE        70
+#define MAX_SEARCH_TIME             0xFFFFFFFFFFFFFFFFULL
 
 
 
@@ -76,21 +79,37 @@ extern uint64_t nodes;
 // search configuration throught the entire lifecycle.
 typedef struct
 {
-    int wtime;
-    int btime;
-    int winc;
-    int binc;
-    int npmsec;
-    int movetime;
-    int movestogo;
-    int depth;
-    int mate;
-    int perft;
+    int  wtime;
+    int  btime;
+    int  winc;
+    int  binc;
+    int  npmsec;
+    int  movetime;
+    int  movestogo;
+    int  depth;
+    int  mate;
+    int  perft;
     bool infinite;
-    int nodes;
+    int  nodes;
+    bool ponder;
 } Limits_t;
 
 extern Limits_t Limits;
+
+
+
+// Time Control variables
+//
+// These are flags to tell how the search is performed internally. These are not
+// to be confused with Limits, which are UCI-specific settings parsed in the
+// 'go' command. 
+extern uint64_t inc;
+extern uint64_t otime;
+extern uint64_t comptime;
+extern uint64_t starttime;
+extern uint64_t stoptime;
+extern bool     timedout;
+extern bool     timeset;
 
 
 
@@ -217,9 +236,10 @@ void dperft(int);
 void search();
 int  qsearch(int, int);
 void initSearch();
-void resetLimits();
 void sortMoves(MoveList_t &);
 void printMoveScores(MoveList_t &);
+void resetLimits();
+void resetTimeControl();
 
 
 
@@ -400,6 +420,36 @@ static inline void enablePV_scoring(MoveList_t &MoveList)
             followPV = true;
         }
     }
+}
+
+
+
+// getTimeInMilliseconds
+//
+// Get the number of milliseconds since epoch time.
+static inline uint64_t getTimeInMilliseconds()
+{
+    return duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now().time_since_epoch()).count();
+}
+
+
+
+// readClockAndInput
+//
+// Check if we need to stop, because time is up, or because the user has 
+// entered a command and hit Enter.
+static inline void readClockAndInput()
+{
+    if (timeset && (getTimeInMilliseconds() > stoptime))
+        timedout = true;
+
+
+    // read GUI input
+	//string str;
+    //getline(cin, str);
+
+    //if (str == "stop")
+    //    timedout = true;
 }
 
 

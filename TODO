@@ -1,6 +1,9 @@
 TODO
 ====
-- time controls
+
+Before release 1.0:
+-------------------
+- read input (for 'stop' command)
 - transposition tables
 - 3-fold repetition
 - razoring
@@ -9,3 +12,10 @@ TODO
 
 - bug: when found a mating distance, search keeps deepening and slow.
   Should return almost immediately!
+
+
+Infinity wars:
+--------------
+- pondering
+- lazy SMP
+- static exchange evaluation (SEE) for ordering captures in qsearch()

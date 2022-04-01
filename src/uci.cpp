@@ -21,6 +21,8 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <chrono>
+#include <future>
 
 #include "bitboard.h"
 #include "movgen.h"
@@ -174,20 +176,128 @@ void UCI::go(istringstream &is)
 
     // reset search configuration before making a new search
     resetLimits();
+    resetTimeControl();
 
 
     // parse sub-commands
     while (is >> token)
-             if (token == "wtime")     is >> Limits.wtime;
-        else if (token == "btime")     is >> Limits.btime;
-        else if (token == "winc")      is >> Limits.winc;
-        else if (token == "binc")      is >> Limits.binc;
-        else if (token == "movestogo") is >> Limits.movestogo;
-        else if (token == "depth")     is >> Limits.depth;
-        else if (token == "nodes")     is >> Limits.nodes;
-        else if (token == "movetime")  is >> Limits.movetime;
+    {
+        // "wtime": time remaning on the clock for White
+        if (token == "wtime")     
+        {
+            is >> Limits.wtime;
+
+            if (Limits.wtime > 0)
+            {
+                if (sideToMove == White)
+                    Limits.movetime = comptime = Limits.wtime;
+                else
+                    otime    = Limits.wtime;
+            }
+        }
+
+        
+        // "btime": time remaning on the clock for Black
+        else if (token == "btime")
+        {
+            is >> Limits.btime;
+
+            if (Limits.btime > 0)
+            {
+                if (sideToMove == Black)
+                    Limits.movetime = comptime = Limits.btime;
+                else
+                    otime    = Limits.btime;
+            }
+        }
+
+
+        // "winc": time increment for White
+        else if (token == "winc")
+        {
+            is >> Limits.winc;
+
+            if (Limits.winc > 0)
+                if (sideToMove == White)
+                    inc = Limits.winc;
+        }
+
+
+        // "binc": time increment for Black
+        else if (token == "binc")
+        {
+            is >> Limits.binc;
+
+            if (Limits.binc > 0)
+                if (sideToMove == Black)
+                    inc = Limits.binc;
+        }
+
+
+        // "movestogo": number of moves left for the next time control
+        else if (token == "movestogo")
+        {
+            is >> Limits.movestogo;
+        }
+
+
+        // "depth": search up to a given depth, regardless of time
+        else if (token == "depth")
+        {
+            is >> Limits.depth;
+
+            if (Limits.depth <= 0)
+                Limits.depth = 1;
+
+            // make time "infinite" and let depth stop the search
+            Limits.infinite = false;
+            timeset = false;
+        }
+
+
+        // "nodes": search up to a given no. of nodes, regardless of time/depth
+        else if (token == "nodes")
+        {
+            is >> Limits.nodes;
+            timeset = false;
+        }
+
+
+        // "movetime": time (in milliseconds) to search for a move
+        else if (token == "movetime")
+        {
+            is >> Limits.movetime;
+
+            timeset = true;
+
+            // if move time is not available
+            if (Limits.movetime != -1)
+            {
+                // set time equal to move time
+                comptime = Limits.movetime;
+
+                // set moves to go to 1
+                Limits.movestogo = 1;
+            }
+        }
+
+
+        // XXX
         else if (token == "mate")      is >> Limits.mate;
-        else if (token == "infinite")  Limits.infinite = true;
+
+
+        // "ponder": enable/disable pondering for this specific search
+        else if (token == "ponder")    Limits.ponder   = true;
+
+
+        // "infinite": enter infinite analysis
+        else if (token == "infinite")
+        {
+            Limits.infinite = true;
+            timeset         = false;
+            Limits.depth    = MAX_SEARCH_DEPTH;
+            Limits.movetime = comptime = MAX_SEARCH_TIME;
+        }
 
 
         // run "perft" test
@@ -197,6 +307,37 @@ void UCI::go(istringstream &is)
             dperft(Limits.perft);
             return;
         }
+    }
+
+    // configure internal timing, if time control is available
+    if ((comptime != 0) && !Limits.infinite)
+    {
+        // set up timing
+        timeset = true;
+        comptime /= Limits.movestogo;
+        
+        // disable time buffer when time is almost up
+        if (comptime > 1500) comptime -= 50;
+        
+        // init max. stop time
+        stoptime = Limits.movetime = starttime + comptime + inc;
+        
+        // treat increment as seconds per move when time is almost up
+        if (comptime < 1500 && inc && Limits.depth == MAX_SEARCH_DEPTH)
+            Limits.movetime = starttime + inc - 50;
+    }
+
+
+    // prepare an asynchronous function to constaintly check the input
+    /*future<string> io = async(launch::async, getLineFromCin);
+
+    if (io.wait_for(chrono::seconds(0)) == future_status::ready)
+    {
+        auto line = io.get();
+        cout << "read async line = '" << line << "'" << endl;
+
+        io = async(launch::async, getLineFromCin);
+    }*/
 
 
     // start the search
@@ -391,4 +532,18 @@ void UCI::printHelp()
 
     cout << "- smoves: print the list of pseudo-legal moves, sorted by score";
     cout << endl << endl;
+}
+
+
+
+
+// getLineFromCin
+//
+// Read an entire line from the user input.
+string UCI::getLineFromCin()
+{
+    string line;
+    getline(cin, line);
+
+    return line;
 }

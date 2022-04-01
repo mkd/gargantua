@@ -40,6 +40,17 @@ Limits_t Limits;
 
 
 
+// Time Control variables
+uint64_t starttime = getTimeInMilliseconds();
+uint64_t stoptime  = starttime;
+uint64_t inc       = 0;
+uint64_t otime     = 0;
+uint64_t comptime  = 0;
+bool     timedout  = false;
+bool     timeset   = true;
+
+
+
 // killers [id][ply] 
 //
 // Killers is a table where the two best (quiet) moves are
@@ -96,18 +107,19 @@ void initSearch()
 // Reset all search limits to their initial configuration.
 void resetLimits()
 {
-    Limits.wtime = 0;
-    Limits.btime = 0;
-    Limits.winc = 0;
-    Limits.binc = 0;
-    Limits.npmsec = 0;
-    Limits.movetime = 0;
-    Limits.movestogo = 0;
-    Limits.depth = DEFAULT_SEARCH_DEPTH;
-    Limits.mate = 0;
-    Limits.perft = 0;
-    Limits.infinite = 0;
-    Limits.nodes = 0;
+    Limits.wtime     = 0;
+    Limits.btime     = 0;
+    Limits.winc      = 0;
+    Limits.binc      = 0;
+    Limits.npmsec    = 0;
+    Limits.movetime  = -1;
+    Limits.movestogo = 40;
+    Limits.depth     = MAX_SEARCH_DEPTH;
+    Limits.mate      = 0;
+    Limits.perft     = 0;
+    Limits.infinite  = 0;
+    Limits.nodes     = 0;
+    Limits.ponder    = false;
 }
 
 
@@ -147,6 +159,11 @@ int negamax(int alpha, int beta, int depth)
 
     // increment nodes count
     nodes++;
+
+
+    // check the clock and the input status
+    if((nodes & 2047 ) == 0)
+		readClockAndInput();
 
 
     // is king in check?
@@ -225,15 +242,20 @@ int negamax(int alpha, int beta, int depth)
 
         // decrement ply
         ply--;
-        
+
+
         // decrement repetition index
         //repetition_index--;
-            
+
+
         // restore board state
         takeBack();
 
+
         // reutrn 0 if time is up
-        //if (stopped == 1) return 0;
+        if (timedout)
+            return 0;
+
 
         // fail-hard beta cutoff
         if (score >= beta)
@@ -344,6 +366,11 @@ int negamax(int alpha, int beta, int depth)
 
         // undo move
         takeBack();
+
+
+        // reutrn 0 if time is up
+        if (timedout)
+            return 0;
 
         
         // fail-hard beta cutoff
@@ -456,11 +483,16 @@ void search()
     nodes = 0ULL;
 
 
+    // reset "time is up" flag
+    timedout = 0;
+
+
     // iterative deepening framework
     for (int current_depth = 1; current_depth <= Limits.depth; current_depth++)
     {
-        //memset(pv_table, 0, sizeof(pv_table));
-        //memset(pv_length, 0, sizeof(pv_length));
+        // stop calculating and return best move so far 
+        if (timedout)
+            break;
 
 
         // enable follow PV flag
@@ -495,20 +527,23 @@ void search()
         
     
         // print bestmove and PV line
-        cout << "info depth " << current_depth
-             << " score cp " << score
-             << " nodes " <<  nodes
-             << " nps " << nodes * 1000000000 / ns
-             << " time " << ms
-             << " pv ";
-        
-        // print PV line
-        for (int count = 0; count < pv_length[0]; count++)
-            cout << prettyMove(pv_table[0][count]) << " ";
+        if (pv_length[0])
+        {
+            cout << "info depth " << current_depth
+                 << " score cp " << score
+                 << " nodes " <<  nodes
+                 << " nps " << nodes * 1000000000 / ns
+                 << " time " << ms
+                 << " pv ";
+            
+            // print PV line
+            for (int count = 0; count < pv_length[0]; count++)
+                cout << prettyMove(pv_table[0][count]) << " ";
 
 
-        // new line before next depth
-        cout << endl << flush;
+            // new line before next depth
+            cout << endl << flush;
+        }
     }
 
 
@@ -533,8 +568,8 @@ int qsearch(int alpha, int beta)
 
 
     // check the clock and the input status
-    //if((nodes & 2047 ) == 0)
-		//communicate();
+    if((nodes & 2047 ) == 0)
+		readClockAndInput();
 
 
     // check for an immediate draw
@@ -620,7 +655,8 @@ int qsearch(int alpha, int beta)
 
 
         // reutrn 0 if time is up
-        //if (stopped == 1) return 0;
+        if (timedout)
+            return 0;
 
        
         // found a better move
@@ -779,4 +815,24 @@ void printMoveScores(MoveList_t &MoveList)
         cout << " score: " << scoreMove(MoveList.moves[count]) << endl;
     }
     cout << endl << endl;
+}
+
+
+
+// resetTimeControl
+//
+// Set the internal time configuration back to the default one. This is
+// typically done when parsing a new 'go' command from UCI.
+void resetTimeControl()
+{
+    // reset timing
+    comptime  = 0;
+    inc       = 0;
+    stoptime  = 0;
+    timeset   = 1;
+    timedout  = false; 
+
+    starttime = getTimeInMilliseconds();
+    Limits.movestogo = 40;
+    Limits.movetime  = -1;
 }
