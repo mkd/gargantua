@@ -47,7 +47,6 @@ void go(istringstream &);
 void traceEval();
 void loop(int argc, char *argv[]);
 void printHelp();
-string getLineFromCin();
 
 
 }  //  namespace UCI

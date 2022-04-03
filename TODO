@@ -3,7 +3,6 @@ TODO
 
 Before release 1.0:
 -------------------
-- read input (for 'stop' command)
 - transposition tables
 - 3-fold repetition
 - razoring
