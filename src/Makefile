@@ -58,10 +58,10 @@ DEPFILES  := $(SOURCES:.cpp=.d)
 
 
 ### Compilation flags
-CXXFLAGS := -Ofast -Wall -Wcast-qual -pedantic -std=c++20 -Wvla -fno-exceptions -fno-rtti -m64 -mpopcnt -flto -DNDEBUG $(DEFINES)
-DFLAGS   := -Wall -O0 -g -DDEBUG -std=c++20 $(DEFINES)
-WINFLAGS := -DWIN64 -static-libgcc -static-libstdc++ -DNDEBUG $(DEFINES)
-#LDFLAGS  += -lpthread
+CXXFLAGS := -Ofast -Wall -Wcast-qual -pedantic -std=c++20 -Wvla -fno-exceptions -fno-rtti -m64 -mpopcnt -flto -pthread -DNDEBUG $(DEFINES)
+DFLAGS   := -Wall -O0 -g -DDEBUG -pthread -std=c++20 $(DEFINES)
+WINFLAGS := -DWIN64 -pthread -static-libgcc -static-libstdc++ -DNDEBUG $(DEFINES)
+LDFLAGS  += -lpthread
 
 
 
