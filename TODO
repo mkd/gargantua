@@ -5,6 +5,9 @@ Before release 1.0:
 -------------------
 - transposition tables
 - 3-fold repetition
+- contempt value for DRAWSCORE based on game phase (endgame = 0; other = -0.25)
+  - return DRAWSCORE --> return contempt_draw();
+  - contempt_draw() { if (endgame) return 0; else -0.25 for white, 0.25 for black.
 - razoring
 - static null move pruning (does it help? or much slower due to double NNUE?)
 - futility pruning (e.g., Blunder)
@@ -15,6 +18,6 @@ Before release 1.0:
 
 Infinity wars:
 --------------
-- pondering
+- pondering: https://web.archive.org/web/20071027053527/http://www.brucemo.com/compchess/programming/pondering.htm
 - lazy SMP
 - static exchange evaluation (SEE) for ordering captures in qsearch()
