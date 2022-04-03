@@ -269,4 +269,70 @@ static inline bool noMajorsOrMinors()
 
 
 
+// get game phase score
+/* bbc way
+// 
+    if (game_phase_score > opening_phase_score) game_phase = opening;
+    else if (game_phase_score < endgame_phase_score) game_phase = endgame;
+    else game_phase = middlegame;
+
+
+static inline int get_game_phase_score()
+{
+        The game phase score of the game is derived from the pieces
+        (not counting pawns and kings) that are still on the board.
+        The full material starting position game phase score is:
+        
+        4 * knight material score in the opening +
+        4 * bishop material score in the opening +
+        4 * rook material score in the opening +
+        2 * queen material score in the opening
+    
+    // white & black game phase scores
+    int white_piece_scores = 0, black_piece_scores = 0;
+    
+    // loop over white pieces
+    for (int piece = N; piece <= Q; piece++)
+        white_piece_scores += count_bits(bitboards[piece]) * material_score[opening][piece];
+    
+    // loop over white pieces
+    for (int piece = n; piece <= q; piece++)
+        black_piece_scores += count_bits(bitboards[piece]) * -material_score[opening][piece];
+    
+    // return game phase score
+    return white_piece_scores + black_piece_scores;
+}
+*/
+
+/*
+    chess0 way:
+
+    // 2.2 Pieces
+    whitepawns = bitCnt(board.whitePawns);
+    whiteknights = bitCnt(board.whiteKnights);
+    whitebishops = bitCnt(board.whiteBishops);
+    whiterooks = bitCnt(board.whiteRooks);
+    whitequeens = bitCnt(board.whiteQueens);
+    whitetotalmat = 3 * whiteknights + 3 * whitebishops + 5 * whiterooks + 10 * whitequeens;
+    whitetotal = whitepawns + whiteknights + whitebishops + whiterooks + whitequeens;
+    blackpawns = bitCnt(board.blackPawns);
+    blackknights = bitCnt(board.blackKnights);
+    blackbishops = bitCnt(board.blackBishops);
+    blackrooks = bitCnt(board.blackRooks);
+    blackqueens = bitCnt(board.blackQueens);
+    blacktotalmat = 3 * blackknights + 3 * blackbishops + 5 * blackrooks + 10 * blackqueens;
+    blacktotal = blackpawns + blackknights + blackbishops + blackrooks + blackqueens;
+    allpieces = board.whitePawns | board.whiteKnights | board.whiteBishops |
+                board.whiteRooks | board.whiteQueens | board.whiteKing |
+                board.blackPawns | board.blackKnights | board.blackBishops |
+                board.blackRooks | board.blackQueens | board.blackKing;
+
+
+    // 3. check if we are at the endgame: anything less than a
+    //                                    queen + rook (=15), excluding pawns,
+    //                                    is considered endgame
+    endgame = (whitetotalmat < 15 || blacktotalmat < 15);
+    */
+
+
 #endif  //  POSITIION_H
