@@ -44,8 +44,6 @@ Limits_t Limits;
 uint64_t starttime = getTimeInMilliseconds();
 uint64_t stoptime  = starttime;
 uint64_t inc       = 0;
-uint64_t otime     = 0;
-uint64_t comptime  = 0;
 bool     timedout  = false;
 bool     timeset   = true;
 
@@ -112,7 +110,7 @@ void resetLimits()
     Limits.winc      = 0;
     Limits.binc      = 0;
     Limits.npmsec    = 0;
-    Limits.movetime  = -1;
+    Limits.movetime  = 0;
     Limits.movestogo = 40;
     Limits.depth     = MAX_SEARCH_DEPTH;
     Limits.mate      = 0;
@@ -162,8 +160,8 @@ int negamax(int alpha, int beta, int depth)
 
 
     // check the clock and the input status
-    if((nodes & 2047 ) == 0)
-		readClockAndInput();
+    //if((nodes & 2047 ) == 0)
+	//	readClockAndInput();
 
 
     // is king in check?
@@ -453,6 +451,10 @@ void search()
     assert(Limits.depth >= 0);
 
 
+    // set the flag for the engine to know the search is started
+    timedout = false;
+
+
     // define best score
     int score;
 
@@ -549,6 +551,10 @@ void search()
 
     // print bestmove
     cout << "bestmove " << prettyMove(pv_table[0][0]) << endl << flush;
+
+
+    // tell the engine that the search is ready
+    timedout = true;
 }
 
 
@@ -568,8 +574,8 @@ int qsearch(int alpha, int beta)
 
 
     // check the clock and the input status
-    if((nodes & 2047 ) == 0)
-		readClockAndInput();
+    //if((nodes & 2047 ) == 0)
+	//	readClockAndInput();
 
 
     // check for an immediate draw
@@ -826,7 +832,6 @@ void printMoveScores(MoveList_t &MoveList)
 void resetTimeControl()
 {
     // reset timing
-    comptime  = 0;
     inc       = 0;
     stoptime  = 0;
     timeset   = 1;
@@ -834,5 +839,5 @@ void resetTimeControl()
 
     starttime = getTimeInMilliseconds();
     Limits.movestogo = 40;
-    Limits.movetime  = -1;
+    Limits.movetime  =  0;
 }

@@ -23,6 +23,15 @@
 
 #include <cassert>
 #include <chrono>
+#include <string>
+#include <future>
+
+#ifdef WIN64
+    #include <windows.h>
+#else
+    #include <sys/time.h>
+    #include <sys/select.h>
+#endif
 
 #include "movgen.h"
 
@@ -41,6 +50,7 @@ using namespace std;
 #define LMR_REDUCTION_LIMIT            3
 #define ASPIRATION_WINDOW_SIZE        70
 #define MAX_SEARCH_TIME             0xFFFFFFFFFFFFFFFFULL
+#define WATCH_INTERVAL_MS             10
 
 
 
@@ -84,14 +94,14 @@ typedef struct
     int  winc;
     int  binc;
     int  npmsec;
-    int  movetime;
     int  movestogo;
     int  depth;
     int  mate;
     int  perft;
     bool infinite;
-    int  nodes;
     bool ponder;
+    uint64_t movetime;
+    uint64_t nodes;
 } Limits_t;
 
 extern Limits_t Limits;
@@ -104,8 +114,6 @@ extern Limits_t Limits;
 // to be confused with Limits, which are UCI-specific settings parsed in the
 // 'go' command. 
 extern uint64_t inc;
-extern uint64_t otime;
-extern uint64_t comptime;
 extern uint64_t starttime;
 extern uint64_t stoptime;
 extern bool     timedout;
@@ -434,22 +442,93 @@ static inline uint64_t getTimeInMilliseconds()
 
 
 
-// readClockAndInput
+// inputWaiting
 //
-// Check if we need to stop, because time is up, or because the user has 
-// entered a command and hit Enter.
-static inline void readClockAndInput()
+// Function to "listen" to GUI's input during the search, without
+// blocking the program. Credit goes to Richard Albert, author of
+// VICE chess engine.
+static inline int inputWaiting()
 {
-    if (timeset && (getTimeInMilliseconds() > stoptime))
-        timedout = true;
+    #ifndef WIN64
+        fd_set readfds;
+        struct timeval tv;
+        FD_ZERO (&readfds);
+        FD_SET (fileno(stdin), &readfds);
+        tv.tv_sec=0; tv.tv_usec=0;
+        select(16, &readfds, 0, 0, &tv);
+
+        return (FD_ISSET(fileno(stdin), &readfds));
 
 
-    // read GUI input
-	//string str;
-    //getline(cin, str);
+    #else
+        static int init = 0, pipe;
+        static HANDLE inh;
+        DWORD dw;
 
-    //if (str == "stop")
-    //    timedout = true;
+        if (!init)
+        {
+            init = 1;
+            inh = GetStdHandle(STD_INPUT_HANDLE);
+            pipe = !GetConsoleMode(inh, &dw);
+            if (!pipe)
+            {
+                SetConsoleMode(inh, dw & ~(ENABLE_MOUSE_INPUT|ENABLE_WINDOW_INPUT));
+                FlushConsoleInputBuffer(inh);
+            }
+        }
+        
+        if (pipe)
+        {
+           if (!PeekNamedPipe(inh, NULL, 0, NULL, &dw, NULL)) return 1;
+           return dw;
+        }
+        
+        else
+        {
+           GetNumberOfConsoleInputEvents(inh, &dw);
+           return dw <= 1 ? 0 : dw;
+        }
+
+    #endif
+}
+
+
+
+// watchClockAndInput
+//
+// Check if we need to stop, because time is up, or because any other
+// limit has been hit.
+//
+// This function should be called in its own (asynchronous) thread, e.g.,
+// using launch::async with a future<> object.
+static inline void watchClockAndInput()
+{
+    string cmd;
+
+    
+    while (!timedout)
+    {
+        // watch clock
+        if (timeset && (getTimeInMilliseconds() > stoptime))
+            timedout = true;
+
+
+        // read the input
+        else if (inputWaiting())
+        {
+            cin >> cmd;
+            if (cmd == "stop")
+                timedout = true;
+        }
+
+        // check for nodes limitation
+        else if ((Limits.nodes > 0) && (nodes > Limits.nodes))
+            timedout = true;
+
+
+        // update interval 
+        this_thread::sleep_for(chrono::milliseconds(WATCH_INTERVAL_MS));
+    }
 }
 
 

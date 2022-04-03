@@ -108,7 +108,7 @@ int UCI::parseMove(string str)
 // The function sets up the position described in the given FEN string ("fen")
 // or the starting position ("startpos") and then makes the moves given in the
 // following move list ("moves").
-void UCI::position(istringstream& is)
+void UCI::position(istringstream &is)
 {
     // string variables to parse the command
     string token, fen;
@@ -190,9 +190,7 @@ void UCI::go(istringstream &is)
             if (Limits.wtime > 0)
             {
                 if (sideToMove == White)
-                    Limits.movetime = comptime = Limits.wtime;
-                else
-                    otime    = Limits.wtime;
+                    Limits.movetime = Limits.wtime;
             }
         }
 
@@ -205,9 +203,7 @@ void UCI::go(istringstream &is)
             if (Limits.btime > 0)
             {
                 if (sideToMove == Black)
-                    Limits.movetime = comptime = Limits.btime;
-                else
-                    otime    = Limits.btime;
+                    Limits.movetime = Limits.btime;
             }
         }
 
@@ -269,16 +265,10 @@ void UCI::go(istringstream &is)
             is >> Limits.movetime;
 
             timeset = true;
+            Limits.movestogo = 1;
 
-            // if move time is not available
-            if (Limits.movetime != -1)
-            {
-                // set time equal to move time
-                comptime = Limits.movetime;
-
-                // set moves to go to 1
-                Limits.movestogo = 1;
-            }
+            if (Limits.movetime <= 0)
+                Limits.movetime = 1;
         }
 
 
@@ -296,7 +286,7 @@ void UCI::go(istringstream &is)
             Limits.infinite = true;
             timeset         = false;
             Limits.depth    = MAX_SEARCH_DEPTH;
-            Limits.movetime = comptime = MAX_SEARCH_TIME;
+            Limits.movetime = MAX_SEARCH_TIME;
         }
 
 
@@ -309,35 +299,33 @@ void UCI::go(istringstream &is)
         }
     }
 
+
     // configure internal timing, if time control is available
-    if ((comptime != 0) && !Limits.infinite)
+    if ((Limits.movetime > 0) && !Limits.infinite)
     {
         // set up timing
         timeset = true;
-        comptime /= Limits.movestogo;
-        
-        // disable time buffer when time is almost up
-        if (comptime > 1500) comptime -= 50;
+        Limits.movetime /= Limits.movestogo;
         
         // init max. stop time
-        stoptime = Limits.movetime = starttime + comptime + inc;
-        
+        stoptime = starttime + Limits.movetime + inc;
+
         // treat increment as seconds per move when time is almost up
-        if (comptime < 1500 && inc && Limits.depth == MAX_SEARCH_DEPTH)
-            Limits.movetime = starttime + inc - 50;
+        if ((Limits.movetime < 1000) && inc && (Limits.depth == MAX_SEARCH_DEPTH))
+            stoptime = starttime + inc - 50;
     }
 
 
-    // prepare an asynchronous function to constaintly check the input
-    /*future<string> io = async(launch::async, getLineFromCin);
+    // print search configuration
+    /*cout << endl;
+    cout << "starttime: " << starttime << "; movestogo: " << Limits.movestogo
+         << "; inc: " << inc << "; movetime: " << Limits.movetime << "; "
+         << "stoptime: " << stoptime << "; depth: " << Limits.depth
+         << "; timeset: " << timeset << "; nodes: " << Limits.nodes << endl;*/
 
-    if (io.wait_for(chrono::seconds(0)) == future_status::ready)
-    {
-        auto line = io.get();
-        cout << "read async line = '" << line << "'" << endl;
 
-        io = async(launch::async, getLineFromCin);
-    }*/
+    // constaintly watch the clock and other limits that will stop the search
+    auto io = async(launch::async, watchClockAndInput);
 
 
     // start the search
@@ -412,7 +400,8 @@ void UCI::loop(int argc, char* argv[])
 
 
         // "stop": halt the search but keep the UCI loop open
-        else if (token == "stop") { }
+        else if (token == "stop")
+            timedout = true;
 
 
         // "uci": print engine information
@@ -532,18 +521,4 @@ void UCI::printHelp()
 
     cout << "- smoves: print the list of pseudo-legal moves, sorted by score";
     cout << endl << endl;
-}
-
-
-
-
-// getLineFromCin
-//
-// Read an entire line from the user input.
-string UCI::getLineFromCin()
-{
-    string line;
-    getline(cin, line);
-
-    return line;
 }
