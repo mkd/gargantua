@@ -42,12 +42,12 @@ enum Slider { Rook, Bishop };
 
 
 
-// All Pieces: P=0, ..., k=11
+// Piece constants: P=0, ..., k=11
 enum Pieces { P, N, B, R, Q, K, p, n, b, r, q, k };
 
 
 
-// List of board squares: a8=0, ..., h1=63, NoSq=64 (no-square)
+// List of board squares' constants: a8=0, ..., h1=63, NoSq=64 (no-square)
 enum BoardSquares
 {
     a8, b8, c8, d8, e8, f8, g8, h8,
@@ -512,11 +512,13 @@ static inline unsigned int ls1b(Bitboard bb)
 // popLsb
 //
 // Find and clear the least significant bit in a non-zero bitboard.
-static inline int popLsb(Bitboard& b) {
+static inline int popLsb(Bitboard& b)
+{
   assert(b);
+
   const int s = ls1b(b);
-  //b &= b - 1;
-  b ^= SqBB[s];
+  b &= b - 1;
+
   return s;
 }
 

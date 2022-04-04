@@ -24,6 +24,7 @@
 #include <cassert>
 #include <chrono>
 #include <string>
+#include <thread>
 #include <future>
 
 #ifdef WIN64
@@ -113,9 +114,9 @@ extern Limits_t Limits;
 // These are flags to tell how the search is performed internally. These are not
 // to be confused with Limits, which are UCI-specific settings parsed in the
 // 'go' command. 
-extern uint64_t inc;
 extern uint64_t starttime;
 extern uint64_t stoptime;
+extern uint64_t inc;
 extern bool     timedout;
 extern bool     timeset;
 
@@ -142,7 +143,6 @@ extern int killers[2][MAXPLY];
 //
 // @see https://www.chessprogramming.org/History_Heuristic
 extern int history[12][64];
-
 
 
 
@@ -450,6 +450,7 @@ static inline uint64_t getTimeInMilliseconds()
 static inline int inputWaiting()
 {
     #ifndef WIN64
+
         fd_set readfds;
         struct timeval tv;
         FD_ZERO (&readfds);
@@ -461,6 +462,7 @@ static inline int inputWaiting()
 
 
     #else
+
         static int init = 0, pipe;
         static HANDLE inh;
         DWORD dw;

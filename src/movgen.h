@@ -27,6 +27,7 @@
 
 #include "bitboard.h"
 #include "position.h"
+#include "tt.h"
 
 
 
@@ -122,7 +123,7 @@ typedef struct
 
 // Castling rights update constants: when a rook or the King are moved,
 // these rights are checked and the current castling rights are updated.
-static constexpr int CastlingRights[64] =
+static constexpr int castling_rights[64] =
 {
      7, 15, 15, 15,  3, 15, 15, 11,
     15, 15, 15, 15, 15, 15, 15, 15,
@@ -255,6 +256,7 @@ static inline bool isSquareAttacked(int square, int side)
     memcpy(occupancies_copy, occupancies, sizeof(occupancies));           \
     side_copy = sideToMove, enpassant_copy = epsq, castle_copy = castle;  \
     fifty_copy = fifty;                                                   \
+    uint64_t hash_key_copy = hash_key;                                    \
 
 
 
@@ -268,6 +270,7 @@ static inline bool isSquareAttacked(int square, int side)
     memcpy(occupancies, occupancies_copy, sizeof(occupancies));           \
     sideToMove = side_copy, epsq = enpassant_copy, castle = castle_copy;  \
     fifty = fifty_copy;                                                   \
+    hash_key = hash_key_copy;                                             \
 
 
 
@@ -311,6 +314,10 @@ static inline int makeMove(int move)
     setBit(occupancies[sideToMove], toSq);
 
 
+    // remove and set piece from source to target square in the hash key
+    hash_key ^= piece_keys[piece][fromSq] ^ piece_keys[piece][toSq];
+
+
     // increment fifty move rule counter
     if ((piece != P) && (piece != p))
         fifty++;
@@ -333,8 +340,8 @@ static inline int makeMove(int move)
                 setBit(occupancies[White], f1);
                 
                 // hash rook
-                //hash_key ^= piece_keys[R][h1];  // remove rook from h1 from hash key
-                //hash_key ^= piece_keys[R][f1];  // put rook on f1 into a hash key
+                hash_key ^= piece_keys[R][h1] ^ piece_keys[R][f1];
+
                 break;
            
 
@@ -349,8 +356,8 @@ static inline int makeMove(int move)
                 setBit(occupancies[White], d1);
                 
                 // hash rook
-                //hash_key ^= piece_keys[R][a1];  // remove rook from a1 from hash key
-                //hash_key ^= piece_keys[R][d1];  // put rook on d1 into a hash key
+                hash_key ^= piece_keys[R][a1] ^ piece_keys[R][d1];
+
                 break;
            
 
@@ -365,8 +372,8 @@ static inline int makeMove(int move)
                 setBit(occupancies[Black], f8);
                 
                 // hash rook
-                //hash_key ^= piece_keys[r][h8];  // remove rook from h8 from hash key
-                //hash_key ^= piece_keys[r][f8];  // put rook on f8 into a hash key
+                hash_key ^= piece_keys[r][h8] ^ piece_keys[r][f8];
+
                 break;
            
 
@@ -381,8 +388,8 @@ static inline int makeMove(int move)
                 setBit(occupancies[Black], d8);
                 
                 // hash rook
-                //hash_key ^= piece_keys[r][a8];  // remove rook from a8 from hash key
-                //hash_key ^= piece_keys[r][d8];  // put rook on d8 into a hash key
+                hash_key ^= piece_keys[r][a8] ^ piece_keys[r][d8];
+
                 break;
         }
     }
@@ -424,7 +431,8 @@ static inline int makeMove(int move)
                 popBit(occupancies[Them], toSq);
 
                 // remove the piece from hash key
-                //hash_key ^= piece_keys[bb_piece][target_square];
+                hash_key ^= piece_keys[bb_piece][toSq];
+
                 break;
             }
         }
@@ -443,7 +451,7 @@ static inline int makeMove(int move)
                 popBit(occupancies[Black], toSq + 8);
 
                 // remove pawn from hash key
-                //hash_key ^= piece_keys[p][toSq + 8];
+                hash_key ^= piece_keys[p][toSq + 8];
             }
            
 
@@ -457,7 +465,7 @@ static inline int makeMove(int move)
                 popBit(occupancies[White], toSq - 8);
 
                 // remove pawn from hash key
-                //hash_key ^= piece_keys[P][toSq - 8];
+                hash_key ^= piece_keys[P][toSq - 8];
             }
         }
     }
@@ -473,7 +481,7 @@ static inline int makeMove(int move)
             popBit(bitboards[P], toSq);
 
             // remove pawn from hash key
-            //hash_key ^= piece_keys[P][toSq];
+            hash_key ^= piece_keys[P][toSq];
         }
 
         
@@ -484,7 +492,7 @@ static inline int makeMove(int move)
             popBit(bitboards[p], toSq);
             
             // remove pawn from hash key
-            //hash_key ^= piece_keys[p][toSq];
+            hash_key ^= piece_keys[p][toSq];
         }
 
         
@@ -493,13 +501,14 @@ static inline int makeMove(int move)
 
         
         // add promoted piece into the hash key
-        //hash_key ^= piece_keys[promo][toSq];
+        hash_key ^= piece_keys[promo][toSq];
     }
 
 
 
     // hash enpassant if available (remove enpassant square from hash key)
-    //if (ep != NoSq) hash_key ^= enpassant_keys[ep];
+    if (epsq != NoSq)
+        hash_key ^= enpassant_keys[epsq];
    
 
     // reset enpassant square
@@ -516,7 +525,7 @@ static inline int makeMove(int move)
             epsq = toSq + 8;
             
             // hash enpassant
-            //hash_key ^= enpassant_keys[toSq + 8];
+            hash_key ^= enpassant_keys[toSq + 8];
         }
         
         // black to move
@@ -526,18 +535,22 @@ static inline int makeMove(int move)
             epsq = toSq - 8;
             
             // hash enpassant
-            //hash_key ^= enpassant_keys[target_square - 8];
+            hash_key ^= enpassant_keys[toSq - 8];
         }
     }
 
 
     // hash castling
-    //hash_key ^= castle_keys[castle];
+    hash_key ^= castle_keys[castle];
 
     
     // update castling rights
-    castle &= CastlingRights[fromSq];
-    castle &= CastlingRights[toSq];
+    castle &= castling_rights[fromSq];
+    castle &= castling_rights[toSq];
+
+
+    // re-hash castling after updating castling rights
+    hash_key ^= castle_keys[castle];
 
 
     // update all occupancies
@@ -546,7 +559,7 @@ static inline int makeMove(int move)
 
     // change side to move
     sideToMove ^= 1;
-    //hash_key ^= side_key;
+    hash_key ^= side_key;
 
     
     // check if move is legal (return 0 for illegal move, 1 for legal)

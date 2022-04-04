@@ -20,6 +20,7 @@
 
 #include "bitboard.h"
 #include "tt.h"
+#include "position.h"
 
 
 
@@ -42,28 +43,68 @@ void initRandomKeys()
     rng32_state = 1804289383;
 
 
-    // loop over the pieces
+    // init random piece keys
     for (int piece = P; piece <= k; piece++)
-    {
-        // loop over the board squares
         for (int square = 0; square < 64; square++)
-            // init random piece keys
             piece_keys[piece][square] = rng64();
-    }
 
     
-    // loop over the board squares
+    // init random enpassant keys
     for (int square = 0; square < 64; square++)
-        // init random enpassant keys
         enpassant_keys[square] = rng64();
 
     
-    // loop over castling keys
+    // init castling keys
     for (int index = 0; index < 16; index++)
-        // init castling keys
         castle_keys[index] = rng64();
 
         
     // init random side key
     side_key = rng64();
+}
+
+
+
+// generateHashkey
+//
+// Generate "almost" unique hash keys for every given position.
+uint64_t generateHashkey()
+{
+    // final hash key
+    uint64_t final_key = 0ULL;
+
+    
+    // temp piece bitboard copy
+    Bitboard bb;
+
+    
+    // loop over piece bitboards
+    for (int piece = P; piece <= k; piece++)
+    {
+        // init piece bitboard copy
+        bb = bitboards[piece];
+       
+
+        // loop over the pieces within a bitboard
+        while (bb)
+            final_key ^= piece_keys[piece][popLsb(bb)];
+    }
+
+    
+    // hash enpassant
+    if (epsq != NoSq)
+        final_key ^= enpassant_keys[epsq];
+
+    
+    // hash castling rights
+    final_key ^= castle_keys[castle];
+
+    
+    // hash the side only if black is to move
+    if (sideToMove == Black)
+        final_key ^= side_key;
+   
+
+    // return generated hash key
+    return final_key;
 }
