@@ -1259,7 +1259,7 @@ static bool load_eval_file(const char *evalFile)
   if (success)
   {
     init_weights(evalData);
-    printf("\nUsing neural network: %s\n", evalFile);
+    printf("Using neural network: %s\n", evalFile);
   }
   if (mapping) unmap_file(evalData, mapping);
   return success;
