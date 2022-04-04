@@ -24,6 +24,7 @@
 #include <cassert>
 
 #include "bitboard.h"
+#include "tt.h"
 
 
 

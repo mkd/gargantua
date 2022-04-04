@@ -25,6 +25,7 @@
 #include "position.h"
 #include "search.h"
 #include "uci.h"
+#include "tt.h"
 
 
 
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
 
     // initializations
     initBitboards();
+    initRandomKeys();
     initSearch();
 
 
@@ -50,18 +52,6 @@ int main(int argc, char *argv[])
     nnue_init("nn-eba324f53044.nnue");
     cout << endl << flush;
 
-
-    // test
-    //setPosition("r3k2r/pPppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-    //MoveList_t MoveList;
-    //generateMoves(MoveList);
-    //auto start = chrono::high_resolution_clock::now();
-    //for (int i = 0; i < 999999; i++)
-    //    sortMoves(MoveList);
-    //auto finish = chrono::high_resolution_clock::now();
-    //auto ns = chrono::duration_cast<chrono::nanoseconds>(finish-start).count();
-    //cout << "Time: " << ns / 1000000.0f << "ms." << endl;
-    
 
     // enter UCI loop
     UCI::loop(argc, argv);

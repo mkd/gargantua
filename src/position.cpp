@@ -26,6 +26,7 @@
 
 #include "bitboard.h"
 #include "position.h"
+#include "tt.h"
 
 
 
@@ -48,6 +49,11 @@ int epsq = NoSq;
 int castle;
 int fifty = 0;
 int ply = 0;
+
+
+
+// Chess position's (almost) unique hash key
+uint64_t hash_key = 0ULL;
 
 
 
@@ -231,7 +237,7 @@ void setPosition(const string &fenStr)
    
 
     // init hash key
-    //hash_key = generate_hash_key();
+    hash_key = generateHashkey();
 }
 
 
@@ -431,6 +437,7 @@ void printBoard()
 
     // print board status
     cout << "  Fen:    " << getFEN() << endl;
+    cout << "  Key:    " << hex << uppercase << hash_key << endl;
     cout << "  Side:   " << ((sideToMove == White) ? "White" : "Black") << endl;
     cout << "  Epsq:   " << ((epsq != NoSq) ? SquareToCoordinates[epsq] : "-") << endl;
     cout << "  Castle: " << ((castle & wk) ? "K" : "-") <<
@@ -438,5 +445,7 @@ void printBoard()
                             ((castle & bk) ? "k" : "-") <<
                             ((castle & bq) ? "q" : "-") << endl;
 
+    // reset formating for the next time
+    cout << resetiosflags(std::cout.flags());
     cout << endl;
 }

@@ -119,6 +119,11 @@ extern int ply;
 
 
 
+// Every chess position has its own (almost) unique hash key:
+extern uint64_t hash_key;
+
+
+
 // Flag to indicate whether the board should be displayed from White's
 // perspective (false) or Black's perspective (true).
 extern bool flip;
@@ -141,7 +146,7 @@ extern bool flip;
    1001       black king => queen side
               white king => king side
 */
-enum CastlingRights { wk = 1, wq = 2, bk = 4, bq = 8 };
+enum castling { wk = 1, wq = 2, bk = 4, bq = 8 };
 
 
 

@@ -35,11 +35,10 @@
 
 
 
+// UCI interface functionality, including move parsing, UCI commands, etc.
 namespace UCI 
 {
 
-
-// UCI interface functionality, including move parsing, UCI commands, etc.
 string moveToString(int m);
 int parseMove(string);
 void position(istringstream &);
@@ -47,7 +46,6 @@ void go(istringstream &);
 void traceEval();
 void loop(int argc, char *argv[]);
 void printHelp();
-
 
 }  //  namespace UCI
 

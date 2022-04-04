@@ -35,4 +35,13 @@ extern Bitboard side_key;
 
 
 
+// initRandomKeys
+//
+// Functionality to initialize, generate, access and manipulate Zobrist
+// hash keys as well as transposition tables.
+void initRandomKeys();
+uint64_t generateHashkey();
+
+
+
 #endif  //  TT_H

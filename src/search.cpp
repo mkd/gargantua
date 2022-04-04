@@ -61,10 +61,7 @@ int killers[2][MAXPLY];
 
 
 
-// history [piece][square]
-//
-// History is a table where to store moves that have produced an improvement in
-// the score of previous searches. In other words, they have raised alpha.
+// history heuristics [piece][square]
 int history[12][64];
 
 
@@ -159,12 +156,7 @@ int negamax(int alpha, int beta, int depth)
     nodes++;
 
 
-    // check the clock and the input status
-    //if((nodes & 2047 ) == 0)
-	//	readClockAndInput();
-
-
-    // is king in check?
+    // is king in check? --> needed for dectecting mate and in-check extension
     bool inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
                                                             ls1b(bitboards[k]),
                                                             sideToMove ^ 1);
@@ -218,7 +210,8 @@ int negamax(int alpha, int beta, int depth)
         //repetition_table[repetition_index] = hash_key;
         
         // hash enpassant if available
-        //if (epsq != NoSq) hash_key ^= enpassant_keys[epsq];
+        if (epsq != NoSq)
+            hash_key ^= enpassant_keys[epsq];
         
         // reset enpassant capture square
         epsq = NoSq;
@@ -227,7 +220,7 @@ int negamax(int alpha, int beta, int depth)
         sideToMove ^= 1;
         
         // hash the side
-        //hash_key ^= side_key;
+        hash_key ^= side_key;
 
         // avoid doing 2 null moves in sequence
         allowNull = false;
@@ -241,10 +234,8 @@ int negamax(int alpha, int beta, int depth)
         // decrement ply
         ply--;
 
-
         // decrement repetition index
         //repetition_index--;
-
 
         // restore board state
         takeBack();
@@ -573,11 +564,6 @@ int qsearch(int alpha, int beta)
     int val, score;
 
 
-    // check the clock and the input status
-    //if((nodes & 2047 ) == 0)
-	//	readClockAndInput();
-
-
     // check for an immediate draw
     if (isDraw())
         return DRAWSCORE;
@@ -670,6 +656,20 @@ int qsearch(int alpha, int beta)
         {
             // PV node (position)
             alpha = score;
+
+            // write PV move
+            /*
+            pv_table[ply][ply] = MoveList.moves[count];
+
+            
+            // copy moves from deeper ply into current ply's line
+            for (int next_ply = ply + 1; next_ply < pv_length[ply + 1]; next_ply++)
+                pv_table[ply][next_ply] = pv_table[ply + 1][next_ply];
+           
+
+            // adjust PV length
+            pv_length[ply] = pv_length[ply + 1];            
+            */
             
             // fail-hard beta cutoff
             if (score >= beta)
