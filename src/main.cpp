@@ -48,12 +48,16 @@ int main(int argc, char *argv[])
     initSearch();
 
 
+    // initialize hash table (cache)
+    init_hash_table(1024);
+
+
     // initialize neural network (NNUE) for evaluation
     nnue_init("nn-eba324f53044.nnue");
-    cout << endl << flush;
 
 
     // enter UCI loop
+    cout << endl << flush;
     UCI::loop(argc, argv);
 
 
