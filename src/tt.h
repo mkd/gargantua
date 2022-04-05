@@ -43,23 +43,32 @@ extern Bitboard side_key;
 //
 // That means a cache size of 128MB will contain about 16M entries.
 
-
 // initial hash size (~128MB)
 extern uint32_t hash_size;
 
 
-// number hash table entries
+// current no. of hash table entries used
 extern uint64_t hash_entries;
 
 
+// number of max. hash table entries
+extern uint64_t hash_total;
+
+
 // no hash entry found constant
-#define no_hash_entry 100000
+#define no_hash_found 100000
 
 
 // transposition table hash flags (node type)
 #define hash_type_exact 0
 #define hash_type_alpha 1
 #define hash_type_beta  2
+
+
+
+// Constant returned when no hash entry is found in TT
+#define no_hash_entry 100000
+
 
 
 // TTEntry struct is the 8 bytes transposition table entry, defined as below:
@@ -79,18 +88,46 @@ typedef struct {
     int      best_move;
 } TTEntry_t;
 
+
+// Our global Transposition Table data structure:
 extern TTEntry_t *hash_table;
 
 
 
-// initRandomKeys
-//
-// Functionality to initialize, generate, access and manipulate Zobrist
-// hash keys as well as transposition tables.
+// Zobrist hash key functionality:
 void initRandomKeys();
 uint64_t generateHashkey();
-void clear_hash_table();
-void init_hash_table(uint32_t);
+
+
+
+// General Transposition Table API to initialize, clear, write,
+// read, resize, etc., our hash table.
+namespace TT 
+{
+
+void clear();
+void init(uint32_t);
+int probe(int, int, int &, int);
+void save(int, int, int, int);
+
+
+
+// TT::hashfull
+//
+// Returns an approximation of the hashtable occupation during a search. The
+// hash is x permill full, as per UCI protocol.
+static inline int hashfull()
+{
+    // reliability checks
+    assert(hash_total > 0);
+
+
+    return (hash_entries * 1000) / hash_total;
+}
+
+
+
+}  //  namespace TT
 
 
 

@@ -49,9 +49,9 @@ int main(int argc, char *argv[])
 
 
     // initialize hash table (cache)
-    init_hash_table(1024);
+    TT::init(1024);
 
-
+    
     // initialize neural network (NNUE) for evaluation
     nnue_init("nn-eba324f53044.nnue");
 
