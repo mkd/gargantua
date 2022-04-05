@@ -23,6 +23,7 @@
 #include "bitboard.h"
 #include "tt.h"
 #include "position.h"
+#include "search.h"
 
 
 
@@ -43,10 +44,15 @@ Bitboard side_key;
 // initial hash size (~128MB)
 uint32_t hash_size = 134217728;
 
-// number hash table entries
+// current no. of hash table entries used
 uint64_t hash_entries = 0ULL;
 
-// TT data structure
+// number of max. hash table entries
+uint64_t hash_total = 0ULL;
+
+
+
+// Global TT data structure
 TTEntry_t *hash_table = nullptr;
 
 
@@ -130,12 +136,12 @@ uint64_t generateHashkey()
 
 
 
-// clear_hash_table
+// TT::clear
 //
 // Clear the hash table containing the transposition table entries (TTEntry_t).
 // This means all entries are reset to "zero" and made ready to be filled
 // again.
-void clear_hash_table()
+void TT::clear()
 {
     // init hash table entry pointer
     TTEntry_t *hash_entry;
@@ -155,10 +161,10 @@ void clear_hash_table()
 
 
 
-// init_hash_table
+// TT::init
 //
 // Dynamically allocate memory for the hash table (in MBytes).
-void init_hash_table(uint32_t mb)
+void TT::init(uint32_t mb)
 {
     // init hash size
     int hash_size = mb * 1024 * 1024;
@@ -188,9 +194,104 @@ void init_hash_table(uint32_t mb)
     // if allocation succeeded, reset/clear the hash table entries
     else
     {
-        clear_hash_table();
+        TT::clear();
         cout << "Hash table initialized with " << hash_entries << " entries (";
         cout << mb << " MBytes)";
         cout << endl;
     }
+}
+
+
+
+// TT:probe
+//
+// Look up the current position in the transposition table and return is
+// associated score. If the associated score is a fail-low, return alpha.
+// If the associated score is a beta-cutoff, return beta. 
+//
+// In case the given position is not found, return no_hash_found.
+int TT::probe(int alpha, int beta, int &best_move, int depth)
+{
+    // reliability checks
+    assert(best_move != nullptr);
+    assert(depth >= 0);
+
+
+    // variable holding the score to be returned
+    int score;
+
+
+    // create a TT instance pointer to the hash entry in particular
+    TTEntry_t *hash_entry = &hash_table[hash_key % hash_entries];
+
+    
+    // make sure we're dealing with the exact position we're looking for
+    if (hash_entry->key == hash_key)
+    {
+        // check that the depth for the entry stored is the same or higher
+        // (i.e., more accurate score)
+        if (hash_entry->depth >= depth)
+        {
+            // extract stored score from TT entry
+            score = hash_entry->value;
+           
+
+            // if score is a mate, find the mating distance from the root node
+            if (score < -MATESCORE)
+                score += ply;
+            else if (score > MATESCORE)
+                score -= ply;
+       
+
+            // exact (PV node) score 
+            if (hash_entry->type == hash_type_exact)
+                return score;
+
+            
+            // the score is a fail-low node, return alpha
+            if ((hash_entry->type == hash_type_alpha) && (score <= alpha))
+                // return alpha (fail-low node) score
+                return alpha;
+
+            
+            // the score is a fail-high node, return beta
+            if ((hash_entry->type == hash_type_beta) && (score >= beta))
+                return beta;
+        }
+       
+
+        // store best move
+        best_move = hash_entry->best_move;
+    }
+   
+
+    // if hash entry doesn't exist
+    return no_hash_found;
+}
+
+
+
+// TT::save
+//
+// Populate the TTEntry with a new node's data, possibly overwriting an
+// old position. Update is not atomic and can end up in race conditions.
+void TT::save(int score, int best_move, int depth, int hash_type)
+{
+    // create a TT instance pointer to the hash entry in particular
+    TTEntry_t *hash_entry = &hash_table[hash_key % hash_entries];
+
+
+    // store the score independent from the actual path from root node
+    if (score < -MATESCORE)
+        score -= ply;
+    if (score > MATESCORE)
+        score += ply;
+
+
+    // write hash entry data 
+    hash_entry->key       = hash_key;
+    hash_entry->value     = score;
+    hash_entry->type      = hash_type;
+    hash_entry->depth     = depth;
+    hash_entry->best_move = best_move;
 }
