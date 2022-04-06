@@ -1,12 +1,13 @@
 Initial release v1.0
 ====================
-- Basic NNUE evaluation
-- Basic UCI protocol support
-- Negamax with quiescent search
-- Cross-compilation for Win64 platforms
 - Fully Bitboard-based implementation
+- Basic NNUE evaluation
+- Negamax with quiescent search
+- Basic UCI protocol support
+- Cross-compilation for Win64 platforms
 - Principal Search Variation
 - Late Move Reductions (LMR)
 - Null moving pruning
 - Aspiration window
 - Basic time controls
+- Transposition tables
