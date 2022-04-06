@@ -19,7 +19,6 @@ Before release 1.0:
     - QSearch updates pv_table vs. only update in negamax
 
 - bug: when found a mating distance, search keeps deepening and slow.
-  Should return almost immediately!
 
 
 
@@ -30,8 +29,7 @@ Infinity wars:
 - pondering: https://web.archive.org/web/20071027053527/http://www.brucemo.com/compchess/programming/pondering.htm
   - use async to ponder (make move and search infinite to fill the cache) 
 
-- lazy SMP
-    - evaluate async/future vs Thread
+- lazy SMP: try with thread_local (minimum modifications). Otherwise:
     - call search() with async Threads-1 times 
     - half of the threads use depth, half use depth+1 
     - Each thread needs its own copy of modifiable structures (pv_table, followPV, allowNull, killers, history)

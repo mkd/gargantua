@@ -47,16 +47,18 @@ extern Bitboard side_key;
 extern uint32_t hash_size;
 
 
-// current no. of hash table entries used
-extern uint64_t hash_entries;
+// no. of total hash table entries
+extern uint64_t hash_total_entries;
 
 
-// number of max. hash table entries
-extern uint64_t hash_total;
+// no. of hash entries used
+extern uint64_t hash_used;
 
 
-// no hash entry found constant
+
+// Constant returned when no hash entry is found in TT
 #define no_hash_found 100000
+
 
 
 // transposition table hash flags (node type)
@@ -66,24 +68,19 @@ extern uint64_t hash_total;
 
 
 
-// Constant returned when no hash entry is found in TT
-#define no_hash_entry 100000
-
-
-
 // TTEntry struct is the 8 bytes transposition table entry, defined as below:
 //
-// key        16 bit
-// depth       8 bit
-// type        8 bit
+// key        64 bit
+// depth      32 bit
+// type       32 bit
 // value      32 bit
 // best_move  16 bit
 //
-// Total size (per entry): 64 bits / 8 bytes
+// Total size (per entry): 192 bits / 24 bytes
 typedef struct {
     uint64_t key;   
-    uint8_t  depth;      
-    uint8_t  type;       
+    int      depth;      
+    int      type;       
     int      value;
     int      best_move;
 } TTEntry_t;
@@ -119,10 +116,10 @@ void save(int, int, int, int);
 static inline int hashfull()
 {
     // reliability checks
-    assert(hash_total > 0);
+    assert(hash_total_entries > 0);
 
 
-    return (hash_entries * 1000) / hash_total;
+    return (hash_used * 1000) / hash_total_entries;
 }
 
 

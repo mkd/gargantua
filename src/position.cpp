@@ -84,6 +84,10 @@ void resetBoard()
     //repetition_index = 0;
 
 
+    // reset hash_key
+    hash_key = 0ULL;
+
+
     // reset fifty move rule counter
     fifty = 0;
 
