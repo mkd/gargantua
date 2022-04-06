@@ -44,11 +44,11 @@ Bitboard side_key;
 // initial hash size (~128MB)
 uint32_t hash_size = 134217728;
 
-// current no. of hash table entries used
-uint64_t hash_entries = 0ULL;
+// current no. of total hash table entries
+uint64_t hash_total_entries = 0ULL;
 
-// number of max. hash table entries
-uint64_t hash_total = 0ULL;
+// no. of hash entries used
+uint64_t hash_used = 0ULL;
 
 
 
@@ -148,7 +148,7 @@ void TT::clear()
 
 
     // loop over TT elements
-    for (hash_entry = hash_table; hash_entry < hash_table + hash_entries; hash_entry++)
+    for (hash_entry = hash_table; hash_entry < hash_table + hash_total_entries; hash_entry++)
     {
         // reset TT inner fields
         hash_entry->key         = 0ULL;
@@ -171,7 +171,7 @@ void TT::init(uint32_t mb)
 
     
     // init number of hash entries
-    hash_entries =  hash_size / sizeof(TTEntry_t);
+    hash_total_entries =  hash_size / sizeof(TTEntry_t);
 
 
     // free hash table's dynamic memory
@@ -183,7 +183,7 @@ void TT::init(uint32_t mb)
 
      
     // allocate memory
-    hash_table = (TTEntry_t *) malloc(hash_entries * sizeof(TTEntry_t));
+    hash_table = (TTEntry_t *) malloc(hash_total_entries * sizeof(TTEntry_t));
 
 
     // if allocation has failed
@@ -195,7 +195,8 @@ void TT::init(uint32_t mb)
     else
     {
         TT::clear();
-        cout << "Hash table initialized with " << hash_entries << " entries (";
+
+        cout << "Hash table initialized with " << hash_total_entries << " entries (";
         cout << mb << " MBytes)";
         cout << endl;
     }
@@ -214,15 +215,10 @@ int TT::probe(int alpha, int beta, int &best_move, int depth)
 {
     // reliability checks
     assert(best_move != nullptr);
-    assert(depth >= 0);
-
-
-    // variable holding the score to be returned
-    int score;
 
 
     // create a TT instance pointer to the hash entry in particular
-    TTEntry_t *hash_entry = &hash_table[hash_key % hash_entries];
+    TTEntry_t *hash_entry = &hash_table[hash_key % hash_total_entries];
 
     
     // make sure we're dealing with the exact position we're looking for
@@ -233,7 +229,7 @@ int TT::probe(int alpha, int beta, int &best_move, int depth)
         if (hash_entry->depth >= depth)
         {
             // extract stored score from TT entry
-            score = hash_entry->value;
+            int score = hash_entry->value;
            
 
             // if score is a mate, find the mating distance from the root node
@@ -250,7 +246,6 @@ int TT::probe(int alpha, int beta, int &best_move, int depth)
             
             // the score is a fail-low node, return alpha
             if ((hash_entry->type == hash_type_alpha) && (score <= alpha))
-                // return alpha (fail-low node) score
                 return alpha;
 
             
@@ -278,14 +273,19 @@ int TT::probe(int alpha, int beta, int &best_move, int depth)
 void TT::save(int score, int best_move, int depth, int hash_type)
 {
     // create a TT instance pointer to the hash entry in particular
-    TTEntry_t *hash_entry = &hash_table[hash_key % hash_entries];
+    TTEntry_t *hash_entry = &hash_table[hash_key % hash_total_entries];
 
 
     // store the score independent from the actual path from root node
     if (score < -MATESCORE)
         score -= ply;
-    if (score > MATESCORE)
+    else if (score > MATESCORE)
         score += ply;
+
+
+    // if no collision, increment the counter of hash used
+    if (hash_entry->depth == 0)
+        hash_used++;
 
 
     // write hash entry data 

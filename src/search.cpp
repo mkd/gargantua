@@ -143,8 +143,29 @@ int negamax(int alpha, int beta, int depth)
     int score;
 
 
-    // we're too deep in the search, evaluate and quit
-    if (ply > MAXPLY)
+    // best move (to use with the transposition table)
+    int bestmove = 0;
+
+
+    // initialize hash flag for the transposition table
+    int hash_type = hash_type_alpha;
+
+
+    // figure out whether the current node is PV node or not
+    bool pv_node = ((beta - alpha) > 1);
+
+
+    // Step 1. Transposition Table (TT)
+    // 
+    // Try to find the current node from the Transposition Table and return
+    // the score immediately.
+    //if (ply && (score = TT::probe(alpha, beta, bestmove, depth) != no_hash_found) && !pv_node)
+    if (ply && (score = TT::probe(alpha, beta, bestmove, depth) != no_hash_found))
+        return score;
+
+
+    // we are too deep, hence there's an overflow of arrays relying on max ply constant
+    if (ply > (MAXPLY - 1))
         return evaluate();
 
 
@@ -178,7 +199,7 @@ int negamax(int alpha, int beta, int depth)
     int legal = 0;
 
 
-    // Step 1. Null Move Pruning
+    // Step 2. Null Move Pruning
     //
 	// If our opponet is given a free move, can they improve their position? If
     // we do a quick search after giving our opponet this free move and we still
@@ -279,6 +300,11 @@ int negamax(int alpha, int beta, int depth)
 
         // increment ply
         ply++;
+
+
+        // increment repetition index & store hash key
+        //repetition_index++;
+        //repetition_table[repetition_index] = hash_key;
        
 
         // make the move and check if it is illegal - skip it if so
@@ -286,6 +312,9 @@ int negamax(int alpha, int beta, int depth)
         {
             // decrement ply
             ply--;
+
+            // decrement repetition index
+            //repetition_index--;
 
             // undo move
             takeBack();
@@ -299,20 +328,20 @@ int negamax(int alpha, int beta, int depth)
         legal++;
 
 
-        // Step 2. Full-width and full-depth search, if no moves searched yet
+        // Step 3. Full-width and full-depth search, if no moves searched yet
         if (moves_searched == 0)
             score = -negamax(-beta, -alpha, depth - 1);
 
         
+        // Step 4. Late Move Reductions (LMR)
+        //
+        // Configure late-move reductions (LMR): assuming that the moves in the
+        // list are ordered from potential best to potential worst, analyzing 
+        // the first moves is more critical than the last ones. Therefore, 
+        // using LMR we analyze the first 3 moves in full-depth, but cut down
+        // the analysis depth for the rest of moves.
         else
         {
-            // 3. Late Move Reductions (LMR)
-            //
-            // Configure late-move reductions (LMR): assuming that the moves in the
-            // list are ordered from potential best to potential worst, analyzing 
-            // the first moves is more critical than the last ones. Therefore, 
-            // using LMR we analyze the first 3 moves in full-depth, but cut down
-            // the analysis depth for the rest of moves.
             if(
                 moves_searched >= LMR_FULLDEPTH_MOVES &&
                 depth >= LMR_REDUCTION_LIMIT &&
@@ -328,7 +357,7 @@ int negamax(int alpha, int beta, int depth)
                 score = alpha + 1;
                
 
-            // Step 4. Principal Variation Search
+            // Step 5. Principal Variation Search
             if (score > alpha)
             {
                 // Once you've found a move with a score that is between alpha and beta,
@@ -353,6 +382,10 @@ int negamax(int alpha, int beta, int depth)
         ply--;
 
 
+        // decrement repetition index
+        //repetition_index--;
+
+
         // undo move
         takeBack();
 
@@ -360,26 +393,6 @@ int negamax(int alpha, int beta, int depth)
         // reutrn 0 if time is up
         if (timedout)
             return 0;
-
-        
-        // fail-hard beta cutoff
-        if (score >= beta)
-        {
-            // store hash entry with the score equal to beta
-            //write_hash_entry(beta, best_move, depth, hash_flag_beta);
-           
-
-            // store killer moves (only for quiet moves)
-            if (!getMoveCapture(MoveList.moves[count]))
-            {
-                killers[1][ply] = killers[0][ply];
-                killers[0][ply] = MoveList.moves[count];
-            }
-
-
-            // node (move) fails high
-            return beta;
-        }
 
 
         // increment the counter of moves searched so far
@@ -389,6 +402,14 @@ int negamax(int alpha, int beta, int depth)
         // found a better move (improves alpha)
         if (score > alpha)
         {
+            // hash entry type is PV node (exact score)
+            hash_type = hash_type_exact;
+
+
+            // store the best move in the TT
+            bestmove = MoveList.moves[count];
+
+
             // store history moves (only for quiet moves)
             if (!getMoveCapture(MoveList.moves[count]))
                 history[getMovePiece(MoveList.moves[count])][getMoveTarget(MoveList.moves[count])] += depth;
@@ -409,6 +430,26 @@ int negamax(int alpha, int beta, int depth)
 
             // adjust PV length
             pv_length[ply] = pv_length[ply + 1];            
+
+        
+            // fail-hard beta cutoff
+            if (score >= beta)
+            {
+                // store hash entry with the score equal to beta
+                TT::save(beta, bestmove, depth, hash_type_beta);
+               
+
+                // store killer moves (only for quiet moves)
+                if (!getMoveCapture(MoveList.moves[count]))
+                {
+                    killers[1][ply] = killers[0][ply];
+                    killers[0][ply] = MoveList.moves[count];
+                }
+
+
+                // node (move) fails high
+                return beta;
+            }
         }
     }
 
@@ -424,6 +465,10 @@ int negamax(int alpha, int beta, int depth)
         else
             return DRAWSCORE;
     }
+
+
+    // store hash entry with the score equal to alpha
+    TT::save(alpha, bestmove, depth, hash_type);
 
     
     // node (move) fails low
@@ -526,6 +571,7 @@ void search()
                  << " score cp " << score
                  << " nodes " <<  nodes
                  << " nps " << nodes * 1000000000 / ns
+                 << " hashfull " << TT::hashfull()
                  << " time " << ms
                  << " pv ";
             
@@ -574,7 +620,7 @@ int qsearch(int alpha, int beta)
 
 
     // we are too deep, hence there's an overflow of arrays relying on max ply constant
-    if (ply > MAXPLY - 1)
+    if (ply > (MAXPLY - 1))
         return evaluate();
 
 

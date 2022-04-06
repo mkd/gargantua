@@ -30,6 +30,7 @@
 #include "search.h"
 #include "uci.h"
 #include "eval.h"
+#include "tt.h"
 
 
 
@@ -426,13 +427,17 @@ void UCI::loop(int argc, char* argv[])
 
         // "position": setup a FEN position and make moves
         else if (token == "position")
+        {
             UCI::position(is);
+            TT::clear();
+        }
 
 
         // "ucinewgame" command: start
         else if (token == "ucinewgame")
         {
             setPosition(FENPOS_STARTPOS);
+            TT::clear();
             initSearch();
         }
 
