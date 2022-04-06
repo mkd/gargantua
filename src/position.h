@@ -109,18 +109,18 @@ static std::map<int, unsigned char> PromoPieces = {
 // 3. The enpassant capture square
 // 4. The castling rights
 // 5. The 50-move rule counter
-extern Bitboard bitboards[12];
-extern Bitboard occupancies[3];
-extern int sideToMove;
-extern int epsq;
-extern int castle;
-extern int fifty;
-extern int ply;
+extern thread_local Bitboard bitboards[12];
+extern thread_local Bitboard occupancies[3];
+extern thread_local int sideToMove;
+extern thread_local int epsq;
+extern thread_local int castle;
+extern thread_local int fifty;
+extern thread_local int ply;
 
 
 
 // Every chess position has its own (almost) unique hash key:
-extern uint64_t hash_key;
+extern thread_local uint64_t hash_key;
 
 
 
