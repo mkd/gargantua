@@ -42,18 +42,18 @@ using namespace std;
 // 4. The castling rights
 // 5. The 50-move rule (50 moves without captures, pawn moves nor promotions)
 // 6. A ply counter (to separate root moves from the rest)
-Bitboard bitboards[12];
-Bitboard occupancies[3];
-int sideToMove = White;
-int epsq = NoSq; 
-int castle;
-int fifty = 0;
-int ply = 0;
+thread_local Bitboard bitboards[12];
+thread_local Bitboard occupancies[3];
+thread_local int sideToMove = White;
+thread_local int epsq = NoSq; 
+thread_local int castle;
+thread_local int fifty = 0;
+thread_local int ply = 0;
 
 
 
 // Chess position's (almost) unique hash key
-uint64_t hash_key = 0ULL;
+thread_local uint64_t hash_key = 0ULL;
 
 
 
