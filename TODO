@@ -4,18 +4,48 @@ TODO
 Before release 1.0:
 -------------------
 - transposition tables
+- print hashfull in search info 
+  - hash_entries is total, Implement TT::save() counter, to calculate hashfull!
 - 3-fold repetition
+  - Chess0 algo seems faster (index - fifty), don’t check the whole array 
 - razoring
 - static null move pruning (does it help? or much slower due to double NNUE?)
 - futility pruning (e.g., Blunder)
+
+- fine-tuning — tests with tournaments:
+    - Null move R: 2, 3, 2 + depth/4,5,6, 3 + depth/4,5,6 etc.
+    - Aspiration window size: 25, 50, 75, 100, etc.
+    - Contempt -0.25 or -0.50 vs DRAWSCORE (0)
+    - QSearch updates pv_table vs. only update in negamax
 
 - bug: when found a mating distance, search keeps deepening and slow.
   Should return almost immediately!
 
 
+
 Infinity wars:
 --------------
+- evaluate the use of a contempt factor for draw in the middle game (randomize draw value, so that the engine won’t settle): https://web.archive.org/web/20071031095923/http://www.brucemo.com/compchess/programming/contempt.htm
+
 - pondering: https://web.archive.org/web/20071027053527/http://www.brucemo.com/compchess/programming/pondering.htm
+  - use async to ponder (make move and search infinite to fill the cache) 
+
 - lazy SMP
+    - evaluate async/future vs Thread
+    - call search() with async Threads-1 times 
+    - half of the threads use depth, half use depth+1 
+    - Each thread needs its own copy of modifiable structures (pv_table, followPV, allowNull, killers, history)
+    - Position should be encapsulated into pos Struct, cannot share one global set of variables: bit boards, fifty, ply, occupancies, sideToMove, castling, castling_rights, etc
+    - Modify saveBoard() and takeBack() to update own copies of pos Struct
+    - Start by testing all “reentrant changes” with only the main thread. Make it work. Measure performance.
+    - Then start to add threads. 
+    - Re-entrant version of makeMove() —> makeMove(pos, move): make a move on a given position (don’t use global)
+
 - static exchange evaluation (SEE) for ordering captures in qsearch()
+
 - contempt score
+
+- improve NNUE:
+  - Update to newest library (half-K)
+  - Use incremental / accumulator for performance
+  - https://github.com/jdart1/nnue
