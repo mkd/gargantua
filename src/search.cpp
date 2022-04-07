@@ -1,4 +1,5 @@
 /*
+
   This file is part of Gargantua, a UCI chess engine with NNUE evaluation
   derived from Chess0, and inspired by Code Monkey King's bbc-1.4.
      
@@ -135,7 +136,7 @@ void resetLimits()
 // The score returned by the algorithm is always from calling qsearch().
 int negamax(int alpha, int beta, int depth)
 {
-    // reliability check
+    // reliability checks
     assert(depth >= 0);
 
 
@@ -145,6 +146,11 @@ int negamax(int alpha, int beta, int depth)
 
     // best move (to use with the transposition table)
     int bestmove = 0;
+
+
+    // if the position is a draw, don't search anymore
+    if (isDraw())
+        return DRAWSCORE;
 
 
     // initialize hash flag for the transposition table
@@ -159,14 +165,8 @@ int negamax(int alpha, int beta, int depth)
     // 
     // Try to find the current node from the Transposition Table and return
     // the score immediately.
-    //if (ply && (score = TT::probe(alpha, beta, bestmove, depth) != no_hash_found) && !pv_node)
-    if (ply && (score = TT::probe(alpha, beta, bestmove, depth) != no_hash_found))
+    if (ply && ((score = TT::probe(alpha, beta, bestmove, depth)) != no_hash_found) && !pv_node)
         return score;
-
-
-    // we are too deep, hence there's an overflow of arrays relying on max ply constant
-    if (ply > (MAXPLY - 1))
-        return evaluate();
 
 
     // init PV length
@@ -432,10 +432,11 @@ int negamax(int alpha, int beta, int depth)
             pv_length[ply] = pv_length[ply + 1];            
 
         
-            // fail-hard beta cutoff
+            // fail-high (beta cutoff)
             if (score >= beta)
             {
-                // store hash entry with the score equal to beta
+                // store hash entry with the score equal to beta, only if not null move
+                //if (bestmove)
                 TT::save(beta, bestmove, depth, hash_type_beta);
                
 
@@ -467,7 +468,8 @@ int negamax(int alpha, int beta, int depth)
     }
 
 
-    // store hash entry with the score equal to alpha
+    // store hash entry with the score equal to alpha, only if not null move
+    //if (bestmove)
     TT::save(alpha, bestmove, depth, hash_type);
 
     
@@ -522,7 +524,7 @@ void search()
 
 
     // reset "time is up" flag
-    timedout = 0;
+    timedout = false;
 
 
     // iterative deepening framework
@@ -553,7 +555,7 @@ void search()
         }
 
         
-        // set up the window for the next iteration best=150 (22,8M)
+        // set up the window for the next iteration
         alpha = score - ASPIRATION_WINDOW_SIZE;
         beta  = score + ASPIRATION_WINDOW_SIZE;
 
@@ -703,26 +705,10 @@ int qsearch(int alpha, int beta)
             // PV node (position)
             alpha = score;
 
-            // write PV move
-            /*
-            pv_table[ply][ply] = MoveList.moves[count];
 
-            
-            // copy moves from deeper ply into current ply's line
-            for (int next_ply = ply + 1; next_ply < pv_length[ply + 1]; next_ply++)
-                pv_table[ply][next_ply] = pv_table[ply + 1][next_ply];
-           
-
-            // adjust PV length
-            pv_length[ply] = pv_length[ply + 1];            
-            */
-            
-            // fail-hard beta cutoff
+            // fail-high beta cutoff
             if (score >= beta)
-            {
-                // node (position) fails high
                 return beta;
-            }
         }
     }
    
@@ -825,7 +811,7 @@ void dperft(int depth)
 void sortMoves(MoveList_t &MoveList)
 {
     // reliability checks
-    assert(MoveList.count > 0);
+    //assert(MoveList.count > 0);
     assert(MoveList.count < 256);
 
 

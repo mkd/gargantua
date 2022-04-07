@@ -3,9 +3,6 @@ TODO
 
 Before release 1.0:
 -------------------
-- transposition tables
-- print hashfull in search info 
-  - hash_entries is total, Implement TT::save() counter, to calculate hashfull!
 - 3-fold repetition
   - Chess0 algo seems faster (index - fifty), don’t check the whole array 
 - razoring
@@ -17,6 +14,9 @@ Before release 1.0:
     - Aspiration window size: 25, 50, 75, 100, etc.
     - Contempt -0.25 or -0.50 vs DRAWSCORE (0)
     - QSearch updates pv_table vs. only update in negamax
+    - Store null move in TT vs. don't store it -- if (bestmove) TT::save()
+    - allowNull vs. (always allow)
+    - don't do Null move if !pv_node  vs.  do it always (also in PV)
 
 - bug: when found a mating distance, search keeps deepening and slow.
 

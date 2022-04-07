@@ -44,14 +44,15 @@ using namespace std;
 
 // Default settings and configuration for the search, as well as 
 // tuning parameters for search extensions and reductions:
-#define DEFAULT_SEARCH_DEPTH          10
-#define MAX_SEARCH_DEPTH             256 
-#define DEFAULT_SEARCH_MOVETIME_MS  5000
-#define LMR_FULLDEPTH_MOVES            4
-#define LMR_REDUCTION_LIMIT            3
-#define ASPIRATION_WINDOW_SIZE        70
-#define MAX_SEARCH_TIME             0xFFFFFFFFFFFFFFFFULL
-#define WATCH_INTERVAL_MS             10
+#define DEFAULT_SEARCH_DEPTH         10
+#define MAX_SEARCH_DEPTH            256
+#define DEFAULT_SEARCH_MOVETIME_MS 5000
+#define LMR_FULLDEPTH_MOVES           4
+#define LMR_REDUCTION_LIMIT           3
+#define ASPIRATION_WINDOW_SIZE       70
+#define WATCH_INTERVAL_MS            10
+
+#define MAX_SEARCH_TIME           0xFFFFFFFFFFFFFFFFULL
 
 
 
