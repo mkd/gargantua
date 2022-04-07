@@ -70,13 +70,13 @@ extern uint64_t hash_used;
 
 // TTEntry struct is the 8 bytes transposition table entry, defined as below:
 //
-// key        64 bit
-// depth      32 bit
-// type       32 bit
-// value      32 bit
-// best_move  16 bit
+// key        64 bits
+// depth       8 bits
+// type        8 bits
+// value      32 bits
+// best_move  32 bits
 //
-// Total size (per entry): 192 bits / 24 bytes
+// Total size (per entry): 144 bits / 18 bytes
 typedef struct {
     uint64_t key;   
     int      depth;      
@@ -84,7 +84,6 @@ typedef struct {
     int      value;
     int      best_move;
 } TTEntry_t;
-
 
 // Our global Transposition Table data structure:
 extern TTEntry_t *hash_table;

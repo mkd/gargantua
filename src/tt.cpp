@@ -157,6 +157,10 @@ void TT::clear()
         hash_entry->value       = 0;
         hash_entry->best_move   = 0;
     }
+
+
+    // reset the hash usage counter
+    hash_used = 0ULL;
 }
 
 
@@ -213,10 +217,6 @@ void TT::init(uint32_t mb)
 // In case the given position is not found, return no_hash_found.
 int TT::probe(int alpha, int beta, int &best_move, int depth)
 {
-    // reliability checks
-    assert(best_move != nullptr);
-
-
     // create a TT instance pointer to the hash entry in particular
     TTEntry_t *hash_entry = &hash_table[hash_key % hash_total_entries];
 
