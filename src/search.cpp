@@ -623,11 +623,6 @@ int qsearch(int alpha, int beta)
     int val, score;
 
 
-    // check for an immediate draw
-    if (ply && isDraw())
-        return DRAWSCORE;
-
-
     // increment nodes count
     nodes++;
 

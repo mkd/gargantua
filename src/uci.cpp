@@ -353,7 +353,7 @@ void UCI::traceEval()
          << evaluate() / 100.0f << endl << endl << flush;
 
     // reset formating
-    cout << resetiosflags(std::cout.flags());
+    cout << resetiosflags(cout.flags());
 }
 
 

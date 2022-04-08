@@ -170,34 +170,23 @@ std::string getFEN();
 
 
 
-// countRepetitions
+// isRepetition
 //
 // Counts the 3-fold repetitions played on the board. Returns the number
 // of repetitions, i.e., a return value >= 3 means it's a draw.
-static inline int countRepetitions()
+static inline int isRepetition()
 {
     // reliability checks
     assert(ply > 0);
 
 
-    // initialize variables to start counting positions
-    int ilast, rep = 1;
-
-
-    // we don't need to check the entire history, only positions
-    // after the last pawn move or capture (i.e., ply - fifty)
-    ilast = ply - fifty;
-
-
-    // we can check every other position, because they are
-    // alternating from side to side on the move
-    for (int i = ply - 2; i >= ilast; i -= 2)
-        if (repetition_table[i] == hash_key)
-            rep++;
+    // if we found the hash key same with a current
+    for (int index = repetition_index; index > 0; index--)
+        if (repetition_table[index] == hash_key)
+            return true;
    
 
-    // return the number of repetitions for this position
-    return rep;
+    return false;
 }
 
 
@@ -216,13 +205,13 @@ static inline int countRepetitions()
 // 3.6 KBN-Kminor
 static inline bool isDraw()
 {
-    // 3-fold repetition
-    if (countRepetitions() >= 3)
+    // 50-move rule
+    if (fifty > 99)
         return true;
 
 
-    // 50-move rule
-    if (fifty > 99)
+    // 3-fold repetition
+    if (isRepetition())
         return true;
 
 
