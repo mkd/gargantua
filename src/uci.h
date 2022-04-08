@@ -31,7 +31,9 @@
 
 
 
-// XXX: define Options
+// Default sizes for the Hash option
+#define HASH_MIN_SIZE   16
+#define HASH_MAX_SIZE 1024
 
 
 
@@ -43,6 +45,7 @@ string moveToString(int m);
 int parseMove(string);
 void position(istringstream &);
 void go(istringstream &);
+void setOption(istringstream &);
 void traceEval();
 void loop(int argc, char *argv[]);
 void printHelp();
