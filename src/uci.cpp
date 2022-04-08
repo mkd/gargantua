@@ -38,6 +38,11 @@ using namespace std;
 
 
 
+// List of options available for Gargantua:
+std::map<string, int> Options;
+
+
+
 // Credit: Most of the UCI functionality is taken from Stockfish.
 // @see https://github.com/official-stockfish/Stockfish/blob/master/src/uci.cpp
 
@@ -175,6 +180,8 @@ void UCI::position(istringstream &is)
 
 
 
+// UCI::go
+//
 // UCI::go() is called when the engine receives the "go" UCI command. The
 // function sets the thinking time and other parameters from the input string,
 // then starts the search.
@@ -340,6 +347,55 @@ void UCI::go(istringstream &is)
 
 
 
+// UCI::setoption
+//
+// UCI::setoption() is called when engine receives the "setoption" UCI command.
+// The function updates the UCI option ("name") to the given value ("value").
+void UCI::setOption(istringstream& is)
+{
+    // variables to parse the options
+    string token, name, value;
+
+
+    // consume "name" token
+    is >> token;
+
+
+    // read option name (can contain spaces)
+    while (is >> token && token != "value")
+        name += (name.empty() ? "" : " ") + token;
+
+
+    // read option value (can contain spaces)
+    while (is >> token)
+        value += (value.empty() ? "" : " ") + token;
+
+
+    // option name Hash type spin default 1024 min 16 max 1024" << endl;
+    if (name == "Hash")
+    {
+        // obtain the MBytes from the value given in the option
+        int mb = stoi(value);
+
+        // check min and max size boundaries
+        if (mb < HASH_MIN_SIZE)
+            mb = HASH_MIN_SIZE;
+
+        if(mb > HASH_MAX_SIZE)
+            mb = HASH_MAX_SIZE;
+
+        // set hash table size in MB
+        TT::init(stoi(value));
+    }
+
+
+    // unknown option
+    else
+        cout << "No such option: " << name << endl << flush;
+}
+
+
+
 // UCI::traceEval
 //
 // Print the evaluation for the current position.
@@ -415,14 +471,16 @@ void UCI::loop(int argc, char* argv[])
         {
             cout << "id name "   << ENGINE_NAME << " " << ENGINE_VERSION << endl; 
             cout << "id author " << ENGINE_AUTHOR << endl; 
-            //cout << Options << endl;
+
+            cout << "option name Hash type spin default 1024 min 16 max 1024" << endl;
+
             cout << "uciok" << endl << flush;
         }
 
 
         // "setoption": configure settings
-        else if (token == "setoption") {}
-            //UCI::setOption(is);
+        else if (token == "setoption")
+            UCI::setOption(is);
 
 
         // "go": search

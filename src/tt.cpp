@@ -177,10 +177,7 @@ void TT::init(uint32_t mb)
 
     // free hash table's dynamic memory
     if (hash_table != nullptr)
-    {
-        cout << "    Clearing hash memory..." << endl;
         free(hash_table);
-    }
 
      
     // allocate memory
@@ -189,7 +186,7 @@ void TT::init(uint32_t mb)
 
     // if allocation has failed
     if (hash_table == nullptr)
-        cout << "    Couldn't allocate memory for hash table!" << endl;
+        cout << "Couldn't allocate memory for hash table!" << endl;
 
 
     // if allocation succeeded, reset/clear the hash table entries
