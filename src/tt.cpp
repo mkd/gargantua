@@ -41,9 +41,6 @@ Bitboard side_key;
 
 // Transposition Table data structure and initializations
 
-// initial hash size (~128MB)
-uint32_t hash_size = 134217728;
-
 // current no. of total hash table entries
 uint64_t hash_total_entries = 0ULL;
 

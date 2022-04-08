@@ -21,6 +21,7 @@
 #ifndef POSITION_H
 #define POSITION_H
 
+#include <iostream>
 #include <map>
 #include <cstring>
 
@@ -150,6 +151,15 @@ enum castling { wk = 1, wq = 2, bk = 4, bq = 8 };
 
 
 
+// Structures to detect 3-fold repetitions within the game:
+//
+// repetition_table stores a number of positions "played" during the search
+// repetition_index tells the size of the repetition_table (pointer to last)
+extern Bitboard repetition_table[1024];
+extern int repetition_index;
+
+
+
 // Functionality to handle a position on the chess board, including
 // resting the board to its initial status, printing the board and
 // parsing positions in FEN notation.
@@ -157,6 +167,38 @@ void resetBoard();
 void printBoard();
 void setPosition(const std::string &);
 std::string getFEN();
+
+
+
+// countRepetitions
+//
+// Counts the 3-fold repetitions played on the board. Returns the number
+// of repetitions, i.e., a return value >= 3 means it's a draw.
+static inline int countRepetitions()
+{
+    // reliability checks
+    assert(ply > 0);
+
+
+    // initialize variables to start counting positions
+    int ilast, rep = 1;
+
+
+    // we don't need to check the entire history, only positions
+    // after the last pawn move or capture (i.e., ply - fifty)
+    ilast = ply - fifty;
+
+
+    // we can check every other position, because they are
+    // alternating from side to side on the move
+    for (int i = ply - 2; i >= ilast; i -= 2)
+        if (repetition_table[i] == hash_key)
+            rep++;
+   
+
+    // return the number of repetitions for this position
+    return rep;
+}
 
 
 
@@ -175,7 +217,8 @@ std::string getFEN();
 static inline bool isDraw()
 {
     // 3-fold repetition
-    // TODO
+    if (countRepetitions() >= 3)
+        return true;
 
 
     // 50-move rule

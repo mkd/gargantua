@@ -27,6 +27,7 @@
 #include "bitboard.h"
 #include "position.h"
 #include "tt.h"
+#include "search.h"
 
 
 
@@ -63,6 +64,12 @@ bool flip = false;
 
 
 
+// Structures to detect 3-fold repetitions within the game:
+Bitboard repetition_table[1024];
+int repetition_index;
+
+
+
 // resetBoard
 //
 // Reset the board variables, set the pieces back to start position, etc.
@@ -81,7 +88,7 @@ void resetBoard()
    
 
     // reset repetition index
-    //repetition_index = 0;
+    repetition_index = 0;
 
 
     // reset hash_key
@@ -93,7 +100,7 @@ void resetBoard()
 
 
     // reset repetition table
-    //memset(repetition_table, 0ULL, sizeof(repetition_table));
+    memset(repetition_table, 0ULL, sizeof(repetition_table));
 }
 
 
