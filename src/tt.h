@@ -39,34 +39,23 @@ extern Bitboard side_key;
 //
 // We use a C-stye array due to a much faster speed in read and
 // write performance. The array contains TTEntry objects, which
-// take 64 bits of space each (8 bytes).
+// take 144 bits of space each (18 bytes).
 //
-// That means a cache size of 128MB will contain about 16M entries.
-
-// initial hash size (~128MB)
-extern uint32_t hash_size;
-
+// That means a cache size of 1024MB will contain about ~60M entries.
 
 // no. of total hash table entries
 extern uint64_t hash_total_entries;
 
-
 // no. of hash entries used
 extern uint64_t hash_used;
 
-
-
 // Constant returned when no hash entry is found in TT
 #define no_hash_found 100000
-
-
 
 // transposition table hash flags (node type)
 #define hash_type_exact 0
 #define hash_type_alpha 1
 #define hash_type_beta  2
-
-
 
 // TTEntry struct is the 8 bytes transposition table entry, defined as below:
 //

@@ -155,11 +155,20 @@ void UCI::position(istringstream &is)
     {
         saveBoard();
 
+        // increment repetition index
+        repetition_index++;
+            
+        // wtire hash key into a repetition table
+        repetition_table[repetition_index] = hash_key;
+
         // test whether the move is legal and make it on the board
         if (!makeMove(m))
         {
             // undo move, if not legal
             takeBack();
+
+            // decrement repetition index
+            repetition_index--;
         }
     }
 }

@@ -149,7 +149,7 @@ int negamax(int alpha, int beta, int depth)
 
 
     // if the position is a draw, don't search anymore
-    if (isDraw())
+    if (ply && isDraw())
         return DRAWSCORE;
 
 
@@ -206,9 +206,11 @@ int negamax(int alpha, int beta, int depth)
     // find a move with a score better than beta, our opponet can't improve
     // their position and they wouldn't take this path, so we have a beta
     // cut-off and can prune  this branch.                      
+    //
+    //
     if (allowNull && (depth >= 3)
                   && !inCheck
-                  && !followPV
+                  && !pv_node
                   && !noMajorsOrMinors())
     {
         // R: is the reduction factor. The larger the R, the shallower the
@@ -227,8 +229,8 @@ int negamax(int alpha, int beta, int depth)
         ply++;
         
         // increment repetition index & store hash key
-        //repetition_index++;
-        //repetition_table[repetition_index] = hash_key;
+        repetition_index++;
+        repetition_table[repetition_index] = hash_key;
         
         // hash enpassant if available
         if (epsq != NoSq)
@@ -256,7 +258,7 @@ int negamax(int alpha, int beta, int depth)
         ply--;
 
         // decrement repetition index
-        //repetition_index--;
+        repetition_index--;
 
         // restore board state
         takeBack();
@@ -303,8 +305,8 @@ int negamax(int alpha, int beta, int depth)
 
 
         // increment repetition index & store hash key
-        //repetition_index++;
-        //repetition_table[repetition_index] = hash_key;
+        repetition_index++;
+        repetition_table[repetition_index] = hash_key;
        
 
         // make the move and check if it is illegal - skip it if so
@@ -314,7 +316,7 @@ int negamax(int alpha, int beta, int depth)
             ply--;
 
             // decrement repetition index
-            //repetition_index--;
+            repetition_index--;
 
             // undo move
             takeBack();
@@ -383,7 +385,7 @@ int negamax(int alpha, int beta, int depth)
 
 
         // decrement repetition index
-        //repetition_index--;
+        repetition_index--;
 
 
         // undo move
@@ -569,9 +571,18 @@ void search()
         // print bestmove and PV line
         if (pv_length[0])
         {
-            cout << "info depth " << current_depth
-                 << " score cp " << score
-                 << " nodes " <<  nodes
+            cout << "info depth " << current_depth;
+
+            // report mating distance if available, otherwise print score
+            if ((score > -MATEVALUE) && (score < -MATESCORE))
+                cout << " score mate " << -(score + MATEVALUE) / 2 - 1;
+            else if ((score > MATESCORE) && (score < MATEVALUE))
+                cout << " score mate " << (MATEVALUE - score) / 2 + 1;
+            else
+                cout << " score cp " << score;
+
+            // other search information: nodes, nps, time, etc.
+            cout << " nodes " <<  nodes
                  << " nps " << nodes * 1000000000 / ns
                  << " hashfull " << TT::hashfull()
                  << " time " << ms
@@ -613,7 +624,7 @@ int qsearch(int alpha, int beta)
 
 
     // check for an immediate draw
-    if (isDraw())
+    if (ply && isDraw())
         return DRAWSCORE;
 
 
@@ -658,8 +669,8 @@ int qsearch(int alpha, int beta)
 
         
         // increment repetition index & store hash key
-        //repetition_index++;
-        //repetition_table[repetition_index] = hash_key;
+        repetition_index++;
+        repetition_table[repetition_index] = hash_key;
 
         
         // make sure to make only legal moves
@@ -669,8 +680,9 @@ int qsearch(int alpha, int beta)
             ply--;
             
             // decrement repetition index
-            //repetition_index--;
+            repetition_index--;
 
+            // undo move
             takeBack();
             
             // skip to next move
@@ -687,7 +699,7 @@ int qsearch(int alpha, int beta)
 
         
         // decrement repetition index
-        //repetition_index--;
+        repetition_index--;
 
 
         // take move back
