@@ -58,6 +58,7 @@ using namespace std;
 
 // Search definitions, including alpha-beta bounds, mating scores, etc.
 #define DRAWSCORE           0
+#define CONTEMPTSCORE      25
 #define MATEVALUE       49000
 #define MATESCORE       48000
 #define VALUE_INFINITE  50000
@@ -532,6 +533,44 @@ static inline void watchClockAndInput()
         // update interval 
         this_thread::sleep_for(chrono::milliseconds(WATCH_INTERVAL_MS));
     }
+}
+
+
+
+// isEndgame
+//
+// Determine if the current position should be considered an endgame
+// position for the current side to move.
+static inline bool isEndgame()
+{
+    int pawn_material   = countBits(bitboards[P] | bitboards[p]) * 100;
+    int knight_material = countBits(bitboards[N] | bitboards[n]) * 320;
+    int bishop_material = countBits(bitboards[B] | bitboards[b]) * 320;
+    int rook_material   = countBits(bitboards[R] | bitboards[r]) * 500;
+    int queen_material  = countBits(bitboards[Q] | bitboards[q]) * 950;
+
+	return ((pawn_material + knight_material + bishop_material
+                           + rook_material + queen_material) < 2600);
+}
+
+
+
+
+// contempt
+//
+// Determine the draw score based on the phase of the game and whose moving,
+// to encourge the engine to strive for a win in the middle-game, but be
+// satisified with a draw in the endgame.
+static inline int contempt()
+{
+    // in the endgame, it's ok to try to draw, if we're losing
+    if (isEndgame())
+        return DRAWSCORE;
+
+
+    // in the opening and middle game, we try to fight
+    else
+        return ((sideToMove == White) ? -CONTEMPTSCORE : CONTEMPTSCORE);
 }
 
 
