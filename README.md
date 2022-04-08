@@ -3,7 +3,7 @@ Gargantua is a UCI chess engine with [NNUE](https://www.chessprogramming.org/NNU
 evaluation, derived from [Chess0](https://github.com/mkd/chess0), and inspired
 by Code Monkey King's [BBC](https://github.com/maksimKorzh/bbc).
 
-Gargantua's current approximate ELO rating is around ~2700, based on the
+Gargantua's current approximate ELO rating is around ~2800, based on the
 [Elometer test](http://www.elometer.net), various tournaments against other
 rated chess engines, and a series of online games played on the
 [Free Internet Chess Server (FICS)](https://www.freechess.org/).

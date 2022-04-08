@@ -150,7 +150,8 @@ int negamax(int alpha, int beta, int depth)
 
     // if the position is a draw, don't search anymore
     if (ply && isDraw())
-        return DRAWSCORE;
+        //return DRAWSCORE;
+        return contempt();
 
 
     // initialize hash flag for the transposition table
@@ -466,7 +467,8 @@ int negamax(int alpha, int beta, int depth)
         
         // king not in check: stalemate
         else
-            return DRAWSCORE;
+            //return DRAWSCORE;
+            return contempt();
     }
 
 

@@ -3,21 +3,24 @@ TODO
 
 Before release 1.0:
 -------------------
-- test the use of draw_comptent() when not in endgame
-- razoring
-- static null move pruning (does it help? or much slower due to double NNUE?)
-- futility pruning (e.g., Blunder)
-
 - fine-tuning — tests with tournaments:
+    - Contempt -0.25 or -0.50 vs DRAWSCORE (0)
     - Null move R: 2, 3, 2 + depth/4,5,6, 3 + depth/4,5,6 etc.
     - Aspiration window size: 25, 50, 75, 100, etc.
-    - Contempt -0.25 or -0.50 vs DRAWSCORE (0)
     - QSearch updates pv_table vs. only update in negamax
     - Store null move in TT vs. don't store it -- if (bestmove) TT::save()
     - allowNull vs. (always allow)
     - don't do Null move if !pv_node  vs.  do it always (also in PV)
 
+
+- UCI options (start with hash)
+- razoring
+- static null move pruning (does it help? or much slower due to double NNUE?)
+- futility pruning (e.g., Blunder)
+
 - bug: when found a mating distance, search keeps deepening and slow.
+- bug: cannot mate KRK when short in time
+  --> cannot mate me! position: 8/8/2k5/8/8/6R1/5K2/8 w - - 0 1
 
 
 
@@ -34,11 +37,9 @@ Infinity wars:
     - Modify saveBoard() and takeBack() to update own copies of pos Struct
     - Start by testing all “reentrant changes” with only the main thread. Make it work. Measure performance.
     - Then start to add threads. 
-    - Re-entrant version of makeMove() —> makeMove(pos, move): make a move on a given position (don’t use global)
+    - thread_local for variables used by all search threads
 
 - static exchange evaluation (SEE) for ordering captures in qsearch()
-
-- contempt score
 
 - improve NNUE:
   - Update to newest library (half-K)
