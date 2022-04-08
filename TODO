@@ -3,8 +3,9 @@ TODO
 
 Before release 1.0:
 -------------------
-- 3-fold repetition
-  - Chess0 algo seems faster (index - fifty), don’t check the whole array 
+- bug: 3-fold repetition when up in material
+- bug: engine timeout in certain positions (unresponsive)
+- test the use of draw_comptent() when not in endgame
 - razoring
 - static null move pruning (does it help? or much slower due to double NNUE?)
 - futility pruning (e.g., Blunder)
@@ -24,8 +25,6 @@ Before release 1.0:
 
 Infinity wars:
 --------------
-- evaluate the use of a contempt factor for draw in the middle game (randomize draw value, so that the engine won’t settle): https://web.archive.org/web/20071031095923/http://www.brucemo.com/compchess/programming/contempt.htm
-
 - pondering: https://web.archive.org/web/20071027053527/http://www.brucemo.com/compchess/programming/pondering.htm
   - use async to ponder (make move and search infinite to fill the cache) 
 

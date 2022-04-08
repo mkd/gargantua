@@ -316,22 +316,18 @@ void UCI::go(istringstream &is)
         // set up timing
         timeset = true;
         Limits.movetime /= Limits.movestogo;
+
+        // compensate for lag
+        if (Limits.movetime > 1500)
+            Limits.movetime -= 50;
         
         // init max. stop time
         stoptime = starttime + Limits.movetime + inc;
 
         // treat increment as seconds per move when time is almost up
-        if ((Limits.movetime < 1000) && inc && (Limits.depth == MAX_SEARCH_DEPTH))
+        if ((Limits.movetime < 1500) && inc && (Limits.depth == MAX_SEARCH_DEPTH))
             stoptime = starttime + inc - 50;
     }
-
-
-    // print search configuration
-    /*cout << endl;
-    cout << "starttime: " << starttime << "; movestogo: " << Limits.movestogo
-         << "; inc: " << inc << "; movetime: " << Limits.movetime << "; "
-         << "stoptime: " << stoptime << "; depth: " << Limits.depth
-         << "; timeset: " << timeset << "; nodes: " << Limits.nodes << endl;*/
 
 
     // constaintly watch the clock and other limits that will stop the search
