@@ -537,7 +537,7 @@ void UCI::loop(int argc, char* argv[])
         {
             MoveList_t MoveList;
             generateMoves(MoveList);
-            sortMoves(MoveList);
+            sortMoves(MoveList, 0);
             printMoveScores(MoveList);
         }
 

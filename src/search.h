@@ -246,7 +246,7 @@ void dperft(int);
 void search();
 int  qsearch(int, int);
 void initSearch();
-void sortMoves(MoveList_t &);
+void sortMoves(MoveList_t &, int);
 void printMoveScores(MoveList_t &);
 void resetLimits();
 void resetTimeControl();
