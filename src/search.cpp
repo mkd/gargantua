@@ -287,7 +287,7 @@ int negamax(int alpha, int beta, int depth)
 
 
     // sort moves from best to worst
-    sortMoves(MoveList);
+    sortMoves(MoveList, bestmove);
 
 
     // number of moves searched so far, within a move list
@@ -651,7 +651,7 @@ int qsearch(int alpha, int beta)
     // generate a new move list and sort it
     MoveList_t MoveList;
     generateCapturesAndPromotions(MoveList);
-    sortMoves(MoveList);
+    sortMoves(MoveList, 0);
 
     
     // loop over moves within a movelist
@@ -817,7 +817,10 @@ void dperft(int depth)
 // other heuristics), and sorts the list from bigger score to smaller 
 // score. In other words, sortMoves() tries to bring the best move to
 // the front.
-void sortMoves(MoveList_t &MoveList)
+//
+// If a "best move" is found in the transposition table, it is placed
+// at the top, making it the first move to be searched.
+void sortMoves(MoveList_t &MoveList, int bestmove)
 {
     // reliability checks
     //assert(MoveList.count > 0);
@@ -831,7 +834,15 @@ void sortMoves(MoveList_t &MoveList)
     // find the score for every move
     for (int i = 0; i < MoveList.count; i++) 
     {
-        pairt[i].first  = scoreMove(MoveList.moves[i]);
+        // score bestmove (from TT) above all
+        if (MoveList.moves[i] == bestmove)
+            pairt[i].first = 30000;
+
+        // rest of moves are scored using scoreMove()
+        else
+            pairt[i].first  = scoreMove(MoveList.moves[i]);
+
+        // associate score with the move
         pairt[i].second = MoveList.moves[i];
     }
   

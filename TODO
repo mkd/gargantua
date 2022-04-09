@@ -11,12 +11,14 @@ Before release 1.0:
     - Store null move in TT vs. don't store it -- if (bestmove) TT::save()
     - allowNull vs. (always allow)
     - don't do Null move if !pv_node  vs.  do it always (also in PV)
+    - Time control: movestogo=40 vs. movestogo=30
 
-
-- UCI options (start with hash)
+- TC 120+1s inc stays in minute 01:00 and doesn't use the time, should use it!
+- bestmove from TT into sortMoves
 - razoring
 - static null move pruning (does it help? or much slower due to double NNUE?)
 - futility pruning (e.g., Blunder)
+- other reductions/search optimizations (look at list from Blunder and Stockfish, in their search)
 
 - bug: when found a mating distance, search keeps deepening and slow.
 - bug: cannot mate KRK when short in time
@@ -40,6 +42,8 @@ Infinity wars:
     - thread_local for variables used by all search threads
 
 - static exchange evaluation (SEE) for ordering captures in qsearch()
+
+- book: built-in vs. external
 
 - improve NNUE:
   - Update to newest library (half-K)
