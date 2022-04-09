@@ -58,10 +58,12 @@ using namespace std;
 
 // Search definitions, including alpha-beta bounds, mating scores, etc.
 #define DRAWSCORE           0
-#define CONTEMPTSCORE      25
+#define CONTEMPTSCORE      50
 #define MATEVALUE       49000
 #define MATESCORE       48000
 #define VALUE_INFINITE  50000
+
+#define STATIC_NULLMOVE_PRUNING_MARGIN 120
 
 
 
