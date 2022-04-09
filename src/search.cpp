@@ -200,7 +200,30 @@ int negamax(int alpha, int beta, int depth)
     int legal = 0;
 
 
-    // Step 2. Null Move Pruning
+    // Step 2. Static Null Move Pruning
+    // 
+    // If our current material score is so good that even if we give
+    // ourselves a big hit materially and subtract a large amount of our
+    // material score (the "score margin") and our material score is still
+    // greater than beta, we assume this node will fail-high and we can
+    // prune its branch.   
+	int static_eval = evaluate();
+    
+    // evaluation pruning / static null move pruning
+	if ((depth < 3) && !pv_node
+                    && !inCheck
+                    && (abs(beta - 1) > -VALUE_INFINITE + 100))
+	{   
+        // define evaluation margin
+		int eval_margin = STATIC_NULLMOVE_PRUNING_MARGIN * depth;
+		
+		// evaluation margin substracted from static evaluation score
+		if (static_eval - eval_margin >= beta)
+			return beta;
+	}
+
+
+    // Step 3. Null Move Pruning
     //
 	// If our opponet is given a free move, can they improve their position? If
     // we do a quick search after giving our opponet this free move and we still
@@ -275,6 +298,60 @@ int negamax(int alpha, int beta, int depth)
             return beta;
     }
 
+
+    // Step 4. Razoring
+    //
+    // If eval is really low check with qsearch if it can exceed alpha, if it
+    // can't, return a fail low.
+
+    /*
+    if (!pv_node && (depth <= 7) 
+                 && (static_eval < alpha - 348 - 258 * depth * depth))
+    {
+        int new_score = qsearch(alpha - 1, alpha);
+        if (new_score < alpha)
+            return new_score;
+    }
+    */
+    
+    if (!pv_node && !inCheck && (depth <= 3))
+    {
+        // get static eval and add first bonus
+        score = static_eval + 125;
+        
+        // define new score
+        int new_score;
+        
+        // static evaluation indicates a fail-low node
+        if (score < beta)
+        {
+            // on depth 1
+            if (depth == 1)
+            {
+                // get quiscence score
+                new_score = qsearch(alpha, beta);
+                
+                // return quiescence score if it's greater then static evaluation score
+                return (new_score > score) ? new_score : score;
+            }
+            
+            // add second bonus to static evaluation
+            score += 175;
+            
+            // static evaluation indicates a fail-low node
+            if (score < beta && depth <= 2)
+            {
+                // get quiscence score
+                new_score = qsearch(alpha, beta);
+                
+                // quiescence score indicates fail-low node
+                if (new_score < beta)
+                    // return quiescence score if it's greater then static evaluation score
+                    return (new_score > score) ? new_score : score;
+            }
+        }
+	}
+
     
     // create a new move list and generate the moves
     MoveList_t MoveList;
@@ -331,12 +408,12 @@ int negamax(int alpha, int beta, int depth)
         legal++;
 
 
-        // Step 3. Full-width and full-depth search, if no moves searched yet
+        // Step 4. Full-width and full-depth search, if no moves searched yet
         if (moves_searched == 0)
             score = -negamax(-beta, -alpha, depth - 1);
 
         
-        // Step 4. Late Move Reductions (LMR)
+        // Step 5. Late Move Reductions (LMR)
         //
         // Configure late-move reductions (LMR): assuming that the moves in the
         // list are ordered from potential best to potential worst, analyzing 
@@ -360,7 +437,7 @@ int negamax(int alpha, int beta, int depth)
                 score = alpha + 1;
                
 
-            // Step 5. Principal Variation Search
+            // Step 6. Principal Variation Search
             if (score > alpha)
             {
                 // Once you've found a move with a score that is between alpha and beta,
