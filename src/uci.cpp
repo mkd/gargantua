@@ -38,11 +38,6 @@ using namespace std;
 
 
 
-// List of options available for Gargantua:
-std::map<string, int> Options;
-
-
-
 // Credit: Most of the UCI functionality is taken from Stockfish.
 // @see https://github.com/official-stockfish/Stockfish/blob/master/src/uci.cpp
 
@@ -371,7 +366,7 @@ void UCI::setOption(istringstream& is)
         value += (value.empty() ? "" : " ") + token;
 
 
-    // option name Hash type spin default 1024 min 16 max 1024" << endl;
+    // option name Hash type spin default 1024 min 16 max 1024
     if (name == "Hash")
     {
         // obtain the MBytes from the value given in the option
@@ -384,8 +379,37 @@ void UCI::setOption(istringstream& is)
         if(mb > HASH_MAX_SIZE)
             mb = HASH_MAX_SIZE;
 
+
+        // register the new setting in Options
+        Options["Hash"] = mb;
+
+
         // set hash table size in MB
-        TT::init(stoi(value));
+        TT::init(mb);
+    }
+
+
+    // option name Clear Hash type button
+    else if (name == "Clear Hash")
+    {
+        TT::clear();
+    }
+
+
+    // option name Contempt type spin 
+    else if (name == "Contempt")
+    {
+        // obtain the new contempt factor from the given option
+        int new_contempt = stoi(value);
+
+
+        // set the contempt factor to the given setting
+        if (new_contempt < OPTIONS_CONTEMPT_MIN)
+            Options["Contempt"] = OPTIONS_CONTEMPT_MIN;
+        else if (new_contempt > OPTIONS_CONTEMPT_MAX)
+            Options["Contempt"] = OPTIONS_CONTEMPT_MAX;
+        else
+            Options["Contempt"] = new_contempt;
     }
 
 
@@ -425,6 +449,10 @@ void UCI::loop(int argc, char* argv[])
 {
     // string variables to process the commands
     string token, cmd;
+
+
+    // set options to their initial value
+    resetOptions();
 
 
     // set the starting position by default
@@ -473,6 +501,8 @@ void UCI::loop(int argc, char* argv[])
             cout << "id author " << ENGINE_AUTHOR << endl; 
 
             cout << "option name Hash type spin default 1024 min 16 max 1024" << endl;
+            cout << "option name Clear Hash type button" << endl;
+            cout << "option name Contempt type spin default 25 min 0 max 200" << endl;
 
             cout << "uciok" << endl << flush;
         }
@@ -589,4 +619,15 @@ void UCI::printHelp()
 
     cout << "- smoves: print the list of pseudo-legal moves, sorted by score";
     cout << endl << endl;
+}
+
+
+
+// UCI::resetOptions
+//
+// Set the engine options to the original defaults.
+void UCI::resetOptions()
+{
+    Options["Hash"]     = OPTIONS_DEFAULT_HASHSIZE;
+    Options["Contempt"] = OPTIONS_DEFAULT_CONTEMPT;
 }

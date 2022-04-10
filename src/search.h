@@ -58,12 +58,16 @@ using namespace std;
 
 // Search definitions, including alpha-beta bounds, mating scores, etc.
 #define DRAWSCORE           0
-#define CONTEMPTSCORE      50
 #define MATEVALUE       49000
 #define MATESCORE       48000
 #define VALUE_INFINITE  50000
 
 #define STATIC_NULLMOVE_PRUNING_MARGIN 120
+
+#define OPTIONS_DEFAULT_HASHSIZE    1024 
+#define OPTIONS_DEFAULT_CONTEMPT      25
+#define OPTIONS_CONTEMPT_MIN           0
+#define OPTIONS_CONTEMPT_MAX         200
 
 
 
@@ -110,6 +114,12 @@ typedef struct
 } Limits_t;
 
 extern Limits_t Limits;
+
+
+
+// Map containing all the engine options that can be set using
+// the UCI command 'setoption'
+extern std::map<std::string, int> Options;
 
 
 
@@ -572,7 +582,7 @@ static inline int contempt()
 
     // in the opening and middle game, we try to fight
     else
-        return ((sideToMove == White) ? -CONTEMPTSCORE : CONTEMPTSCORE);
+        return ((sideToMove == White) ? -Options["Contempt"] : Options["Contempt"]);
 }
 
 

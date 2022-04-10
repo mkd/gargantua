@@ -21,6 +21,8 @@
 #ifndef UCI_H
 #define UCI_H
 
+#include <map>
+
 
 
 // Engine information 
@@ -49,6 +51,7 @@ void setOption(istringstream &);
 void traceEval();
 void loop(int argc, char *argv[]);
 void printHelp();
+void resetOptions();
 
 }  //  namespace UCI
 

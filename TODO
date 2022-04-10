@@ -4,7 +4,6 @@ TODO
 Before release 1.0:
 -------------------
 - fine-tuning — tests with tournaments:
-    - Contempt -0.25 or -0.50 vs DRAWSCORE (0)
     - Null move R: 2, 3, 2 + depth/4,5,6, 3 + depth/4,5,6 etc.
     - Aspiration window size: 25, 50, 75, 100, etc.
     - QSearch updates pv_table vs. only update in negamax
@@ -13,6 +12,7 @@ Before release 1.0:
     - don't do Null move if !pv_node  vs.  do it always (also in PV)
     - Time control: movestogo=40 vs. movestogo=30
     - Razor ala Stockfish vs. Razor ala BBC vs. BOTH
+    - Razor bonuses (125, 175, etc)
 
 - TC 120+1s inc stays in minute 01:00 and doesn't use the time, should use it!
 - futility pruning (e.g., Blunder)
