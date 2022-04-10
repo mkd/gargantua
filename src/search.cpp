@@ -41,6 +41,12 @@ Limits_t Limits;
 
 
 
+// Options holds more settings (aside from Limits) that can set via the
+// setoption command in UCI.
+std::map<string, int> Options;
+
+
+
 // Time Control variables
 uint64_t starttime = getTimeInMilliseconds();
 uint64_t stoptime  = starttime;
