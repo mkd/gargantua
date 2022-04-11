@@ -38,8 +38,8 @@
 int main(int argc, char *argv[])
 {
     // print engine info
-    cout << ENGINE_NAME << " " << ENGINE_VERSION <<
-            " by " << ENGINE_AUTHOR << endl << flush;
+    cout << EngineName << " " << EngineVersion << " by "
+         << EngineAuthor << endl << flush;
 
 
     // initializations

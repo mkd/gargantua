@@ -4,7 +4,7 @@ TODO
 Before release 1.0:
 -------------------
 - fine-tuning — tests with tournaments:
-    - Null move R: 2, 3, 2 + depth/4,5,6, 3 + depth/4,5,6 etc.
+    - Null move R3d6 vs R3d4 vs R3d2
     - Aspiration window size: 25, 50, 75, 100, etc.
     - QSearch updates pv_table vs. only update in negamax
     - Store null move in TT vs. don't store it -- if (bestmove) TT::save()
@@ -16,9 +16,8 @@ Before release 1.0:
 
 - TC 120+1s inc stays in minute 01:00 and doesn't use the time, should use it!
 - futility pruning (e.g., Blunder)
+- Late move pruning (e.g., Blunder)
 - other reductions/search optimizations (look at list from Blunder and Stockfish, in their search)
-
-- bug: when found a mating distance, search keeps deepening and slow.
 - bug: cannot mate KRK when short in time
   --> cannot mate me! position: 8/8/2k5/8/8/6R1/5K2/8 w - - 0 1
 
@@ -42,6 +41,7 @@ Infinity wars:
 - static exchange evaluation (SEE) for ordering captures in qsearch()
 
 - book: built-in vs. external
+  r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -  | d5e6 e2a6
 
 - improve NNUE:
   - Update to newest library (half-K)

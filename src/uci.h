@@ -26,16 +26,16 @@
 
 
 // Engine information 
-#define ENGINE_NAME     "Gargantua"
-#define ENGINE_VERSION  "1.0"
-#define ENGINE_AUTHOR   "Claudio M. Camacho <claudiomkd@gmail.com>"
-#define ENGINE_URL      "http://github.com/mkd/gargantua"
+#define EngineName     "Gargantua"
+#define EngineVersion  "1.0"
+#define EngineAuthor   "Claudio M. Camacho <claudiomkd@gmail.com>"
+#define EngineURL      "http://github.com/mkd/gargantua"
 
 
 
 // Default sizes for the Hash option
-#define HASH_MIN_SIZE   16
-#define HASH_MAX_SIZE 1024
+#define HashMinSize   16
+#define HashMaxSize 1024
 
 
 

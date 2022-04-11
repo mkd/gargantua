@@ -199,7 +199,7 @@ static inline void addMove(MoveList_t &MoveList, int move)
 // isSquareAttacked
 //
 // True if the given square is attacked by any piece an opponent's piece.
-static inline bool isSquareAttacked(int square, int side)
+constexpr bool isSquareAttacked(int square, int side)
 {
     // reliability checks
     assert((side == White) || (side == Black));

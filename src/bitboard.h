@@ -354,7 +354,7 @@ void initBitboards();
 // getBit
 //
 // #define getBit(b, pos) (b & (1ULL << pos))
-static inline int getBit(Bitboard b, int pos)
+constexpr int getBit(Bitboard b, int pos)
 {
     return ((b >> pos) & 1ULL);
 }
@@ -364,7 +364,7 @@ static inline int getBit(Bitboard b, int pos)
 // setBit
 //
 // #define setBit(b, pos) (b |= (1ULL << pos))
-static inline void setBit(Bitboard &b, int pos)
+constexpr void setBit(Bitboard &b, int pos)
 {
     b |= (1ULL << pos);
 }
@@ -376,7 +376,7 @@ static inline void setBit(Bitboard &b, int pos)
 // #define popBit(b, pos) (b &= ~(1ULL << pos))
 //
 // NOTE: for speed, use ^= SqBB[pos] inline within the code.
-static inline void popBit(Bitboard &b, int pos)
+constexpr void popBit(Bitboard &b, int pos)
 {
     b &= ~(1ULL << pos);
 }
@@ -386,7 +386,7 @@ static inline void popBit(Bitboard &b, int pos)
 // toggleBit
 //
 // #define toggleBit(b, pos) (b ^= (1ULL << pos))
-static inline void toggleBit(Bitboard &b, int pos)
+constexpr void toggleBit(Bitboard &b, int pos)
 {
     b ^= (1ULL << pos);
 }
@@ -396,7 +396,7 @@ static inline void toggleBit(Bitboard &b, int pos)
 // moreThanOne
 //
 // Return true if the number of 1s in a Bitboard is >1.
-static inline bool moreThanOne(Bitboard b)
+constexpr bool moreThanOne(Bitboard b)
 {
     return b & (b - 1);
 }
@@ -408,7 +408,7 @@ static inline bool moreThanOne(Bitboard b)
 // Count the number of bits within a Bitboard using the MIT HAKMEM algorithm.
 //
 // @see http://graphics.stanford.edu/~seander/bithacks.html
-static inline int countBits(Bitboard bb)
+constexpr int countBits(Bitboard bb)
 {
     #ifdef WIN64
         // Win64 targets compiled using MSVC on Intel paltforms -- use HW acceleration
@@ -420,12 +420,12 @@ static inline int countBits(Bitboard bb)
         // Win64 targets use MIT HAKEM -- fastest way to count bits using SW
         #else
 
-        static const Bitboard  M1 = 0x5555555555555555;  // 1 zero,  1 one ...
-        static const Bitboard  M2 = 0x3333333333333333;  // 2 zeros,  2 ones ...
-        static const Bitboard  M4 = 0x0f0f0f0f0f0f0f0f;  // 4 zeros,  4 ones ...
-        static const Bitboard  M8 = 0x00ff00ff00ff00ff;  // 8 zeros,  8 ones ...
-        static const Bitboard M16 = 0x0000ffff0000ffff;  // 16 zeros, 16 ones ...
-        static const Bitboard M32 = 0x00000000ffffffff;  // 32 zeros, 32 ones
+        constexpr Bitboard  M1 = 0x5555555555555555;  // 1 zero,  1 one ...
+        constexpr Bitboard  M2 = 0x3333333333333333;  // 2 zeros,  2 ones ...
+        constexpr Bitboard  M4 = 0x0f0f0f0f0f0f0f0f;  // 4 zeros,  4 ones ...
+        constexpr Bitboard  M8 = 0x00ff00ff00ff00ff;  // 8 zeros,  8 ones ...
+        constexpr Bitboard M16 = 0x0000ffff0000ffff;  // 16 zeros, 16 ones ...
+        constexpr Bitboard M32 = 0x00000000ffffffff;  // 32 zeros, 32 ones
 
         bb = (bb & M1 ) + ((bb >>  1) & M1 );   //put count of each  2 bits into those  2 bits
         bb = (bb & M2 ) + ((bb >>  2) & M2 );   //put count of each  4 bits into those  4 bits
@@ -454,7 +454,7 @@ static inline int countBits(Bitboard bb)
 // ls1b
 //
 // Find the first bit on a Bitboard using the De Bruijn Multiplication
-static inline unsigned int ls1b(Bitboard bb)
+constexpr unsigned int ls1b(Bitboard bb)
 {
     #if defined(__GNUC__)  // GCC, Clang, ICC
 
@@ -512,7 +512,7 @@ static inline unsigned int ls1b(Bitboard bb)
 // popLsb
 //
 // Find and clear the least significant bit in a non-zero bitboard.
-static inline int popLsb(Bitboard& b)
+constexpr int popLsb(Bitboard& b)
 {
   assert(b);
 

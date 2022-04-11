@@ -64,7 +64,7 @@ bool     timeset   = true;
 // beta cut-offs, where a move killer moves [id][ply]
 //
 // Note: storing exactly 2 killer moves is best for efficiency/performance.
-int killers[2][MAXPLY];
+int killers[2][MaxPly];
 
 
 
@@ -74,12 +74,12 @@ int history[12][64];
 
 
 // PV length [ply]
-int pv_length[MAXPLY];
+int pv_length[MaxPly];
 
 
 
 // PV table [ply][ply]
-int pv_table[MAXPLY][MAXPLY];
+int pv_table[MaxPly][MaxPly];
 
 
 
@@ -116,7 +116,7 @@ void resetLimits()
     Limits.npmsec    = 0;
     Limits.movetime  = 0;
     Limits.movestogo = 40;
-    Limits.depth     = MAX_SEARCH_DEPTH;
+    Limits.depth     = MaxSearchDepth;
     Limits.mate      = 0;
     Limits.perft     = 0;
     Limits.infinite  = 0;
@@ -168,7 +168,21 @@ int negamax(int alpha, int beta, int depth)
     bool pv_node = ((beta - alpha) > 1);
 
 
-    // Step 1. Transposition Table (TT)
+    // Step 1. Mate distance pruning (taken from Stockfish).
+    //
+    // Even if we mate at the next move our score would be at best
+    // mate_in(ply+1), but if alpha is already bigger because a
+    // shorter mate was found upward in the tree then there is no need to
+    // search because we will never beat the current alpha. Same logic but with
+    // reversed signs applies also in the opposite condition of being mated
+    // instead of giving mate. In this case return a fail-high score.
+    alpha = std::max(mated_in(ply), alpha);
+    beta = std::min(mate_in(ply+1), beta);
+    if (alpha >= beta)
+        return alpha;
+
+
+    // Step 2. Transposition Table (TT) lookup
     // 
     // Try to find the current node from the Transposition Table and return
     // the score immediately.
@@ -206,7 +220,7 @@ int negamax(int alpha, int beta, int depth)
     int legal = 0;
 
 
-    // Step 2. Static Null Move Pruning
+    // Step 3. Static Null Move Pruning
     // 
     // If our current material score is so good that even if we give
     // ourselves a big hit materially and subtract a large amount of our
@@ -218,10 +232,10 @@ int negamax(int alpha, int beta, int depth)
     // evaluation pruning / static null move pruning
 	if ((depth < 3) && !pv_node
                     && !inCheck
-                    && (abs(beta - 1) > -VALUE_INFINITE + 100))
+                    && (abs(beta - 1) > -ValueInfinite + 100))
 	{   
         // define evaluation margin
-		int eval_margin = STATIC_NULLMOVE_PRUNING_MARGIN * depth;
+		int eval_margin = StaticNullPruningMargin * depth;
 		
 		// evaluation margin substracted from static evaluation score
 		if (static_eval - eval_margin >= beta)
@@ -229,7 +243,7 @@ int negamax(int alpha, int beta, int depth)
 	}
 
 
-    // Step 3. Null Move Pruning
+    // Step 4. Null Move Pruning
     //
 	// If our opponet is given a free move, can they improve their position? If
     // we do a quick search after giving our opponet this free move and we still
@@ -279,7 +293,7 @@ int negamax(int alpha, int beta, int depth)
         allowNull = false;
                 
         // search moves with reduced depth to find beta cutoffs
-        score = -negamax(-beta, -beta + 1, depth - R);
+        score = -negamax(-beta, -beta + 1, depth - R - 1);
 
         // restore allowNull
         allowNull = true;
@@ -305,7 +319,7 @@ int negamax(int alpha, int beta, int depth)
     }
 
 
-    // Step 4. Razoring
+    // Step 5. Razoring
     //
     // If eval is really low check with qsearch if it can exceed alpha, if it
     // can't, return a fail low.
@@ -338,7 +352,7 @@ int negamax(int alpha, int beta, int depth)
                 new_score = qsearch(alpha, beta);
                 
                 // return quiescence score if it's greater then static evaluation score
-                return (new_score > score) ? new_score : score;
+                return std::max(new_score,score);
             }
             
             // add second bonus to static evaluation
@@ -353,7 +367,7 @@ int negamax(int alpha, int beta, int depth)
                 // quiescence score indicates fail-low node
                 if (new_score < beta)
                     // return quiescence score if it's greater then static evaluation score
-                    return (new_score > score) ? new_score : score;
+                    return std::max(new_score, score);
             }
         }
 	}
@@ -414,12 +428,12 @@ int negamax(int alpha, int beta, int depth)
         legal++;
 
 
-        // Step 4. Full-width and full-depth search, if no moves searched yet
+        // Step 6. Full-width and full-depth search, if no moves searched yet
         if (moves_searched == 0)
             score = -negamax(-beta, -alpha, depth - 1);
 
         
-        // Step 5. Late Move Reductions (LMR)
+        // Step 7. Late Move Reductions (LMR)
         //
         // Configure late-move reductions (LMR): assuming that the moves in the
         // list are ordered from potential best to potential worst, analyzing 
@@ -429,8 +443,8 @@ int negamax(int alpha, int beta, int depth)
         else
         {
             if(
-                moves_searched >= LMR_FULLDEPTH_MOVES &&
-                depth >= LMR_REDUCTION_LIMIT &&
+                moves_searched >= LMRFullDepthMoves &&
+                depth >= LMRReductionLimit &&
                 !inCheck && 
                 !getMoveCapture(MoveList.moves[count]) &&
                 !getPromo(MoveList.moves[count])
@@ -443,7 +457,7 @@ int negamax(int alpha, int beta, int depth)
                 score = alpha + 1;
                
 
-            // Step 6. Principal Variation Search
+            // Step 8. Principal Variation Search
             if (score > alpha)
             {
                 // Once you've found a move with a score that is between alpha and beta,
@@ -546,7 +560,7 @@ int negamax(int alpha, int beta, int depth)
     {
         // king is in check: return mating score (closest distance to mate)
         if (inCheck)
-            return -MATEVALUE + ply;
+            return -MateValue + ply;
         
         // king not in check: stalemate
         else
@@ -602,8 +616,8 @@ void search()
 
 
     // define initial alpha beta bounds
-    int alpha = -VALUE_INFINITE;
-    int beta  =  VALUE_INFINITE;
+    int alpha = -ValueInfinite;
+    int beta  =  ValueInfinite;
 
 
     // reset nodes counter
@@ -635,16 +649,16 @@ void search()
         // we must try again with a full-width window (and the same depth).
         if ((score <= alpha) || (score >= beta))
         {
-            alpha = -VALUE_INFINITE;
-            beta  =  VALUE_INFINITE;
+            alpha = -ValueInfinite;
+            beta  =  ValueInfinite;
             current_depth--;
             continue;
         }
 
         
         // set up the window for the next iteration
-        alpha = score - ASPIRATION_WINDOW_SIZE;
-        beta  = score + ASPIRATION_WINDOW_SIZE;
+        alpha = score - AspirationWindow;
+        beta  = score + AspirationWindow;
 
 
         // stop the timer and measure time elapsed
@@ -659,10 +673,10 @@ void search()
             cout << "info depth " << current_depth;
 
             // report mating distance if available, otherwise print score
-            if ((score > -MATEVALUE) && (score < -MATESCORE))
-                cout << " score mate " << -(score + MATEVALUE) / 2 - 1;
-            else if ((score > MATESCORE) && (score < MATEVALUE))
-                cout << " score mate " << (MATEVALUE - score) / 2 + 1;
+            if ((score > -MateValue) && (score < -MateScore))
+                cout << " score mate " << -(score + MateValue) / 2 - 1;
+            else if ((score > MateScore) && (score < MateValue))
+                cout << " score mate " << (MateValue - score) / 2 + 1;
             else
                 cout << " score cp " << score;
 
@@ -704,7 +718,7 @@ void search()
 // c) depth is too deep or time (from a running timer) is up
 int qsearch(int alpha, int beta)
 {
-    // start searching a score from the beginning (= -VALUE_INFINITE)
+    // start searching a score from the beginning (= -ValueInfinite)
     int val, score;
 
 
@@ -713,7 +727,7 @@ int qsearch(int alpha, int beta)
 
 
     // we are too deep, hence there's an overflow of arrays relying on max ply constant
-    if (ply > (MAXPLY - 1))
+    if (ply > (MaxPly - 1))
         return evaluate();
 
 

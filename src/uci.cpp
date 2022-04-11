@@ -126,7 +126,7 @@ void UCI::position(istringstream &is)
     // "startpos" sets the board to the initial position
     if (token == "startpos")
     {
-        fen = FENPOS_STARTPOS;
+        fen = FenPosStartpos;
         is >> token; // Consume "moves" token if any
     }
 
@@ -297,8 +297,8 @@ void UCI::go(istringstream &is)
         {
             Limits.infinite = true;
             timeset         = false;
-            Limits.depth    = MAX_SEARCH_DEPTH;
-            Limits.movetime = MAX_SEARCH_TIME;
+            Limits.depth    = MaxSearchDepth;
+            Limits.movetime = MaxSearchTime;
         }
 
 
@@ -327,7 +327,7 @@ void UCI::go(istringstream &is)
         stoptime = starttime + Limits.movetime + inc;
 
         // treat increment as seconds per move when time is almost up
-        if ((Limits.movetime < 1500) && inc && (Limits.depth == MAX_SEARCH_DEPTH))
+        if ((Limits.movetime < 1500) && inc && (Limits.depth == MaxSearchDepth))
             stoptime = starttime + inc - 50;
     }
 
@@ -373,11 +373,11 @@ void UCI::setOption(istringstream& is)
         int mb = stoi(value);
 
         // check min and max size boundaries
-        if (mb < HASH_MIN_SIZE)
-            mb = HASH_MIN_SIZE;
+        if (mb < HashMinSize)
+            mb = HashMinSize;
 
-        if(mb > HASH_MAX_SIZE)
-            mb = HASH_MAX_SIZE;
+        if(mb > HashMaxSize)
+            mb = HashMaxSize;
 
 
         // register the new setting in Options
@@ -404,10 +404,10 @@ void UCI::setOption(istringstream& is)
 
 
         // set the contempt factor to the given setting
-        if (new_contempt < OPTIONS_CONTEMPT_MIN)
-            Options["Contempt"] = OPTIONS_CONTEMPT_MIN;
-        else if (new_contempt > OPTIONS_CONTEMPT_MAX)
-            Options["Contempt"] = OPTIONS_CONTEMPT_MAX;
+        if (new_contempt < OptionsContemptMin)
+            Options["Contempt"] = OptionsContemptMin;
+        else if (new_contempt > OptionsContemptMax)
+            Options["Contempt"] = OptionsContemptMax;
         else
             Options["Contempt"] = new_contempt;
     }
@@ -456,7 +456,7 @@ void UCI::loop(int argc, char* argv[])
 
 
     // set the starting position by default
-    setPosition(FENPOS_STARTPOS);
+    setPosition(FenPosStartpos);
 
 
     // prepare and take in commands from the command line, if any
@@ -497,8 +497,8 @@ void UCI::loop(int argc, char* argv[])
         // "uci": print engine information
         else if (token == "uci")
         {
-            cout << "id name "   << ENGINE_NAME << " " << ENGINE_VERSION << endl; 
-            cout << "id author " << ENGINE_AUTHOR << endl; 
+            cout << "id name "   << EngineName << " " << EngineVersion << endl;
+            cout << "id author " << EngineAuthor << endl; 
 
             cout << "option name Hash type spin default 1024 min 16 max 1024" << endl;
             cout << "option name Clear Hash type button" << endl;
@@ -529,7 +529,7 @@ void UCI::loop(int argc, char* argv[])
         // "ucinewgame" command: start
         else if (token == "ucinewgame")
         {
-            setPosition(FENPOS_STARTPOS);
+            setPosition(FenPosStartpos);
             TT::clear();
             initSearch();
         }
@@ -628,6 +628,6 @@ void UCI::printHelp()
 // Set the engine options to the original defaults.
 void UCI::resetOptions()
 {
-    Options["Hash"]     = OPTIONS_DEFAULT_HASHSIZE;
-    Options["Contempt"] = OPTIONS_DEFAULT_CONTEMPT;
+    Options["Hash"]     = OptionsDefaultHashSize;
+    Options["Contempt"] = OptionsDefaultContempt;
 }

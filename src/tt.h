@@ -57,6 +57,8 @@ extern uint64_t hash_used;
 #define hash_type_alpha 1
 #define hash_type_beta  2
 
+
+
 // TTEntry struct is the 8 bytes transposition table entry, defined as below:
 //
 // key        64 bits
