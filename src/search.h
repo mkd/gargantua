@@ -44,35 +44,35 @@ using namespace std;
 
 // Default settings and configuration for the search, as well as 
 // tuning parameters for search extensions and reductions:
-#define DEFAULT_SEARCH_DEPTH         10
-#define MAX_SEARCH_DEPTH            256
-#define DEFAULT_SEARCH_MOVETIME_MS 5000
-#define LMR_FULLDEPTH_MOVES           4
-#define LMR_REDUCTION_LIMIT           3
-#define ASPIRATION_WINDOW_SIZE       70
-#define WATCH_INTERVAL_MS            10
+#define DefaultSearchDepth           12
+#define MaxSearchDepth              256
+#define DefaultMovetime            5000
+#define LMRFullDepthMoves             4
+#define LMRReductionLimit             3
+#define AspirationWindow             70
+#define WatchIntervalMs              10
 
-#define MAX_SEARCH_TIME           0xFFFFFFFFFFFFFFFFULL
+#define MaxSearchTime  0xFFFFFFFFFFFFFFFFULL
 
 
 
 // Search definitions, including alpha-beta bounds, mating scores, etc.
-#define DRAWSCORE           0
-#define MATEVALUE       49000
-#define MATESCORE       48000
-#define VALUE_INFINITE  50000
+#define DrawScore           0
+#define MateValue       49000
+#define MateScore       48000
+#define ValueInfinite   50000
 
-#define STATIC_NULLMOVE_PRUNING_MARGIN 120
+#define StaticNullPruningMargin      120
 
-#define OPTIONS_DEFAULT_HASHSIZE    1024 
-#define OPTIONS_DEFAULT_CONTEMPT      25
-#define OPTIONS_CONTEMPT_MIN           0
-#define OPTIONS_CONTEMPT_MAX         200
+#define OptionsDefaultHashSize      1024 
+#define OptionsDefaultContempt        25
+#define OptionsContemptMin             0
+#define OptionsContemptMax           200
 
 
 
 // Maximum depth at which we try to search
-#define MAXPLY       256
+#define MaxPly            256
 
 
 
@@ -80,7 +80,7 @@ using namespace std;
 // sorting moves based on their likeliness to be good.
 //
 // @see scoreMove() and sortMoves()
-#define MOVESCORE_PROMO_QUIET   10000
+#define MoveScorePromoQuiet   10000
 
 
 
@@ -146,7 +146,7 @@ extern bool     timeset;
 // Note: storing exactly 2 killer moves is best for efficiency/performance.
 //
 // @see https://www.chessprogramming.org/Killer_Heuristic
-extern int killers[2][MAXPLY];
+extern int killers[2][MaxPly];
 
 
 
@@ -190,12 +190,12 @@ extern int history[12][64];
 // propagated up to the root.
 //
 // @see https://www.chessprogramming.org/Triangular_PV-Table
-extern int pv_length[MAXPLY];
+extern int pv_length[MaxPly];
 
 
 
 // PV table [ply][ply]
-extern int pv_table[MAXPLY][MAXPLY];
+extern int pv_table[MaxPly][MaxPly];
 
 
 
@@ -395,7 +395,7 @@ static inline int scoreMove(int move)
     // quiet promotions are also scored
     else if (getPromo(move))
     {
-        return MOVESCORE_PROMO_QUIET;
+        return MoveScorePromoQuiet;
     }
    
 
@@ -543,7 +543,7 @@ static inline void watchClockAndInput()
 
 
         // update interval 
-        this_thread::sleep_for(chrono::milliseconds(WATCH_INTERVAL_MS));
+        this_thread::sleep_for(chrono::milliseconds(WatchIntervalMs));
     }
 }
 
@@ -577,12 +577,33 @@ static inline int contempt()
 {
     // in the endgame, it's ok to try to draw, if we're losing
     if (isEndgame())
-        return DRAWSCORE;
+        return DrawScore;
 
 
     // in the opening and middle game, we try to fight
     else
         return ((sideToMove == White) ? -Options["Contempt"] : Options["Contempt"]);
+}
+
+
+
+// mate_in
+//
+// Detect the distance from the root at which we can mate the opponent.
+constexpr int mate_in(int ply)
+{
+    return MateValue - ply;
+}
+
+
+
+
+// mated_in
+//
+// Detect the distance from the root at which we are mated by our opponent.
+constexpr int mated_in(int ply)
+{
+    return -MateValue + ply;
 }
 
 

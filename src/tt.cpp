@@ -227,9 +227,9 @@ int TT::probe(int alpha, int beta, int &best_move, int depth)
            
 
             // if score is a mate, find the mating distance from the root node
-            if (score < -MATESCORE)
+            if (score < -MateScore)
                 score += ply;
-            else if (score > MATESCORE)
+            else if (score > MateScore)
                 score -= ply;
        
 
@@ -271,9 +271,9 @@ void TT::save(int score, int best_move, int depth, int hash_type)
 
 
     // store the score independent from the actual path from root node
-    if (score < -MATESCORE)
+    if (score < -MateScore)
         score -= ply;
-    else if (score > MATESCORE)
+    else if (score > MateScore)
         score += ply;
 
 
