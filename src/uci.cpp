@@ -320,14 +320,14 @@ void UCI::go(istringstream &is)
         Limits.movetime /= Limits.movestogo;
 
         // compensate for lag
-        if (Limits.movetime > 1500)
+        if (Limits.movetime > 500)
             Limits.movetime -= 50;
         
         // init max. stop time
         stoptime = starttime + Limits.movetime + inc;
 
         // treat increment as seconds per move when time is almost up
-        if ((Limits.movetime < 1500) && inc && (Limits.depth == MaxSearchDepth))
+        if ((Limits.movetime < 500) && inc && (Limits.depth == MaxSearchDepth))
             stoptime = starttime + inc - 50;
     }
 
@@ -342,9 +342,9 @@ void UCI::go(istringstream &is)
 
 
 
-// UCI::setoption
+// UCI::setOption
 //
-// UCI::setoption() is called when engine receives the "setoption" UCI command.
+// UCI::setOption() is called when engine receives the "setoption" UCI command.
 // The function updates the UCI option ("name") to the given value ("value").
 void UCI::setOption(istringstream& is)
 {
