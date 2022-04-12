@@ -109,18 +109,18 @@ void initSearch()
 // Reset all search limits to their initial configuration.
 void resetLimits()
 {
-    Limits.wtime     = 0;
-    Limits.btime     = 0;
-    Limits.winc      = 0;
-    Limits.binc      = 0;
-    Limits.npmsec    = 0;
-    Limits.movetime  = 0;
-    Limits.movestogo = 40;
+    Limits.wtime     =  0;
+    Limits.btime     =  0;
+    Limits.winc      =  0;
+    Limits.binc      =  0;
+    Limits.npmsec    =  0;
+    Limits.movetime  =  0;
+    Limits.movestogo = 30;
     Limits.depth     = MaxSearchDepth;
-    Limits.mate      = 0;
-    Limits.perft     = 0;
-    Limits.infinite  = 0;
-    Limits.nodes     = 0;
+    Limits.mate      =  0;
+    Limits.perft     =  0;
+    Limits.infinite  =  0;
+    Limits.nodes     =  0;
     Limits.ponder    = false;
 }
 
@@ -261,7 +261,7 @@ int negamax(int alpha, int beta, int depth)
         //    search is and the faster (but likely less reliable) the pruning
         //    estimate is.
         //
-        // We use a dynamic reduction limit here (based on Blunder Chess Engine).
+        // We use a dynamic reduction limit here (based on Blunder Chess Engine)
         // 
         // @see https://github.com/algerbrex/blunder/blob/main/engine/search.go
         int R = 3 + depth/6;
@@ -987,6 +987,6 @@ void resetTimeControl()
     timedout  = false; 
 
     starttime = getTimeInMilliseconds();
-    Limits.movestogo = 40;
+    Limits.movestogo = 30;
     Limits.movetime  =  0;
 }
