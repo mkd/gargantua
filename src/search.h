@@ -49,7 +49,7 @@ using namespace std;
 #define DefaultMovetime            5000
 #define LMRFullDepthMoves             4
 #define LMRReductionLimit             3
-#define AspirationWindow             70
+#define AspirationWindow            200
 #define WatchIntervalMs              10
 
 #define MaxSearchTime  0xFFFFFFFFFFFFFFFFULL

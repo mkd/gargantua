@@ -93,6 +93,10 @@ bool scorePV   = false;
 bool allowNull = true;
 
 
+// Late move pruning margins, depending on the depth we are at
+std::array<int, 4> LateMovePruningMargins = { 0, 8, 12, 24};
+
+
 
 // initSearch
 //
@@ -168,7 +172,10 @@ int negamax(int alpha, int beta, int depth)
     bool pv_node = ((beta - alpha) > 1);
 
 
-    // Step 1. Mate distance pruning (taken from Stockfish).
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Step 1. Mate distance pruning (taken from Stockfish)
     //
     // Even if we mate at the next move our score would be at best
     // mate_in(ply+1), but if alpha is already bigger because a
@@ -176,22 +183,33 @@ int negamax(int alpha, int beta, int depth)
     // search because we will never beat the current alpha. Same logic but with
     // reversed signs applies also in the opposite condition of being mated
     // instead of giving mate. In this case return a fail-high score.
+
     alpha = std::max(mated_in(ply), alpha);
-    beta = std::min(mate_in(ply+1), beta);
+    beta  = std::min(mate_in(ply+1), beta);
     if (alpha >= beta)
         return alpha;
 
 
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
     // Step 2. Transposition Table (TT) lookup
     // 
     // Try to find the current node from the Transposition Table and return
-    // the score immediately.
+    // the score immediately. We don't look in the hash table if we are in the
+    // Principal Variation nodes.
+
     if (ply && ((score = TT::probe(alpha, beta, bestmove, depth)) != no_hash_found) && !pv_node)
         return score;
 
 
+
     // init PV length
     pv_length[ply] = ply;
+
+
+    // number of legal moves found
+    int legal = 0;
 
 
     // increment nodes count
@@ -204,6 +222,11 @@ int negamax(int alpha, int beta, int depth)
                                                             sideToMove ^ 1);
 
 
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Step 3. In-check extension
+    // 
     // Extend the search depth by one if we're in check, so that we're less
     // likely to make a tactical mistake. I.e., don't call quiescence search
     // while in check.
@@ -211,22 +234,31 @@ int negamax(int alpha, int beta, int depth)
         depth++;
 
 
-    // leaf node: return static evaluation
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Step 4. Quiescent search
+    //
+    // If we reach depth = 0, we are at a leaf node. Instead of returning a
+    // static evaluation, go through all captures and promotions until the
+    // position is stable enough; and return its score.
+
     if (depth == 0)
         return qsearch(alpha, beta);
 
 
-    // number of legal moves found
-    int legal = 0;
 
 
-    // Step 3. Static Null Move Pruning
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Step 5. Static Null Move Pruning
     // 
     // If our current material score is so good that even if we give
     // ourselves a big hit materially and subtract a large amount of our
     // material score (the "score margin") and our material score is still
     // greater than beta, we assume this node will fail-high and we can
     // prune its branch.   
+
 	int static_eval = evaluate();
     
     // evaluation pruning / static null move pruning
@@ -243,15 +275,17 @@ int negamax(int alpha, int beta, int depth)
 	}
 
 
-    // Step 4. Null Move Pruning
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Step 6. Null move pruning
     //
 	// If our opponet is given a free move, can they improve their position? If
     // we do a quick search after giving our opponet this free move and we still
     // find a move with a score better than beta, our opponet can't improve
     // their position and they wouldn't take this path, so we have a beta
     // cut-off and can prune  this branch.                      
-    //
-    //
+
     if (allowNull && (depth >= 3)
                   && !inCheck
                   && !pv_node
@@ -307,11 +341,9 @@ int negamax(int alpha, int beta, int depth)
         // restore board state
         takeBack();
 
-
         // reutrn 0 if time is up
         if (timedout)
             return 0;
-
 
         // fail-hard beta cutoff
         if (score >= beta)
@@ -319,20 +351,13 @@ int negamax(int alpha, int beta, int depth)
     }
 
 
-    // Step 5. Razoring
-    //
-    // If eval is really low check with qsearch if it can exceed alpha, if it
-    // can't, return a fail low.
 
-    /*
-    if (!pv_node && (depth <= 7) 
-                 && (static_eval < alpha - 348 - 258 * depth * depth))
-    {
-        int new_score = qsearch(alpha - 1, alpha);
-        if (new_score < alpha)
-            return new_score;
-    }
-    */
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Step 7. Razoring
+    //
+    // If eval is really low, check with qsearch if it can exceed alpha, if it
+    // can't, return a fail low.
     
     if (!pv_node && !inCheck && (depth <= 3))
     {
@@ -390,8 +415,15 @@ int negamax(int alpha, int beta, int depth)
     // number of moves searched so far, within a move list
     int moves_searched = 0;
 
-    
-    // loop over moves and search the score for each move
+   
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Step 8. Search all moves
+    //
+    // After doing all the early pruning, we jump into the main loop of going
+    // through the moves available and search the score for each of them.
+
     for (int count = 0; count < MoveList.count; count++)
     {
         // preserve board state
@@ -428,18 +460,29 @@ int negamax(int alpha, int beta, int depth)
         legal++;
 
 
-        // Step 6. Full-width and full-depth search, if no moves searched yet
+
+        ////////////////////////////////////////////////////////////////////////
+        //
+        // Step 9. Full-width and full-depth search
+        //
+        // If this is the first move we are searching, we run a full search to
+        // obtain a score that will guide the next searches.
+
         if (moves_searched == 0)
             score = -negamax(-beta, -alpha, depth - 1);
 
-        
-        // Step 7. Late Move Reductions (LMR)
+
+
+
+        ////////////////////////////////////////////////////////////////////////
         //
-        // Configure late-move reductions (LMR): assuming that the moves in the
-        // list are ordered from potential best to potential worst, analyzing 
-        // the first moves is more critical than the last ones. Therefore, 
-        // using LMR we analyze the first 3 moves in full-depth, but cut down
-        // the analysis depth for the rest of moves.
+        // Step 10. Late move reductions (LMR)
+        //
+        // Assuming that the moves in the list are ordered from potential best
+        // to potential worst, analyzing the first moves is more critical than
+        // the last ones. Therefore, using LMR we analyze the first 3 moves in
+        // full-depth, but cut down the analysis depth for the rest of moves.
+
         else
         {
             if(
@@ -457,21 +500,27 @@ int negamax(int alpha, int beta, int depth)
                 score = alpha + 1;
                
 
-            // Step 8. Principal Variation Search
+
+            ////////////////////////////////////////////////////////////////////
+            //
+            // Step 11. Principal Variation search (PVS)
+            //
+            // Once you've found a move with a score that is between alpha and
+            // beta, the rest of the moves are searched with the goal of proving
+            // that they are all bad. It's possible to do this a bit faster than
+            // a search that worries that one of the remaining moves might be good.
+
             if (score > alpha)
             {
-                // Once you've found a move with a score that is between alpha and beta,
-                // the rest of the moves are searched with the goal of proving that they are all bad.
-                // It's possible to do this a bit faster than a search that worries that one
-                // of the remaining moves might be good. */
                 score = -negamax(-alpha - 1, -alpha, depth - 1);
         
 
-                // If the algorithm finds out that it was wrong, and that one of the
-                // subsequent moves was better than the first PV move, it has to search again,
-                // in the normal alpha-beta manner.  This happens sometimes, and it's a waste of time,
-                // but generally not often enough to counteract the savings gained from doing the
-                // "bad move proof" search referred to earlier.
+                // If the algorithm finds out that it was wrong, and that one of
+                // the subsequent moves was better than the first PV move, it
+                // has to search again, in the normal alpha-beta manner. This
+                // happens sometimes, and it's a waste of time, but generally
+                // not often enough to counteract the savings gained from doing
+                // the "bad move proof" search referred to earlier.
                 if ((score > alpha) && (score < beta))
                     score = -negamax(-beta, -alpha, depth - 1);
             }
@@ -536,7 +585,6 @@ int negamax(int alpha, int beta, int depth)
             if (score >= beta)
             {
                 // store hash entry with the score equal to beta, only if not null move
-                //if (bestmove)
                 TT::save(beta, bestmove, depth, hash_type_beta);
                
 
@@ -555,7 +603,12 @@ int negamax(int alpha, int beta, int depth)
     }
 
 
-    // checkmate or stalemate detection
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Step 12. End-of-game check
+    //
+    // If there are no legal moves, it's either checkmate or stalemate.
+
     if (legal == 0)
     {
         // king is in check: return mating score (closest distance to mate)
@@ -570,7 +623,6 @@ int negamax(int alpha, int beta, int depth)
 
 
     // store hash entry with the score equal to alpha, only if not null move
-    //if (bestmove)
     TT::save(alpha, bestmove, depth, hash_type);
 
     
@@ -644,9 +696,15 @@ void search()
         score = negamax(alpha, beta, current_depth);
 
 
-        // Aspiration Window: search with a narrow window, keep narrowing it
-        // after each iteration. However, if the score falls outside the window,
-        // we must try again with a full-width window (and the same depth).
+
+        ////////////////////////////////////////////////////////////////////////
+        //
+        // Aspiration Window
+        //
+        // Search with a narrow window, keep narrowing it after each iteration.
+        // However, if the score falls outside the window, we must try again
+        // with a full-width window (and the same depth).
+
         if ((score <= alpha) || (score >= beta))
         {
             alpha = -ValueInfinite;
@@ -655,7 +713,7 @@ void search()
             continue;
         }
 
-        
+
         // set up the window for the next iteration
         alpha = score - AspirationWindow;
         beta  = score + AspirationWindow;
