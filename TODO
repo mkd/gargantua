@@ -1,28 +1,52 @@
 TODO
 ====
 
-Before release 1.0:
--------------------
-- fine-tuning — tests with tournaments:
-    - Aspiration window size: 25, 50, 75, 100, etc.
-    - QSearch updates pv_table vs. only update in negamax
-    - Store null move in TT vs. don't store it -- if (bestmove) TT::save()
-    - allowNull vs. (always allow)
-    - don't do Null move if !pv_node  vs.  do it always (also in PV)
-    - Razor ala Stockfish vs. Razor ala BBC vs. BOTH
-    - Razor bonuses (125, 175, etc)
+Before v1.0 release:
+====================
+- Clean up code (e.g., thread_local, futil)
+- Commit latest Aspiration Window 
+- Futility pruning (Blunder, Stockfish)
+    - Futility Pruning - Chessprogramming wiki: https://www.chessprogramming.org/Futility_Pruning
+    - MadChess 2.0 Beta Build 037 (Futility Pruning): https://www.madchess.net/2014/12/29/madchess-2-0-beta-build-37-futility-pruning/
+- review Chess0 skeleton 
+- review Stockfish skeleton 
+- other possible optimizations 
+- Try Late move pruning:
+    - MadChess 3.0 Beta 6f3d17a (Late Move Pruning): https://www.madchess.net/2020/02/08/madchess-3-0-beta-4478cb8-late-move-pruning/
+- Check benchmark and nodes vs Blunder, Crafty, Chess0 and BBC-1.4
+- Gargantua 1.0 >= bbc-1.4
+(Compile both and test against each other) 
+- Release 1.0
+- Submit to CCRL
 
-- TC 120+1s inc stays in minute 01:00 and doesn't use the time, should use it!
-- futility pruning (e.g., Blunder)
-- Late move pruning (e.g., Blunder)
-- other reductions/search optimizations (look at list from Blunder and Stockfish, in their search)
-- bug: cannot mate KRK when short in time
-  --> cannot mate me! position: 8/8/2k5/8/8/6R1/5K2/8 w - - 0 1
+
+
+Backlog for v1.1:
+=================
+- Sygyzy tablebases 
+    - Fathom/fathom.c at master · jdart1/Fathom · GitHub
+- Static Exchange Evaluation
+- book / learn solution, using Stockfish 14.1+ depth=50 multipv=8 (engine vs external solution) 
 
 
 
-Infinity wars:
---------------
+Backlog for v2.0:
+=================
+- Try dperft() with async for each move. How much faster? Does it count the total no. of nodes?
+- Multi-threaded search
+- Pondering 
+
+
+Backlog for v3.0:
+=================
+- New NNUE (half-k) architecture
+- Use incremental / accumulator for performance (18% faster)
+- More up-to-date library --> https://github.com/jdart1/nnue
+
+￼
+
+Notes for future features:
+==========================
 - pondering: https://web.archive.org/web/20071027053527/http://www.brucemo.com/compchess/programming/pondering.htm
   - use async to ponder (make move and search infinite to fill the cache) 
 
@@ -36,12 +60,7 @@ Infinity wars:
     - Then start to add threads. 
     - thread_local for variables used by all search threads
 
-- static exchange evaluation (SEE) for ordering captures in qsearch()
-
-- book: built-in vs. external
-  r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -  | d5e6 e2a6
-
-- improve NNUE:
-  - Update to newest library (half-K)
-  - Use incremental / accumulator for performance
-  - https://github.com/jdart1/nnue
+- book / learn:
+    - built-in vs. external
+    - Stockfish/src/book.py - depth=50 multipv=8
+    - r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -  | d5e6 e2a6
