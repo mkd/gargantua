@@ -93,7 +93,9 @@ bool scorePV   = false;
 bool allowNull = true;
 
 
+
 // Late move pruning margins, depending on the depth we are at
+std::array<int, 9> FutilityMargins = {0, 100, 160, 220, 280, 340, 400, 460, 520};
 std::array<int, 4> LateMovePruningMargins = { 0, 8, 12, 24};
 
 
@@ -172,10 +174,14 @@ int negamax(int alpha, int beta, int depth)
     bool pv_node = ((beta - alpha) > 1);
 
 
+    // flag to detect whether we can prune futile moves
+    bool canFutilityPrune = false;
+
+
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Step 1. Mate distance pruning (taken from Stockfish)
+    // Step 1. Mate Distance Pruning (MDP) -- taken from Stockfish
     //
     // Even if we mate at the next move our score would be at best
     // mate_in(ply+1), but if alpha is already bigger because a
@@ -183,6 +189,8 @@ int negamax(int alpha, int beta, int depth)
     // search because we will never beat the current alpha. Same logic but with
     // reversed signs applies also in the opposite condition of being mated
     // instead of giving mate. In this case return a fail-high score.
+    //
+    // @see https://www.chessprogramming.org/Mate_Distance_Pruning
 
     alpha = std::max(mated_in(ply), alpha);
     beta  = std::min(mate_in(ply+1), beta);
@@ -198,6 +206,8 @@ int negamax(int alpha, int beta, int depth)
     // Try to find the current node from the Transposition Table and return
     // the score immediately. We don't look in the hash table if we are in the
     // Principal Variation nodes.
+    //
+    // @see https://www.chessprogramming.org/Transposition_Table
 
     if (ply && ((score = TT::probe(alpha, beta, bestmove, depth)) != no_hash_found) && !pv_node)
         return score;
@@ -225,11 +235,14 @@ int negamax(int alpha, int beta, int depth)
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Step 3. In-check extension
+    // Step 3. Check Extension
     // 
     // Extend the search depth by one if we're in check, so that we're less
     // likely to make a tactical mistake. I.e., don't call quiescence search
     // while in check.
+    //
+    // @see https://www.chessprogramming.org/Check_Extensions
+
     if (inCheck)
         depth++;
 
@@ -237,27 +250,30 @@ int negamax(int alpha, int beta, int depth)
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Step 4. Quiescent search
+    // Step 4. Quiescence Search
     //
     // If we reach depth = 0, we are at a leaf node. Instead of returning a
     // static evaluation, go through all captures and promotions until the
     // position is stable enough; and return its score.
+    //
+    // @see https://www.chessprogramming.org/Quiescence_Search
 
     if (depth == 0)
         return qsearch(alpha, beta);
 
 
 
-
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Step 5. Static Null Move Pruning
+    // Step 5. Static Null Move Pruning (i.e., Reverse Futility Pruning)
     // 
     // If our current material score is so good that even if we give
     // ourselves a big hit materially and subtract a large amount of our
     // material score (the "score margin") and our material score is still
     // greater than beta, we assume this node will fail-high and we can
-    // prune its branch.   
+    // prune its branch.
+    //
+    // @see https://www.chessprogramming.org/Reverse_Futility_Pruning
 
 	int static_eval = evaluate();
     
@@ -270,7 +286,7 @@ int negamax(int alpha, int beta, int depth)
 		int eval_margin = StaticNullPruningMargin * depth;
 		
 		// evaluation margin substracted from static evaluation score
-		if (static_eval - eval_margin >= beta)
+		if ((static_eval - eval_margin) >= beta)
 			return beta;
 	}
 
@@ -284,7 +300,9 @@ int negamax(int alpha, int beta, int depth)
     // we do a quick search after giving our opponet this free move and we still
     // find a move with a score better than beta, our opponet can't improve
     // their position and they wouldn't take this path, so we have a beta
-    // cut-off and can prune  this branch.                      
+    // cut-off and can prune  this branch.
+    //
+    // @see https://www.chessprogramming.org/Null_Move_Pruning
 
     if (allowNull && (depth >= 3)
                   && !inCheck
@@ -352,12 +370,37 @@ int negamax(int alpha, int beta, int depth)
 
 
 
+    //////////////////////////////////////////////////////////////////////////
+	// 
+    // Step 7. Futility Pruning Detection
+    // 
+    // If we're close to the horizon, and even with a large margin the static
+    // evaluation can't be raised above alpha, we're probably in a fail-low
+    // node, and many moves can be probably be pruned. So set a flag so we
+    // don't waste time searching moves that suck and probably don't even have
+    // a chance of raising alpha.
+    //
+    // @see https://www.chessprogramming.org/Futility_Pruning
+
+    if ((ply > 0) && (depth <= 8)
+                  && !pv_node
+                  && !inCheck
+                  && (alpha < MateScore))
+    {
+        if ((static_eval + FutilityMargins[depth]) <= alpha)
+			canFutilityPrune = true;
+    }
+
+
+
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Step 7. Razoring
+    // Step 8. Razoring
     //
     // If eval is really low, check with qsearch if it can exceed alpha, if it
     // can't, return a fail low.
+    //
+    // @see https://www.chessprogramming.org/Razoring
     
     if (!pv_node && !inCheck && (depth <= 3))
     {
@@ -377,7 +420,7 @@ int negamax(int alpha, int beta, int depth)
                 new_score = qsearch(alpha, beta);
                 
                 // return quiescence score if it's greater then static evaluation score
-                return std::max(new_score,score);
+                return std::max(new_score, score);
             }
             
             // add second bonus to static evaluation
@@ -419,7 +462,7 @@ int negamax(int alpha, int beta, int depth)
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Step 8. Search all moves
+    // Step 9. Search all moves
     //
     // After doing all the early pruning, we jump into the main loop of going
     // through the moves available and search the score for each of them.
@@ -463,7 +506,7 @@ int negamax(int alpha, int beta, int depth)
 
         ////////////////////////////////////////////////////////////////////////
         //
-        // Step 9. Full-width and full-depth search
+        // Step 10. Full-width and full-depth search
         //
         // If this is the first move we are searching, we run a full search to
         // obtain a score that will guide the next searches.
@@ -474,17 +517,47 @@ int negamax(int alpha, int beta, int depth)
 
 
 
-        ////////////////////////////////////////////////////////////////////////
-        //
-        // Step 10. Late move reductions (LMR)
-        //
-        // Assuming that the moves in the list are ordered from potential best
-        // to potential worst, analyzing the first moves is more critical than
-        // the last ones. Therefore, using LMR we analyze the first 3 moves in
-        // full-depth, but cut down the analysis depth for the rest of moves.
-
         else
         {
+            ////////////////////////////////////////////////////////////////////////
+            // 
+            // Step 11. Futility Pruning on current move
+            // 
+            // If we're close to the horizon, and even with a large margin the static
+            // evaluation can't be raised above alpha, we're probably in a fail-low
+            // node, and many moves can be probably be pruned. So set a flag so we
+            // don't waste time searching moves that suck and probably don't even have
+            // a chance of raising alpha.
+            //
+            // @see https://www.chessprogramming.org/Futility_Pruning
+
+            if (canFutilityPrune && (legal > 1))
+            {
+                if (!inCheck  && !getPromo(MoveList.moves[count])
+                              && !getMoveCapture(MoveList.moves[count]))
+                {
+                    // undo and skip move
+                    takeBack();
+                    ply--;
+                    repetition_index--;
+                    continue;
+                }
+            }
+
+
+
+            ////////////////////////////////////////////////////////////////////
+            //
+            // Step 12. Late move reductions (LMR)
+            //
+            // Assuming that the moves in the list are ordered from potential
+            // best to potential worst, analyzing the first moves is more
+            // critical than the last ones. Therefore, using LMR we analyze the
+            // first 3 moves in full-depth, but cut down the analysis depth for
+            // the rest of moves.
+            //
+            // @see https://www.chessprogramming.org/Late_Move_Reductions
+
             if(
                 moves_searched >= LMRFullDepthMoves &&
                 depth >= LMRReductionLimit &&
@@ -503,7 +576,7 @@ int negamax(int alpha, int beta, int depth)
 
             ////////////////////////////////////////////////////////////////////
             //
-            // Step 11. Principal Variation search (PVS)
+            // Step 13. Principal Variation search (PVS)
             //
             // Once you've found a move with a score that is between alpha and
             // beta, the rest of the moves are searched with the goal of proving

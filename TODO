@@ -3,16 +3,18 @@ TODO
 
 Before v1.0 release:
 ====================
-- Clean up code (e.g., thread_local, futil)
-- Commit latest Aspiration Window 
-- Futility pruning (Blunder, Stockfish)
-    - Futility Pruning - Chessprogramming wiki: https://www.chessprogramming.org/Futility_Pruning
-    - MadChess 2.0 Beta Build 037 (Futility Pruning): https://www.madchess.net/2014/12/29/madchess-2-0-beta-build-37-futility-pruning/
+- Review futility pruning
+    - https://www.madchess.net/2014/12/29/madchess-2-0-beta-build-37-futility-pruning/
+    - Test play:
+      1. Ply > 0  vs.  Ply > 1   vs.  Play > 4   (all with depth < 8)
+      2. Futility no promo/capture vs. pawn moves and castles
+      3. Best futility vs. No futility
+    - other conditions for futility? Check Stockfish and Blunder
+- Try Late move pruning:
+    - MadChess 3.0 Beta 6f3d17a (Late Move Pruning): https://www.madchess.net/2020/02/08/madchess-3-0-beta-4478cb8-late-move-pruning/
 - review Chess0 skeleton 
 - review Stockfish skeleton 
 - other possible optimizations 
-- Try Late move pruning:
-    - MadChess 3.0 Beta 6f3d17a (Late Move Pruning): https://www.madchess.net/2020/02/08/madchess-3-0-beta-4478cb8-late-move-pruning/
 - Check benchmark and nodes vs Blunder, Crafty, Chess0 and BBC-1.4
 - Gargantua 1.0 >= bbc-1.4
 (Compile both and test against each other) 
