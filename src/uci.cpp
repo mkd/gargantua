@@ -391,9 +391,7 @@ void UCI::setOption(istringstream& is)
 
     // option name Clear Hash type button
     else if (name == "Clear Hash")
-    {
         TT::clear();
-    }
 
 
     // option name Contempt type spin 
@@ -520,10 +518,7 @@ void UCI::loop(int argc, char* argv[])
 
         // "position": setup a FEN position and make moves
         else if (token == "position")
-        {
             UCI::position(is);
-            TT::clear();
-        }
 
 
         // "ucinewgame" command: start
