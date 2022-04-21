@@ -1,5 +1,4 @@
 /*
-
   This file is part of Gargantua, a UCI chess engine with NNUE evaluation
   derived from Chess0, and inspired by Code Monkey King's bbc-1.4.
      
@@ -95,8 +94,7 @@ bool allowNull = true;
 
 
 // Late move pruning margins, depending on the depth we are at
-std::array<int, 9> FutilityMargins = {0, 100, 160, 220, 280, 340, 400, 460, 520};
-std::array<int, 4> LateMovePruningMargins = { 0, 8, 12, 24};
+//std::array<int, 4> LateMovePruningMargins = { 0, 8, 12, 24};
 
 
 
@@ -162,7 +160,6 @@ int negamax(int alpha, int beta, int depth)
 
     // if the position is a draw, don't search anymore
     if (ply && isDraw())
-        //return DRAWSCORE;
         return contempt();
 
 
@@ -214,19 +211,23 @@ int negamax(int alpha, int beta, int depth)
 
 
 
+    // If the Transposition Table did not return a hit, prepare for a more
+    // comprehensive search by setting up the PV triangular array, resetting
+    // the legal move counter to zero and increasing the nodes visited.
+    //
+    // Also, verify if the current position is in check to detect mate and
+    // decide whether to search deeper (check extension).
+
     // init PV length
     pv_length[ply] = ply;
-
 
     // number of legal moves found
     int legal = 0;
 
-
     // increment nodes count
     nodes++;
 
-
-    // is king in check? --> needed for dectecting mate and in-check extension
+    // is king in check? --> needed for detecting mate and in-check extension
     bool inCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
                                                             ls1b(bitboards[k]),
                                                             sideToMove ^ 1);
@@ -254,7 +255,7 @@ int negamax(int alpha, int beta, int depth)
     //
     // If we reach depth = 0, we are at a leaf node. Instead of returning a
     // static evaluation, go through all captures and promotions until the
-    // position is stable enough; and return its score.
+    // position is stable enough; and then return its score.
     //
     // @see https://www.chessprogramming.org/Quiescence_Search
 
@@ -265,7 +266,21 @@ int negamax(int alpha, int beta, int depth)
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Step 5. Static Null Move Pruning (i.e., Reverse Futility Pruning)
+    // Step 5. Static Evaluation calculation
+    //
+    // In the following steps, we try to prune futile moves or estimate whether
+    // a full search will be of any value. For this purpose, we need to know
+    // what is the current static evaluation of the position. This will be then
+    // used in conjunction with different margins and bonuses to check whether
+    // we can fail low or high immediately without ending in the full search.
+
+	int StaticEval = evaluate();
+
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Step 6. Reverse Futility Pruning (i.e., Static Null Pruning)
     // 
     // If our current material score is so good that even if we give
     // ourselves a big hit materially and subtract a large amount of our
@@ -274,10 +289,7 @@ int negamax(int alpha, int beta, int depth)
     // prune its branch.
     //
     // @see https://www.chessprogramming.org/Reverse_Futility_Pruning
-
-	int static_eval = evaluate();
     
-    // evaluation pruning / static null move pruning
 	if ((depth < 3) && !pv_node
                     && !inCheck
                     && (abs(beta - 1) > -ValueInfinite + 100))
@@ -286,15 +298,20 @@ int negamax(int alpha, int beta, int depth)
 		int eval_margin = StaticNullPruningMargin * depth;
 		
 		// evaluation margin substracted from static evaluation score
-		if ((static_eval - eval_margin) >= beta)
+		if ((StaticEval - eval_margin) >= beta)
 			return beta;
 	}
+
+    int RFPMargin = 64;
+    int EvalMargin = depth * RFPMargin;
+    if (depth < 9 && (StaticEval - EvalMargin) >= beta)
+			return (StaticEval - EvalMargin);
 
 
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Step 6. Null move pruning
+    // Step 7. Null move pruning
     //
 	// If our opponet is given a free move, can they improve their position? If
     // we do a quick search after giving our opponet this free move and we still
@@ -372,7 +389,7 @@ int negamax(int alpha, int beta, int depth)
 
     //////////////////////////////////////////////////////////////////////////
 	// 
-    // Step 7. Futility Pruning Detection
+    // Step 8. Futility Pruning Detection (extended futility: beyond depth == 1)
     // 
     // If we're close to the horizon, and even with a large margin the static
     // evaluation can't be raised above alpha, we're probably in a fail-low
@@ -384,10 +401,9 @@ int negamax(int alpha, int beta, int depth)
 
     if ((ply > 0) && (depth <= 8)
                   && !pv_node
-                  && !inCheck
-                  && (alpha < MateScore))
+                  && !inCheck)
     {
-        if ((static_eval + FutilityMargins[depth]) <= alpha)
+        if ((StaticEval + futility_margin(depth)) <= alpha)
 			canFutilityPrune = true;
     }
 
@@ -395,7 +411,7 @@ int negamax(int alpha, int beta, int depth)
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Step 8. Razoring
+    // Step 9. Razoring
     //
     // If eval is really low, check with qsearch if it can exceed alpha, if it
     // can't, return a fail low.
@@ -405,7 +421,7 @@ int negamax(int alpha, int beta, int depth)
     if (!pv_node && !inCheck && (depth <= 3))
     {
         // get static eval and add first bonus
-        score = static_eval + 125;
+        score = StaticEval + 125;
         
         // define new score
         int new_score;
@@ -462,7 +478,7 @@ int negamax(int alpha, int beta, int depth)
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Step 9. Search all moves
+    // Step 10. Search all moves
     //
     // After doing all the early pruning, we jump into the main loop of going
     // through the moves available and search the score for each of them.
@@ -499,6 +515,12 @@ int negamax(int alpha, int beta, int depth)
         }
 
 
+        // used for avoiding reductions on moves that give check
+        bool givesCheck = isSquareAttacked((sideToMove == White) ? ls1b(bitboards[K]) : 
+                                                                   ls1b(bitboards[k]),
+                                                                   sideToMove ^ 1);
+
+
         // increment legal moves
         legal++;
 
@@ -506,7 +528,7 @@ int negamax(int alpha, int beta, int depth)
 
         ////////////////////////////////////////////////////////////////////////
         //
-        // Step 10. Full-width and full-depth search
+        // Step 11. Full-width and full-depth search
         //
         // If this is the first move we are searching, we run a full search to
         // obtain a score that will guide the next searches.
@@ -516,12 +538,11 @@ int negamax(int alpha, int beta, int depth)
 
 
 
-
         else
         {
             ////////////////////////////////////////////////////////////////////////
             // 
-            // Step 11. Futility Pruning on current move
+            // Step 12. Futility Pruning on current move
             // 
             // If we're close to the horizon, and even with a large margin the static
             // evaluation can't be raised above alpha, we're probably in a fail-low
@@ -531,24 +552,35 @@ int negamax(int alpha, int beta, int depth)
             //
             // @see https://www.chessprogramming.org/Futility_Pruning
 
-            if (canFutilityPrune && (legal > 1))
+            if (false && canFutilityPrune && (legal > futility_move_count(depth)))
+            //if (canFutilityPrune && (legal > 1))
             {
-                if (!inCheck  && !getPromo(MoveList.moves[count])
-                              && !getMoveCapture(MoveList.moves[count]))
+                if (!givesCheck && (killers[0][ply] != MoveList.moves[count])
+                                && (killers[1][ply] != MoveList.moves[count])
+                                && (getMovePiece(MoveList.moves[count]) != P)
+                                && (getMovePiece(MoveList.moves[count]) != p)
+                                && !getPromo(MoveList.moves[count])
+                                && !getCastle(MoveList.moves[count])
+                                && !getMoveCapture(MoveList.moves[count]))
                 {
+
                     // undo and skip move
                     takeBack();
                     ply--;
                     repetition_index--;
+
                     continue;
                 }
             }
 
 
+            //// TODO: Late Move Pruning
+
+
 
             ////////////////////////////////////////////////////////////////////
             //
-            // Step 12. Late move reductions (LMR)
+            // Step 13. Late move reductions (LMR)
             //
             // Assuming that the moves in the list are ordered from potential
             // best to potential worst, analyzing the first moves is more
@@ -576,7 +608,7 @@ int negamax(int alpha, int beta, int depth)
 
             ////////////////////////////////////////////////////////////////////
             //
-            // Step 13. Principal Variation search (PVS)
+            // Step 14. Principal Variation search (PVS)
             //
             // Once you've found a move with a score that is between alpha and
             // beta, the rest of the moves are searched with the goal of proving

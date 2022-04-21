@@ -608,4 +608,24 @@ constexpr int mated_in(int ply)
 
 
 
+// futility_margin
+//
+// Calculate a futility margin based on a given depth.
+constexpr int futility_margin(int depth)
+{
+    return 168 * depth;
+}
+
+
+
+// futility_move_count
+//
+// Calculate how far in the sorted list of moves can we start pruning.
+constexpr int futility_move_count(int depth)
+{
+    return (3 + depth * depth) / 2;
+}
+
+
+
 #endif  //  SEARCH_H
