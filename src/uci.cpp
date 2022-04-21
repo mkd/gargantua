@@ -540,7 +540,10 @@ void UCI::loop(int argc, char* argv[])
 
         // "flip": flip the board when being printed
         else if (token == "flip")
+        {
             flip = !flip;
+            printBoard();
+        }
 
 
         // "help": print a list of non-UCI commands
