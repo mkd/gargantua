@@ -3,16 +3,10 @@ TODO
 
 Before v1.0 release:
 ====================
-- Test bench (300 games, TC 10min):
-  - Test one more time futility vs. classical (no futility)
-- Commit with futility
-- Try !givesCheck within LMR
-- Try Late move pruning (LMP):
-    - MadChess 3.0 Beta 6f3d17a (Late Move Pruning): https://www.madchess.net/2020/02/08/madchess-3-0-beta-4478cb8-late-move-pruning/
-    - Crafty: https://github.com/MichaelB7/Crafty/blob/5501aa243bcb5fcf170791dd240017675960d152/src/search.c#L540
-- review Stockfish skeleton 
-- other possible optimizations 
-- Run benchmark.py against Blunder, Crafty, Chess0 and BBC-1.4
+- Late Move Pruning (LMP)
+- LMR with !givesCheck
+- SF-redux
+- Koivisto aspiration window: d < 6 no aspiration, d > 5 windowSize = 25 or 50
 - Release 1.0
 - Submit to CCRL
 
@@ -22,7 +16,7 @@ Backlog for v1.1:
 =================
 - Sygyzy tablebases 
     - Fathom/fathom.c at master · jdart1/Fathom · GitHub
-- Static Exchange Evaluation
+- Static Exchange Evaluation (SEE)
 - book / learn solution, using Stockfish 14.1+ depth=50 multipv=8 (engine vs external solution) 
 
 
@@ -36,9 +30,9 @@ Backlog for v2.0:
 
 Backlog for v3.0:
 =================
-- New NNUE (half-k) architecture
-- Use incremental / accumulator for performance (18% faster)
-- More up-to-date library --> https://github.com/jdart1/nnue
+- Update NNUE to SFNNv5 architecture
+- Use incremental / accumulator for performance (~20% faster)
+- More up-to-date library? --> https://github.com/jdart1/nnue
 
 ￼
 

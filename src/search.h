@@ -62,8 +62,10 @@ using namespace std;
 #define MateScore       48000
 #define ValueInfinite   50000
 
-#define StaticNullPruningMargin      120
 
+
+
+// Default options (settings) at startup
 #define OptionsDefaultHashSize      1024 
 #define OptionsDefaultContempt        25
 #define OptionsContemptMin             0
