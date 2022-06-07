@@ -1,7 +1,7 @@
 Initial release v1.0
 ====================
 - Fully Bitboard-based implementation
-- Basic NNUE evaluation
+- Pure NNUE evaluation
 - Negamax with quiescent search
 - Basic UCI protocol support
 - Cross-compilation for Win64 platforms
@@ -15,3 +15,5 @@ Initial release v1.0
 - Razoring
 - Mate distance pruning
 - Futility pruning
+- Reverse futility prunning
+- Late move pruning

@@ -136,6 +136,7 @@ void resetLimits()
 //
 // Main alphabeta algorithm (Negamax) which relies on a Principal Variation
 // search.
+//
 int negamax(int alpha, int beta, int depth)
 {
     // reliability checks
@@ -408,6 +409,16 @@ int negamax(int alpha, int beta, int depth)
 
 
 
+    //////////////////////////////////////////////////////////////////////////
+	// 
+    // Step 10. No-hashmove reduction (taken from Stockfish)
+    //
+    // If the position is not in TT, decrease depth by 1 (~3 Elo)
+    if (pv_node && (depth >= 3) && !bestmove)
+        depth--;
+
+
+
     // All-moves search begins here when in check, or after all forward
     // pruning techniques
     moves_loop:
@@ -534,14 +545,11 @@ int negamax(int alpha, int beta, int depth)
             // completing pruning such moves without searching them. Cauation needs //
             // to be taken we don't miss a tactical move however, so the further    //
             // away we prune from the horizon, the "later" the move needs to be.    //
-/*
+
 		    if ((ply > 0) && (depth <= 3)
-                          && (alpha > (-MateScore + 300))
                           && !pv_node
                           && !inCheck
-                          && !givesCheck
                           && !getMoveCapture(MoveList.moves[count])
-                          && !getPromo(MoveList.moves[count])
                           && (legal > LateMovePruningMargins[depth]))
             {
                 // undo the current move and skip to the next one
@@ -551,6 +559,20 @@ int negamax(int alpha, int beta, int depth)
 
                 continue;
 			}
+
+
+
+            // TODO: see()-based pruning
+            /*
+            if ((ply > 0) && (see() < 0))
+            {
+                // undo the current move and skip to the next one
+                takeBack();
+                ply--;
+                repetition_index--;
+
+                continue;
+            }
             */
 
 
@@ -567,13 +589,11 @@ int negamax(int alpha, int beta, int depth)
             //
             // @see https://www.chessprogramming.org/Late_Move_Reductions
 
-            if(
-                legal >= LMRFullDepthMoves &&
-                depth >= LMRReductionLimit &&
-                !inCheck && 
-                !getMoveCapture(MoveList.moves[count]) &&
-                !getPromo(MoveList.moves[count])
-              )
+            if ((ply > 0) && legal >= LMRFullDepthMoves
+                          && depth >= LMRReductionLimit
+                          && !inCheck
+                          && !getMoveCapture(MoveList.moves[count])
+                )
                 score = -negamax(-alpha - 1, -alpha, depth - 2);
 
             
@@ -901,6 +921,10 @@ int qsearch(int alpha, int beta)
     // loop over moves within a movelist
     for (int count = 0; count < MoveList.count; count++)
     {
+        // TODO: see()-based pruning
+        // if (see(MoveList[count]) < 0) continue;
+
+
         // preserve board state
         saveBoard();
        
