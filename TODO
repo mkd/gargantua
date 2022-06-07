@@ -1,11 +1,10 @@
 TODO
 ====
 
+
+
 Before v1.0 release:
 ====================
-- Late Move Pruning (LMP)
-- LMR with !givesCheck
-- SF-redux
 - Koivisto aspiration window: d < 6 no aspiration, d > 5 windowSize = 25 or 50
 - Release 1.0
 - Submit to CCRL
@@ -14,32 +13,26 @@ Before v1.0 release:
 
 Backlog for v1.1:
 =================
+- Static Exchange Evaluation (SEE)
+    - e.g., Blunder uses See() to prune moves in qsearch()
+    - it can slash up to 50% of the nodes searched
 - Sygyzy tablebases 
     - Fathom/fathom.c at master · jdart1/Fathom · GitHub
-- Static Exchange Evaluation (SEE)
-- book / learn solution, using Stockfish 14.1+ depth=50 multipv=8 (engine vs external solution) 
+- book
+    - Stockfish 15+ depth=40 multipv=10
+    - built-in vs. external
+    - Stockfish/src/book.py - depth=40 multipv=10
+    - format: r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -  d5e6 456 e2a6 -201 ...
 
 
 
 Backlog for v2.0:
 =================
 - Try dperft() with async for each move. How much faster? Does it count the total no. of nodes?
-- Multi-threaded search
+
 - Pondering 
-
-
-Backlog for v3.0:
-=================
-- Update NNUE to SFNNv5 architecture
-- Use incremental / accumulator for performance (~20% faster)
-- More up-to-date library? --> https://github.com/jdart1/nnue
-
-￼
-
-Notes for future features:
-==========================
-- pondering: https://web.archive.org/web/20071027053527/http://www.brucemo.com/compchess/programming/pondering.htm
-  - use async to ponder (make move and search infinite to fill the cache) 
+    - https://web.archive.org/web/20071027053527/http://www.brucemo.com/compchess/programming/pondering.htm
+    - use async to ponder (make move and search infinite to fill the cache) 
 
 - lazy SMP: try with thread_local (minimum modifications). Otherwise:
     - call search() with async Threads-1 times 
@@ -51,7 +44,10 @@ Notes for future features:
     - Then start to add threads. 
     - thread_local for variables used by all search threads
 
-- book / learn:
-    - built-in vs. external
-    - Stockfish/src/book.py - depth=50 multipv=8
-    - r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -  | d5e6 e2a6
+
+
+Backlog for v3.0:
+=================
+- Update NNUE to SFNNv5 architecture
+- Use incremental / accumulator for performance (~20% faster)
+- More up-to-date library? --> https://github.com/jdart1/nnue

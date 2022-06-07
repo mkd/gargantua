@@ -88,30 +88,30 @@ to improve the current source code in any way, please go ahead!
 
 
 
-# Features
+# Search features and optimizations
 - **Bitboards:** 
   https://en.wikipedia.org/wiki/Bitboard
 
-- **Principal Variation Search:** 
-  https://en.wikipedia.org/wiki/Principal_variation_search
+- **Universal Chess Interface (UCI) protocol:**
+  http://wbec-ridderkerk.nl/html/UCIProtocol.html
 
-- **Iterative Deepening:**:
-  https://en.wikipedia.org/wiki/Iterative_deepening_depth-first_search
-
-- **Alpha-beta pruning:**
-  https://en.wikipedia.org/wiki/Alpha–beta_pruning
- 
-- **Quiescence search:**
-  https://en.wikipedia.org/wiki/Quiescence_search
-
-- **Null Move Reductions:** 
-  https://en.wikipedia.org/wiki/Null-move_heuristic
+- **NNUE evaluation function:** an evaluation function based on a neural
+  network trained with millions of games played by Stockfish 11 at a
+  moderate depth. More here: https://www.chessprogramming.org/NNUE
 
 - **Aspiration Windows:**
   https://www.chessprogramming.org/Aspiration_Windows
 
-- **Trasnposition tables:** 
+- **Mate Distance Pruning (MDP):**
+  https://www.chessprogramming.org/Mate_Distance_Pruning
+
+- **Transposition Table (TT):**
   https://en.wikipedia.org/wiki/Transposition_table
+
+- **Check Extension:**
+
+- **Quiescence search:**
+  https://en.wikipedia.org/wiki/Quiescence_search
 
 - **Late Move Reductions (LMR):** 
   https://www.chessprogramming.org/Late_Move_Reductions
@@ -122,16 +122,24 @@ to improve the current source code in any way, please go ahead!
 - **Futility Pruning**
   https://www.chessprogramming.org/Futility_Pruning
 
-- **Universal Chess Interface (UCI) protocol:**
-  http://wbec-ridderkerk.nl/html/UCIProtocol.html
+- **Reverse Futility Pruning (i.e., Static Null Move Pruning):**
+  https://www.chessprogramming.org/Reverse_Futility_Pruning
 
-- **NNUE evaluation function:** an evaluation function based on a neural
-  network trained with millions of games played by Stockfish 11 at a
-  moderate depth. More here: https://www.chessprogramming.org/NNUE
+- **Principal Variation Search:** 
+  https://en.wikipedia.org/wiki/Principal_variation_search
+
+- **Iterative Deepening:**:
+  https://en.wikipedia.org/wiki/Iterative_deepening_depth-first_search
+
+- **Alpha-beta pruning:**
+  https://en.wikipedia.org/wiki/Alpha–beta_pruning
+ 
+- **Null Move Reductions:** 
+  https://en.wikipedia.org/wiki/Null-move_heuristic
 
 
 
-# Testing improvements
+# Testing new features
 Every time a new feature is added to the codebase, with the goal of improving 
 Gargantua's playing strength, it needs to be tested against the latest stable
 version (master branch). The goal of the test is to see whether the improvement

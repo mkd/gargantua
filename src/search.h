@@ -352,6 +352,9 @@ static inline int scoreMove(int move)
 
 
     // score capture move
+    //
+    // TODO: replace with static exchange evaluation -- see()
+    //       --> sort moves based on see() value + 10000
     else if (getMoveCapture(move))
     {
         // init target piece
