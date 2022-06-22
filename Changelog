@@ -17,3 +17,4 @@ Initial release v1.0
 - Futility pruning
 - Reverse futility prunning
 - Late move pruning
+- No hashmove reductions
