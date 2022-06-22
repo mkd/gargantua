@@ -5,7 +5,7 @@ TODO
 
 Before v1.0 release:
 ====================
-- Koivisto aspiration window: d < 6 no aspiration, d > 5 windowSize = 25 or 50
+- dynamic compilation flags avx, etc. (e.g., from RubiChess Makefile)
 - Release 1.0
 - Submit to CCRL
 

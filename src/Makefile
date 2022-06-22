@@ -39,7 +39,6 @@ WC	:= x86_64-w64-mingw32-g++
 DEFINES =
 DEFINES += -DIS_64BIT
 ifeq ($(COMP),$(filter $(COMP),gcc clang win icpc))
-  DEFINES += -DUSE_AVX512 -mavx512f -mavx512bw
   DEFINES += -DUSE_AVX2 -mavx2
   DEFINES += -DUSE_BMI1 -mbmi -mlzcnt
   DEFINES += -DUSE_BMI2 -mbmi2
