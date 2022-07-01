@@ -5,9 +5,8 @@ TODO
 
 Backlog for v1.1:
 =================
-- Static Exchange Evaluation (SEE)
-    - e.g., Blunder uses See() to prune moves in qsearch()
-    - it can slash up to 50% of the nodes searched
+- SEE pruning
+- MVV/LVA+SEE vs. only-SEE
 - Sygyzy tablebases 
     - Fathom/fathom.c at master · jdart1/Fathom · GitHub
 - book

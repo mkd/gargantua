@@ -100,6 +100,14 @@ constexpr int RazorMargin = 339;
 
 
 
+// Material value of pieces
+std::array<int, 13> PieceValues = { 100, 300, 300, 500, 900, ValueInfinite,
+                                    100, 300, 300, 500, 900, ValueInfinite, 0 };
+
+
+
+
+
 // initSearch
 //
 // Intialize the search parameters to the default ones.
@@ -287,9 +295,9 @@ int negamax(int alpha, int beta, int depth)
     //
     // @see https://www.chessprogramming.org/Razoring
 
-    if (!pv_node && (ply > 0)
-                 && (depth < 2)
-                 && ((StaticEval + RazorMargin) <= alpha))
+    if (ply && !pv_node
+            && (depth < 2)
+            && ((StaticEval + RazorMargin) <= alpha))
     {
         return qsearch(alpha, beta);
     }
@@ -374,8 +382,8 @@ int negamax(int alpha, int beta, int depth)
 
 
         // undo the null move
-        ply--;
         repetition_index--;
+        ply--;
         takeBack();
 
 
@@ -403,7 +411,7 @@ int negamax(int alpha, int beta, int depth)
     //
     // @see https://www.chessprogramming.org/Futility_Pruning
 
-    if (!pv_node && (ply > 0) && (depth <= 8))
+    if (ply && !pv_node && (depth <= 8))
         if ((StaticEval + futility_margin(depth)) <= alpha)
 			canFutilityPrune = true;
 
@@ -470,8 +478,8 @@ int negamax(int alpha, int beta, int depth)
         if (!makeMove(MoveList.moves[count]))
         {
             // in case of illegal move, undo it and skip to the next one
-            ply--;
             repetition_index--;
+            ply--;
             takeBack();
             
             continue;
@@ -526,9 +534,9 @@ int negamax(int alpha, int beta, int depth)
                                 && !getMoveCapture(MoveList.moves[count]))
                 {
                     // undo the current move and skip to the next one
-                    takeBack();
-                    ply--;
                     repetition_index--;
+                    ply--;
+                    takeBack();
 
                     continue;
                 }
@@ -540,40 +548,25 @@ int negamax(int alpha, int beta, int depth)
             // 
             // Step 14: Late Move Pruning (LMP)
             //
-            // LATE MOVE PRUNING: Because of move ordering, moves late in the move  //
-            // list are not very likely to be interesting, so save time by          //
-            // completing pruning such moves without searching them. Cauation needs //
-            // to be taken we don't miss a tactical move however, so the further    //
-            // away we prune from the horizon, the "later" the move needs to be.    //
+            // Because of move ordering, moves late in the move list are not very
+            // likely to be interesting, so save time by completing pruning such
+            // moves without searching them. Cauation needs to be taken we don't
+            // miss a tactical move however, so the further away we prune from
+            // the horizon, the "later" the move needs to be.
 
-		    if ((ply > 0) && (depth <= 3)
-                          && !pv_node
-                          && !inCheck
-                          && !getMoveCapture(MoveList.moves[count])
-                          && (legal > LateMovePruningMargins[depth]))
+		    if (ply && !pv_node
+                    && (depth <= 3)
+                    && !inCheck
+                    && !getMoveCapture(MoveList.moves[count])
+                    && (legal > LateMovePruningMargins[depth]))
             {
                 // undo the current move and skip to the next one
-                takeBack();
-                ply--;
                 repetition_index--;
+                ply--;
+                takeBack();
 
                 continue;
 			}
-
-
-
-            // TODO: see()-based pruning
-            /*
-            if ((ply > 0) && (see() < 0))
-            {
-                // undo the current move and skip to the next one
-                takeBack();
-                ply--;
-                repetition_index--;
-
-                continue;
-            }
-            */
 
 
 
@@ -589,11 +582,10 @@ int negamax(int alpha, int beta, int depth)
             //
             // @see https://www.chessprogramming.org/Late_Move_Reductions
 
-            if ((ply > 0) && legal >= LMRFullDepthMoves
-                          && depth >= LMRReductionLimit
-                          && !inCheck
-                          && !getMoveCapture(MoveList.moves[count])
-                )
+            if (ply && (legal >= LMRFullDepthMoves)
+                    && (depth >= LMRReductionLimit)
+                    && !inCheck
+                    && !getMoveCapture(MoveList.moves[count]))
                 score = -negamax(-alpha - 1, -alpha, depth - 2);
 
             
@@ -631,8 +623,8 @@ int negamax(int alpha, int beta, int depth)
 
         
         // undo the move after the search
-        ply--;
         repetition_index--;
+        ply--;
         takeBack();
 
 
@@ -921,8 +913,9 @@ int qsearch(int alpha, int beta)
     // loop over moves within a movelist
     for (int count = 0; count < MoveList.count; count++)
     {
-        // TODO: see()-based pruning
-        // if (see(MoveList[count]) < 0) continue;
+        // don't search capture sequences that end up in losing material
+        if (see(MoveList.moves[count]) < 0)
+            continue;
 
 
         // preserve board state
@@ -942,8 +935,8 @@ int qsearch(int alpha, int beta)
         if (!makeMove(MoveList.moves[count]))
         {
             // in case of illegal move, undo it and skip to the next one
-            ply--;
             repetition_index--;
+            ply--;
             takeBack();
             
             continue;
@@ -955,8 +948,8 @@ int qsearch(int alpha, int beta)
        
 
         // undo the move after we got its score
-        ply--;
         repetition_index--;
+        ply--;
         takeBack();
 
 
@@ -1149,4 +1142,102 @@ void resetTimeControl()
     starttime = getTimeInMilliseconds();
     Limits.movestogo = 30;
     Limits.movetime  =  0;
+}
+
+
+
+// see
+//
+// Simulate a capturing sequence on the target square of the move given
+// (static exchange evaluation), and return the final score of the move 
+// (after completing all the captures) from the perspective of the side
+// to move.
+int see(int move)
+{
+    // total static evaluation after all possible exchanges have been made
+    std::array<int, 32> gain;
+
+
+    // internal depth keeps track of which 'ply' within the capture simulation
+    // we are
+    int idepth = 0;
+
+
+    // change side to move
+    int stm = sideToMove ^ 1;
+
+
+    // initialize origin and target square, as well as attacker and target piece
+    int fromSq   = getMoveSource(move);
+    int toSq     = getMoveTarget(move);
+    int attacker = getMovePiece(move);
+
+    
+    // identify the piece on the target square
+    int start_piece = P, end_piece = K, target = -1;
+    
+    if (stm == Black)
+    {
+        start_piece = p;
+        end_piece = k;
+    }
+
+    for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++)
+    {
+        if (getBit(bitboards[bb_piece], toSq))
+        {
+            target = bb_piece;
+            break;
+        }
+    }
+
+
+    // if no piece to capture at target, this is not a capture
+    if (target < 0)
+        return 0;
+
+
+    // temporary bitboards to run the exchange simulation
+    Bitboard seenBB     = 0ULL;
+	Bitboard occupiedBB = occupancies[White] | occupancies[Black];
+	Bitboard attackerBB = SqBB[fromSq];
+
+
+    // list of attackers and defenders to a given square
+    Bitboard attadef = getAttackers(White, toSq, occupiedBB) | getAttackers(Black, toSq, occupiedBB);
+    Bitboard maxXray = occupiedBB & ~(bitboards[N] | bitboards[K] | bitboards[n] | bitboards[k]);
+
+
+    // calcualte initial win, from the first capture
+    gain[idepth] = PieceValues[target];
+
+
+    // simulate the whole capturing sequence and calculate the total gain
+    while (attackerBB)
+    {
+        idepth++;
+        gain[idepth] = PieceValues[attacker] - gain[idepth - 1];
+
+        if (std::max(-gain[idepth-1], gain[idepth]) < 0)
+            break;
+
+        attadef &= ~attackerBB;
+        occupiedBB &= ~attackerBB;
+        seenBB |= attackerBB;
+
+        if ((attackerBB & maxXray) != 0)
+            attadef |= considerXrays(toSq, occupiedBB) & ~seenBB;
+
+        attackerBB = minAttacker(attadef, stm, attacker);
+        stm ^= 1;
+    }
+
+
+    // calculate the total net score after completing all the captures
+    for (idepth--; idepth > 0; idepth--)
+        gain[idepth-1] = -std::max(-gain[idepth-1], gain[idepth]);
+
+
+    // return the total net score of the capturing sequence
+    return gain[0];
 }
