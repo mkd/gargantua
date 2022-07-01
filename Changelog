@@ -1,3 +1,9 @@
+v1.1
+====
+- Static Exchange Evaluation (SEE)
+- Faster quiescence search
+
+
 Initial release v1.0
 ====================
 - Fully Bitboard-based implementation

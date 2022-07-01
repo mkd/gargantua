@@ -259,6 +259,7 @@ static constexpr int mvv_lva[12][12] =
 void dperft(int);
 void search();
 int  qsearch(int, int);
+int  see(int);
 void initSearch();
 void sortMoves(MoveList_t &, int);
 void printMoveScores(MoveList_t &);
@@ -352,9 +353,6 @@ static inline int scoreMove(int move)
 
 
     // score capture move
-    //
-    // TODO: replace with static exchange evaluation -- see()
-    //       --> sort moves based on see() value + 10000
     else if (getMoveCapture(move))
     {
         // init target piece
@@ -363,19 +361,12 @@ static inline int scoreMove(int move)
 
         
         // pick up bitboard piece index ranges depending on side
-        int start_piece, end_piece;
-
+        int start_piece = P, end_piece = K;
         
-        // pick up side to move
         if (sideToMove == White)
         {
             start_piece = p;
             end_piece = k;
-        }
-        else
-        {
-            start_piece = P;
-            end_piece = K;
         }
 
         
@@ -629,6 +620,112 @@ constexpr int futility_margin(int depth)
 constexpr int futility_move_count(int depth)
 {
     return (3 + depth * depth) / 2;
+}
+
+
+
+// getAttackers
+//
+// Create a Bitboard with all pieces from a given side attacking a given square.
+static inline Bitboard getAttackers(Side color, int sq, Bitboard occupied)
+{
+    // bitboards holding the attackers of different type
+    Bitboard attackers = 0ULL;
+
+    Bitboard attackingBishops = 0ULL;
+    Bitboard attackingRooks   = 0ULL;
+    Bitboard attackingQueens  = 0ULL;
+    Bitboard attackingKnights = 0ULL;
+    Bitboard attackingKings   = 0ULL;
+    Bitboard attackingPawns   = 0ULL;
+
+
+    // get the basic list of attackers
+    attackingBishops = (color == White) ? bitboards[B] : bitboards[b];
+    attackingRooks   = (color == White) ? bitboards[R] : bitboards[r];
+    attackingQueens  = (color == White) ? bitboards[Q] : bitboards[q];
+    attackingKnights = (color == White) ? bitboards[N] : bitboards[n];
+    attackingKings   = (color == White) ? bitboards[K] : bitboards[k];
+    attackingPawns   = (color == White) ? bitboards[P] : bitboards[p];
+
+
+    // add long-range attacks
+    Bitboard intercardinalRays = getBishopAttacks(sq, occupied);
+    Bitboard cardinalRaysRays  = getRookAttacks(sq, occupied);
+    attackers |= intercardinalRays & (attackingBishops | attackingQueens);
+    attackers |= cardinalRaysRays & (attackingRooks | attackingQueens);
+
+
+    // add pawns and short-range pieces' attacks
+    attackers |= KnightAttacks[sq] & attackingKnights;
+    attackers |= KingAttacks[sq] & attackingKings;
+    attackers |= PawnAttacks[color ^ 1][sq] & attackingPawns;
+
+
+    // return a Bitboard containing all the attackers to the given square
+    return attackers;
+}
+
+
+
+
+// considerXrays
+//
+// Find long-range attackers that attack a given square, in a given 
+// capturing sequence.
+static inline Bitboard considerXrays(int sq, Bitboard occupied)
+{
+    // start with an empty list (i.e., Bitboard) of attackers
+    Bitboard attackers = 0ULL;
+
+
+    // consider bishops, rooks and queens
+    Bitboard attackingBishops = bitboards[B] | bitboards[b];
+    Bitboard attackingRooks   = bitboards[R] | bitboards[r];
+    Bitboard attackingQueens  = bitboards[Q] | bitboards[q];
+
+
+    // add attacks from each long-range piece
+	Bitboard intercardinalRays = getBishopAttacks(sq, occupied);
+	Bitboard cardinalRaysRays  = getRookAttacks(sq, occupied);
+
+	attackers |= intercardinalRays & (attackingBishops | attackingQueens);
+	attackers |= cardinalRaysRays & (attackingRooks | attackingQueens);
+
+
+    // return the list of all possible X-ray (long-range) attackers
+	return attackers;
+}
+
+
+
+// minAttacker
+//
+// Reveal the next (least valuable) attacker in a capturing sequence.
+static inline Bitboard minAttacker(Bitboard attadef, int stm, int &attacker)
+{
+    // decide what pieces to look for, depending on the side to move
+    int start_piece = P, end_piece = K;
+
+    if (stm == Black)
+    {
+        start_piece = p;
+        end_piece = k;
+    }
+
+
+    // loop through the pieces to find the next attacker
+    for (attacker = start_piece; attacker <= end_piece; attacker++)
+    {
+	    Bitboard subset = attadef & bitboards[attacker];
+
+        if (subset)
+            return (subset & -subset);
+    }
+
+
+    // return an empty Bitboard, if no attackers left
+    return 0;
 }
 
 
