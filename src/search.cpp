@@ -206,10 +206,14 @@ int negamax(int alpha, int beta, int depth)
     // the score immediately. We don't look in the hash table if we are in the
     // Principal Variation nodes.
     //
+    // Note: in order to avoid artifacts in no-pawn endgames, we don't produce
+    //       tranposition table cutoffs at very high rule50 counts (< 90).
+    //
     // @see https://www.chessprogramming.org/Transposition_Table
 
     if (ply && ((score = TT::probe(alpha, beta, bestmove, depth)) != no_hash_found) && !pv_node)
-        return score;
+        if (fifty < 90)
+            return score;
 
 
 
@@ -1073,7 +1077,7 @@ void dperft(int depth)
 void sortMoves(MoveList_t &MoveList, int bestmove)
 {
     // reliability checks
-    //assert(MoveList.count > 0);
+    assert(MoveList.count > 0);
     assert(MoveList.count < 256);
 
 
