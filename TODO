@@ -5,10 +5,11 @@ TODO
 
 Backlog for v1.1:
 =================
-- SEE pruning
-- MVV/LVA+SEE vs. only-SEE
-- Sygyzy tablebases 
-    - Fathom/fathom.c at master · jdart1/Fathom · GitHub
+- add UCI "SyzygyPath" option (if string, enable TB, otherwise don't)
+  option name SyzygyPath type string default <empty>
+- implement TB::init(path) and TB::probeWDL()
+- test some score with some FEN positions
+
 - book
     - Stockfish 15+ depth=40 multipv=10
     - built-in vs. external
