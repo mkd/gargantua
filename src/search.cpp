@@ -217,6 +217,26 @@ int negamax(int alpha, int beta, int depth)
 
 
 
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Step 3. Tablebases probe
+    //
+    // If we have five (5) pieces left, including the kings, try to find the 
+    // position from the tablebases (syzygy), so no more search is needed.
+
+    if (ply && (countBits(occupancies[Both]) <= 5) && (fifty == 0) && !castle)
+    {
+        /*
+        int wdl_score = TB::wdl_probe();
+
+        return (wdl_score < -DrawScore ? MateValue + ply + 1
+              : wdl_score >  DrawScore ? MateValue - ply - 1
+              : DrawScore);
+        */
+    }
+
+
+
     // If the Transposition Table did not return a hit, prepare for a more
     // comprehensive search by setting up the PV triangular array, resetting
     // the legal move counter to zero and increasing the nodes visited.

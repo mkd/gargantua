@@ -26,6 +26,7 @@
 #include "search.h"
 #include "uci.h"
 #include "tt.h"
+#include "tbprobe.h"
 
 
 
@@ -51,7 +52,13 @@ int main(int argc, char *argv[])
     // initialize hash table (cache)
     TT::init(1024);
 
-    
+
+    // initialize tablebases (syzygy)
+    // if (options["SyzygyPath"] != "")
+    //     tb_init(options["SyzygyPath"])   
+    // SyzygyPath = syzygy -- by default
+
+
     // initialize neural network (NNUE) for evaluation
     nnue_init("nn-eba324f53044.nnue");
 
