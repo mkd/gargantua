@@ -1,5 +1,6 @@
 v1.1
 ====
+- Fix Makefile to work in ARM64 and x86_64 environments regardless
 - Static Exchange Evaluation (SEE)
 - Faster quiescence search
 
