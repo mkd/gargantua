@@ -11,7 +11,7 @@ Backlog for v1.1:
 - test some score with some FEN positions
 
 - book
-    - Stockfish 15+ depth=40 multipv=10
+    - Stockfish 17+ depth=40 multipv=10
     - built-in vs. external
     - Stockfish/src/book.py - depth=40 multipv=10
     - format: r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -  d5e6 456 e2a6 -201 ...
