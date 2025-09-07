@@ -1,7 +1,7 @@
 # This file is part of Gargantua, a UCI chess engine with NNUE evaluation
 # derived from Chess0, and inspired by Code Monkey King's bbc-1.4.
 #     
-# Copyright (C) 2024 Claudio M. Camacho
+# Copyright (C) 2025 Claudio M. Camacho
 #
 # Gargantua is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
