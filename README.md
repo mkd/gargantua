@@ -145,15 +145,30 @@ Gargantua's playing strength, it needs to be tested against the latest stable
 version (master branch). The goal of the test is to see whether the improvement
 makes the engine stronger or weaker at gameplay.
 
-Testing a new improvement consists of three steps:
-1. Run benchmark.py to test the search speed and time-to-depth
-2. Run benchmark.py to see whether the number of nodes searched drops
-3. Play 300 games with TC 5min per side (0 increment); using a varied
-   opening book (gm2600.bin), for opening variability, that comes pre-installed
-   in Scid vs. Mac.
+# Testing new features
+Gargantua includes a scalable testing framework in `tests/manager.py` that uses `cutechess-cli` to automate engine matches and measure Elo differences accurately.
 
-In some cases, the number of nodes searched and the search speed might become
-worse than in the master version, yet the play quality might increase
-considerably (e.g., when adding a search extension that improves gameplay).
-In this case, the version that plays better (winner of the games) is chosen
-over the other one.
+## Prerequisites
+- [cutechess-cli](https://github.com/cutechess/cutechess) installed and in your PATH (or in `/Applications/CuteChess/build/`).
+
+## How to run tests
+The framework allows you to test a new version of the engine (compiled effectively from `src/`) against a base version (e.g., a previous release binary).
+
+### 1. Basic Match
+To run a fixed number of games (e.g., 100) with a specific time control (e.g., 10s + 0.1s):
+```bash
+python3 tests/manager.py --match --base ./gargantua-v1 --games 100 --tc 10+0.1 --concurrency 4
+```
+This will:
+1. Compile the current code in `src/` to `gargantua-new`.
+2. Run a match against the provided `--base` engine.
+3. Report live scores and the final Elo difference.
+
+### 2. SPRT (Sequential Probability Ratio Test)
+To quickly accept or reject a change based on likelihood of Elo gain:
+```bash
+python3 tests/manager.py --match --base ./gargantua-v1 --sprt --concurrency 8
+```
+
+### 3. Using Opening Books
+Place PGN or EPD opening books in `tests/books/`. The test manager will automatically detect and use them to ensure opening variety, which leads to more reliable Elo measurements.
