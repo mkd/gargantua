@@ -1,19 +1,19 @@
 /*
   This file is part of Gargantua, a UCI chess engine with NNUE evaluation
   derived from Chess0, and inspired by Code Monkey King's bbc-1.4.
-     
-  Copyright (C) 2025 Claudio M. Camacho
- 
+
+  Copyright (C) 2026 Claudio M. Camacho
+
   Gargantua is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
- 
+
   Gargantua is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
- 
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -23,122 +23,98 @@
 
 #include <cassert>
 #include <chrono>
+#include <future>
 #include <string>
 #include <thread>
-#include <future>
 
 #ifdef WIN64
-    #include <windows.h>
+#include <windows.h>
 #else
-    #include <sys/time.h>
-    #include <sys/select.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #endif
 
 #include "movgen.h"
 
-
-
 using namespace std;
 
-
-
-// Default settings and configuration for the search, as well as 
+// Default settings and configuration for the search, as well as
 // tuning parameters for search extensions and reductions:
-#define DefaultSearchDepth           12
-#define MaxSearchDepth              256
-#define DefaultMovetime            5000
-#define LMRFullDepthMoves             4
-#define LMRReductionLimit             3
-#define AspirationWindow             70
-#define WatchIntervalMs              10
+#define DefaultSearchDepth 12
+#define MaxSearchDepth 256
+#define DefaultMovetime 5000
+#define LMRFullDepthMoves 4
+#define LMRReductionLimit 3
+#define AspirationWindow 70
+#define WatchIntervalMs 10
 
-#define MaxSearchTime  0xFFFFFFFFFFFFFFFFULL
-
-
+#define MaxSearchTime 0xFFFFFFFFFFFFFFFFULL
 
 // Search definitions, including alpha-beta bounds, mating scores, etc.
-#define DrawScore           0
-#define MateValue       49000
-#define MateScore       48000
-#define ValueInfinite   50000
-
-
-
+#define DrawScore 0
+#define MateValue 49000
+#define MateScore 48000
+#define ValueInfinite 50000
 
 // Default options (settings) at startup
-#define OptionsDefaultHashSize      1024 
-#define OptionsDefaultContempt        25
-#define OptionsContemptMin             0
-#define OptionsContemptMax           200
-
-
+#define OptionsDefaultHashSize 1024
+#define OptionsDefaultContempt 25
+#define OptionsContemptMin 0
+#define OptionsContemptMax 200
 
 // Maximum depth at which we try to search
-#define MaxPly            256
-
-
+#define MaxPly 256
 
 // Score assigned to non-capture promotions. This is used for
 // sorting moves based on their likeliness to be good.
 //
 // @see scoreMove() and sortMoves()
-#define MoveScorePromoQuiet   10000
-
-
+#define MoveScorePromoQuiet 10000
 
 // 'nodes' is a global variable holding the number of nodes analyzed
 // or searched. It is used by negamax() but also other performance test
 // functions such as perft().
 extern uint64_t nodes;
 
-
-
 // Limits_t is a structure that holds the configuration of the search.
 // This includes search depth, time to search, etc.
 //
 // The engine uses the global variable "limits" to set, edit and reset the
 // search configuration throught the entire lifecycle.
-typedef struct
-{
-    int  wtime;
-    int  btime;
-    int  winc;
-    int  binc;
-    int  npmsec;
-    int  movestogo;
-    int  depth;
-    int  mate;
-    int  perft;
-    bool infinite;
-    bool ponder;
-    uint64_t movetime;
-    uint64_t nodes;
+typedef struct {
+  int wtime;
+  int btime;
+  int winc;
+  int binc;
+  int npmsec;
+  int movestogo;
+  int depth;
+  int mate;
+  int perft;
+  bool infinite;
+  bool ponder;
+  uint64_t movetime;
+  uint64_t nodes;
 } Limits_t;
 
 extern Limits_t Limits;
-
-
 
 // Map containing all the engine options that can be set using
 // the UCI command 'setoption'
 extern std::map<std::string, int> Options;
 
-
-
 // Time Control variables
 //
 // These are flags to tell how the search is performed internally. These are not
 // to be confused with Limits, which are UCI-specific settings parsed in the
-// 'go' command. 
+// 'go' command.
 extern uint64_t starttime;
 extern uint64_t stoptime;
 extern uint64_t inc;
-extern bool     timedout;
-extern bool     timeset;
+extern bool timedout;
+extern bool timeset;
 
-
-
-// killers [id][ply] 
+// killers [id][ply]
 //
 // Killers is a table where the two best (quiet) moves are
 // systematically stored for later searches. This is based on the
@@ -150,8 +126,6 @@ extern bool     timeset;
 // @see https://www.chessprogramming.org/Killer_Heuristic
 extern int killers[2][MaxPly];
 
-
-
 // history [piece][square]
 //
 // History is a table where to store moves that have produced an improvement in
@@ -159,8 +133,6 @@ extern int killers[2][MaxPly];
 //
 // @see https://www.chessprogramming.org/History_Heuristic
 extern int history[12][64];
-
-
 
 /*
       ================================
@@ -170,17 +142,17 @@ extern int history[12][64];
       ================================
 
            0    1    2    3    4    5
-      
+
       0    m1   m2   m3   m4   m5   m6
-      
-      1    0    m2   m3   m4   m5   m6 
-      
+
+      1    0    m2   m3   m4   m5   m6
+
       2    0    0    m3   m4   m5   m6
-      
+
       3    0    0    0    m4   m5   m6
-       
+
       4    0    0    0    0    m5   m6
-      
+
       5    0    0    0    0    0    m6
 */
 
@@ -194,26 +166,18 @@ extern int history[12][64];
 // @see https://www.chessprogramming.org/Triangular_PV-Table
 extern int pv_length[MaxPly];
 
-
-
 // PV table [ply][ply]
 extern int pv_table[MaxPly][MaxPly];
-
-
 
 // follow PV & score PV move
 extern bool followPV, scorePV;
 
-
-
 // flag to control whether we allow null move pruning or not
 extern bool allowNull;
 
-
-
 // Most Valuable Victim / Less Valuable Attacker (MVV/LVA) lookup table
 /*
-                          
+
     (Victims) Pawn Knight Bishop   Rook  Queen   King
   (Attackers)
         Pawn   105    205    305    405    505    605
@@ -231,101 +195,83 @@ extern bool allowNull;
 // victim of all attacked opponent pieces, in the order of the most valuable
 // first, thus queen, rook, bishop, knight and pawn. After the most valuable
 // victim is found, the find-aggressor cycle loops over the potential aggressors
-// that may capture the victim in inverse order, from pawn, knight, bishop, rook,
-// queen to king. 
+// that may capture the victim in inverse order, from pawn, knight, bishop,
+// rook, queen to king.
 //
 // @see https://www.chessprogramming.org/MVV-LVA
-static constexpr int mvv_lva[12][12] =
-{
- 	{105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605},
-	{104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604},
-	{103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603},
-	{102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602},
-	{101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601},
-	{100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600},
+static constexpr int mvv_lva[12][12] = {
+    {105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
+    {104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
+    {103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603},
+    {102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602},
+    {101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
+    {100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600},
 
-	{105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605},
-	{104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604},
-	{103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603},
-	{102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602},
-	{101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601},
-	{100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600}
-};
-
-
+    {105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
+    {104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
+    {103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603},
+    {102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602},
+    {101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
+    {100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600}};
 
 // Functionality to search a position or perform an operation on the
 // nodes of a given position.
 void dperft(int);
 void search();
-int  qsearch(int, int);
-int  see(int);
+int qsearch(int, int);
+int see(int);
 void initSearch();
 void sortMoves(MoveList_t &, int);
 void printMoveScores(MoveList_t &);
 void resetLimits();
 void resetTimeControl();
 
-
-
 // perft
 //
 // Verify move generation. All the leaf nodes up to the given depth are
 // generated and counted.
-// 
+//
 // @see https://www.chessprogramming.org/Perft
-static inline void perft(int depth)
-{
-    // reliability checks
-    assert(depth >= 0);
+static inline void perft(int depth) {
+  // reliability checks
+  assert(depth >= 0);
 
+  // escape at leaf nodes and increment node count
+  if (depth == 0) {
+    nodes++;
+    return;
+  }
 
-    // escape at leaf nodes and increment node count
-    if (depth == 0)
-    {
-        nodes++;
-        return;
+  // create move list instance
+  MoveList_t MoveList;
+
+  // generate moves
+  generateMoves(MoveList);
+
+  // loop over generated moves
+  for (int move_count = 0; move_count < MoveList.count; move_count++) {
+    // preserve board state
+    saveBoard();
+
+    // make move and, if illegal, skip to the next move
+    NNUE_DO(MoveList.moves[move_count]);
+    if (!makeMove(MoveList.moves[move_count])) {
+      takeBack(MoveList.moves[move_count]);
+      continue;
     }
 
-    
-    // create move list instance
-    MoveList_t MoveList;
+    // call perft driver recursively
+    perft(depth - 1);
 
-    
-    // generate moves
-    generateMoves(MoveList);
-
-    
-    // loop over generated moves
-    for (int move_count = 0; move_count < MoveList.count; move_count++)
-    {   
-        // preserve board state
-        saveBoard();
-
-
-        // make move and, if illegal, skip to the next move
-        if (!makeMove(MoveList.moves[move_count]))
-        {
-            takeBack();
-            continue;
-        }
-
-
-        // call perft driver recursively
-        perft(depth - 1);
-
-        
-        // undo move
-        takeBack();
-    }
+    // undo move
+    takeBack(MoveList.moves[move_count]);
+  }
 }
-
-
 
 /*  =======================
          Move ordering
     =======================
-    
+
     1. PV move
     2. Captures in MVV/LVA
     3. Promotions
@@ -338,173 +284,143 @@ static inline void perft(int depth)
 // scoreMove
 //
 // Assign a score to a move.
-static inline int scoreMove(int move)
-{
-    // if PV move scoring is allowed
-    // if PV move and scoring allowed, assign it the highest score
-    if (scorePV && (pv_table[0][ply] == move))
-    {
-        // disable score PV flag
-        scorePV = false;
-         
-        // give PV move the highest score to search it first
-        return 20000;
+static inline int scoreMove(int move) {
+  // if PV move scoring is allowed
+  // if PV move and scoring allowed, assign it the highest score
+  if (scorePV && (pv_table[0][ply] == move)) {
+    // disable score PV flag
+    scorePV = false;
+
+    // give PV move the highest score to search it first
+    return 20000;
+  }
+
+  // score capture move
+  else if (getMoveCapture(move)) {
+    // init target piece
+    int target_piece = P;
+    int toSq = getMoveTarget(move);
+
+    // pick up bitboard piece index ranges depending on side
+    int start_piece = P, end_piece = K;
+
+    if (sideToMove == White) {
+      start_piece = p;
+      end_piece = k;
     }
 
-
-    // score capture move
-    else if (getMoveCapture(move))
-    {
-        // init target piece
-        int target_piece = P;
-        int toSq = getMoveTarget(move);
-
-        
-        // pick up bitboard piece index ranges depending on side
-        int start_piece = P, end_piece = K;
-        
-        if (sideToMove == White)
-        {
-            start_piece = p;
-            end_piece = k;
-        }
-
-        
-        // loop over the opponent's bitboards
-        for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++)
-        {
-            // if there's a piece on the target square
-            if (getBit(bitboards[bb_piece], toSq))
-            {
-                // remove it from corresponding bitboard
-                target_piece = bb_piece;
-                break;
-            }
-        }
-               
-
-        // score move by MVV LVA lookup [source piece][target piece]
-        return mvv_lva[getMovePiece(move)][target_piece] + 10000;
+    // loop over the opponent's bitboards
+    for (int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++) {
+      // if there's a piece on the target square
+      if (getBit(bitboards[bb_piece], toSq)) {
+        // remove it from corresponding bitboard
+        target_piece = bb_piece;
+        break;
+      }
     }
 
+    // score move by MVV LVA lookup [source piece][target piece]
+    return mvv_lva[getMovePiece(move)][target_piece] + 10000;
+  }
 
-    // quiet promotions are also scored
-    else if (getPromo(move))
-    {
-        return MoveScorePromoQuiet;
-    }
-   
+  // quiet promotions are also scored
+  else if (getPromo(move)) {
+    return MoveScorePromoQuiet;
+  }
 
-    // score quiet move
+  // score quiet move
+  else {
+    // score 1st killer move
+    if (killers[0][ply] == move)
+      return 9000;
+
+    // score 2nd killer move
+    else if (killers[1][ply] == move)
+      return 8000;
+
+    // score history move
     else
-    {
-        // score 1st killer move
-        if (killers[0][ply] == move)
-            return 9000;
-        
-        // score 2nd killer move
-        else if (killers[1][ply] == move)
-            return 8000;
-        
-        // score history move
-        else
-            return history[getMovePiece(move)][getMoveTarget(move)];
-    }
-   
+      return history[getMovePiece(move)][getMoveTarget(move)];
+  }
 
-    // by default, don't add a score to the move
-    return 0;
+  // by default, don't add a score to the move
+  return 0;
 }
-
-
 
 // enablePV_scoring
 //
 // Allow scoring PV moves.
-static inline void enablePV_scoring(MoveList_t &MoveList)
-{
-    // disable following PV
-    followPV = false;
+static inline void enablePV_scoring(MoveList_t &MoveList) {
+  // disable following PV
+  followPV = false;
 
-    
-    // loop over the moves within a move list
-    for (int count = 0; count < MoveList.count; count++)
-    {
-        // make sure we hit PV move
-        if (pv_table[0][ply] == MoveList.moves[count])
-        {
-            // enable move scoring and follow PV again
-            scorePV  = true;
-            followPV = true;
-        }
+  // loop over the moves within a move list
+  for (int count = 0; count < MoveList.count; count++) {
+    // make sure we hit PV move
+    if (pv_table[0][ply] == MoveList.moves[count]) {
+      // enable move scoring and follow PV again
+      scorePV = true;
+      followPV = true;
     }
+  }
 }
-
-
 
 // getTimeInMilliseconds
 //
 // Get the number of milliseconds since epoch time.
-static inline uint64_t getTimeInMilliseconds()
-{
-    return duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now().time_since_epoch()).count();
+static inline uint64_t getTimeInMilliseconds() {
+  return duration_cast<chrono::milliseconds>(
+             chrono::high_resolution_clock::now().time_since_epoch())
+      .count();
 }
-
-
 
 // inputWaiting
 //
 // Function to "listen" to GUI's input during the search, without
 // blocking the program. Credit goes to Richard Albert, author of
 // VICE chess engine.
-static inline int inputWaiting()
-{
-    #ifndef WIN64
+static inline int inputWaiting() {
+#ifndef WIN64
 
-        fd_set readfds;
-        struct timeval tv;
-        FD_ZERO (&readfds);
-        FD_SET (fileno(stdin), &readfds);
-        tv.tv_sec=0; tv.tv_usec=0;
-        select(16, &readfds, 0, 0, &tv);
+  fd_set readfds;
+  struct timeval tv;
+  FD_ZERO(&readfds);
+  FD_SET(fileno(stdin), &readfds);
+  tv.tv_sec = 0;
+  tv.tv_usec = 0;
+  select(16, &readfds, 0, 0, &tv);
 
-        return (FD_ISSET(fileno(stdin), &readfds));
+  return (FD_ISSET(fileno(stdin), &readfds));
 
+#else
 
-    #else
+  static int init = 0, pipe;
+  static HANDLE inh;
+  DWORD dw;
 
-        static int init = 0, pipe;
-        static HANDLE inh;
-        DWORD dw;
+  if (!init) {
+    init = 1;
+    inh = GetStdHandle(STD_INPUT_HANDLE);
+    pipe = !GetConsoleMode(inh, &dw);
+    if (!pipe) {
+      SetConsoleMode(inh, dw & ~(ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT));
+      FlushConsoleInputBuffer(inh);
+    }
+  }
 
-        if (!init)
-        {
-            init = 1;
-            inh = GetStdHandle(STD_INPUT_HANDLE);
-            pipe = !GetConsoleMode(inh, &dw);
-            if (!pipe)
-            {
-                SetConsoleMode(inh, dw & ~(ENABLE_MOUSE_INPUT|ENABLE_WINDOW_INPUT));
-                FlushConsoleInputBuffer(inh);
-            }
-        }
-        
-        if (pipe)
-        {
-           if (!PeekNamedPipe(inh, NULL, 0, NULL, &dw, NULL)) return 1;
-           return dw;
-        }
-        
-        else
-        {
-           GetNumberOfConsoleInputEvents(inh, &dw);
-           return dw <= 1 ? 0 : dw;
-        }
+  if (pipe) {
+    if (!PeekNamedPipe(inh, NULL, 0, NULL, &dw, NULL))
+      return 1;
+    return dw;
+  }
 
-    #endif
+  else {
+    GetNumberOfConsoleInputEvents(inh, &dw);
+    return dw <= 1 ? 0 : dw;
+  }
+
+#endif
 }
-
-
 
 // watchClockAndInput
 //
@@ -513,221 +429,163 @@ static inline int inputWaiting()
 //
 // This function should be called in its own (asynchronous) thread, e.g.,
 // using launch::async with a future<> object.
-static inline void watchClockAndInput()
-{
-    string cmd;
+static inline void watchClockAndInput() {
+  string cmd;
 
-    
-    while (!timedout)
-    {
-        // watch clock
-        if (timeset && (getTimeInMilliseconds() > stoptime))
-            timedout = true;
+  while (!timedout) {
+    // watch clock
+    if (timeset && (getTimeInMilliseconds() > stoptime))
+      timedout = true;
 
-
-        // read the input
-        else if (inputWaiting())
-        {
-            cin >> cmd;
-            if (cmd == "stop")
-                timedout = true;
-        }
-
-        // check for nodes limitation
-        else if ((Limits.nodes > 0) && (nodes > Limits.nodes))
-            timedout = true;
-
-
-        // update interval 
-        this_thread::sleep_for(chrono::milliseconds(WatchIntervalMs));
+    // read the input
+    else if (inputWaiting()) {
+      cin >> cmd;
+      if (cmd == "stop")
+        timedout = true;
     }
+
+    // check for nodes limitation
+    else if ((Limits.nodes > 0) && (nodes > Limits.nodes))
+      timedout = true;
+
+    // update interval
+    this_thread::sleep_for(chrono::milliseconds(WatchIntervalMs));
+  }
 }
-
-
 
 // isEndgame
 //
 // Determine if the current position should be considered an endgame
 // position for the current side to move.
-static inline bool isEndgame()
-{
-    int pawn_material   = countBits(bitboards[P] | bitboards[p]) * 100;
-    int knight_material = countBits(bitboards[N] | bitboards[n]) * 320;
-    int bishop_material = countBits(bitboards[B] | bitboards[b]) * 320;
-    int rook_material   = countBits(bitboards[R] | bitboards[r]) * 500;
-    int queen_material  = countBits(bitboards[Q] | bitboards[q]) * 950;
+static inline bool isEndgame() {
+  int pawn_material = countBits(bitboards[P] | bitboards[p]) * 100;
+  int knight_material = countBits(bitboards[N] | bitboards[n]) * 320;
+  int bishop_material = countBits(bitboards[B] | bitboards[b]) * 320;
+  int rook_material = countBits(bitboards[R] | bitboards[r]) * 500;
+  int queen_material = countBits(bitboards[Q] | bitboards[q]) * 950;
 
-	return ((pawn_material + knight_material + bishop_material
-                           + rook_material + queen_material) < 2600);
+  return ((pawn_material + knight_material + bishop_material + rook_material +
+           queen_material) < 2600);
 }
-
-
-
 
 // contempt
 //
 // Determine the draw score based on the phase of the game and whose moving,
 // to encourge the engine to strive for a win in the middle-game, but be
 // satisified with a draw in the endgame.
-static inline int contempt()
-{
-    // in the endgame, it's ok to try to draw, if we're losing
-    if (isEndgame())
-        return DrawScore;
+static inline int contempt() {
+  // in the endgame, it's ok to try to draw, if we're losing
+  if (isEndgame())
+    return DrawScore;
 
-
-    // in the opening and middle game, we try to fight
-    else
-        return ((sideToMove == White) ? -Options["Contempt"] : Options["Contempt"]);
+  // in the opening and middle game, we try to fight
+  else
+    return ((sideToMove == White) ? -Options["Contempt"] : Options["Contempt"]);
 }
-
-
 
 // mate_in
 //
 // Detect the distance from the root at which we can mate the opponent.
-constexpr int mate_in(int ply)
-{
-    return MateValue - ply;
-}
-
-
-
+constexpr int mate_in(int ply) { return MateValue - ply; }
 
 // mated_in
 //
 // Detect the distance from the root at which we are mated by our opponent.
-constexpr int mated_in(int ply)
-{
-    return -MateValue + ply;
-}
-
-
+constexpr int mated_in(int ply) { return -MateValue + ply; }
 
 // futility_margin
 //
 // Calculate a futility margin based on a given depth.
-constexpr int futility_margin(int depth)
-{
-    return 168 * depth;
-}
-
-
+constexpr int futility_margin(int depth) { return 168 * depth; }
 
 // futility_move_count
 //
 // Calculate how far in the sorted list of moves can we start pruning.
-constexpr int futility_move_count(int depth)
-{
-    return (3 + depth * depth) / 2;
-}
-
-
+constexpr int futility_move_count(int depth) { return (3 + depth * depth) / 2; }
 
 // getAttackers
 //
 // Create a Bitboard with all pieces from a given side attacking a given square.
-static inline Bitboard getAttackers(Side color, int sq, Bitboard occupied)
-{
-    // bitboards holding the attackers of different type
-    Bitboard attackers = 0ULL;
+static inline Bitboard getAttackers(Side color, int sq, Bitboard occupied) {
+  // bitboards holding the attackers of different type
+  Bitboard attackers = 0ULL;
 
-    Bitboard attackingBishops = 0ULL;
-    Bitboard attackingRooks   = 0ULL;
-    Bitboard attackingQueens  = 0ULL;
-    Bitboard attackingKnights = 0ULL;
-    Bitboard attackingKings   = 0ULL;
-    Bitboard attackingPawns   = 0ULL;
+  Bitboard attackingBishops = 0ULL;
+  Bitboard attackingRooks = 0ULL;
+  Bitboard attackingQueens = 0ULL;
+  Bitboard attackingKnights = 0ULL;
+  Bitboard attackingKings = 0ULL;
+  Bitboard attackingPawns = 0ULL;
 
+  // get the basic list of attackers
+  attackingBishops = (color == White) ? bitboards[B] : bitboards[b];
+  attackingRooks = (color == White) ? bitboards[R] : bitboards[r];
+  attackingQueens = (color == White) ? bitboards[Q] : bitboards[q];
+  attackingKnights = (color == White) ? bitboards[N] : bitboards[n];
+  attackingKings = (color == White) ? bitboards[K] : bitboards[k];
+  attackingPawns = (color == White) ? bitboards[P] : bitboards[p];
 
-    // get the basic list of attackers
-    attackingBishops = (color == White) ? bitboards[B] : bitboards[b];
-    attackingRooks   = (color == White) ? bitboards[R] : bitboards[r];
-    attackingQueens  = (color == White) ? bitboards[Q] : bitboards[q];
-    attackingKnights = (color == White) ? bitboards[N] : bitboards[n];
-    attackingKings   = (color == White) ? bitboards[K] : bitboards[k];
-    attackingPawns   = (color == White) ? bitboards[P] : bitboards[p];
+  // add long-range attacks
+  Bitboard intercardinalRays = getBishopAttacks(sq, occupied);
+  Bitboard cardinalRaysRays = getRookAttacks(sq, occupied);
+  attackers |= intercardinalRays & (attackingBishops | attackingQueens);
+  attackers |= cardinalRaysRays & (attackingRooks | attackingQueens);
 
+  // add pawns and short-range pieces' attacks
+  attackers |= KnightAttacks[sq] & attackingKnights;
+  attackers |= KingAttacks[sq] & attackingKings;
+  attackers |= PawnAttacks[color ^ 1][sq] & attackingPawns;
 
-    // add long-range attacks
-    Bitboard intercardinalRays = getBishopAttacks(sq, occupied);
-    Bitboard cardinalRaysRays  = getRookAttacks(sq, occupied);
-    attackers |= intercardinalRays & (attackingBishops | attackingQueens);
-    attackers |= cardinalRaysRays & (attackingRooks | attackingQueens);
-
-
-    // add pawns and short-range pieces' attacks
-    attackers |= KnightAttacks[sq] & attackingKnights;
-    attackers |= KingAttacks[sq] & attackingKings;
-    attackers |= PawnAttacks[color ^ 1][sq] & attackingPawns;
-
-
-    // return a Bitboard containing all the attackers to the given square
-    return attackers;
+  // return a Bitboard containing all the attackers to the given square
+  return attackers;
 }
-
-
-
 
 // considerXrays
 //
-// Find long-range attackers that attack a given square, in a given 
+// Find long-range attackers that attack a given square, in a given
 // capturing sequence.
-static inline Bitboard considerXrays(int sq, Bitboard occupied)
-{
-    // start with an empty list (i.e., Bitboard) of attackers
-    Bitboard attackers = 0ULL;
+static inline Bitboard considerXrays(int sq, Bitboard occupied) {
+  // start with an empty list (i.e., Bitboard) of attackers
+  Bitboard attackers = 0ULL;
 
+  // consider bishops, rooks and queens
+  Bitboard attackingBishops = bitboards[B] | bitboards[b];
+  Bitboard attackingRooks = bitboards[R] | bitboards[r];
+  Bitboard attackingQueens = bitboards[Q] | bitboards[q];
 
-    // consider bishops, rooks and queens
-    Bitboard attackingBishops = bitboards[B] | bitboards[b];
-    Bitboard attackingRooks   = bitboards[R] | bitboards[r];
-    Bitboard attackingQueens  = bitboards[Q] | bitboards[q];
+  // add attacks from each long-range piece
+  Bitboard intercardinalRays = getBishopAttacks(sq, occupied);
+  Bitboard cardinalRaysRays = getRookAttacks(sq, occupied);
 
+  attackers |= intercardinalRays & (attackingBishops | attackingQueens);
+  attackers |= cardinalRaysRays & (attackingRooks | attackingQueens);
 
-    // add attacks from each long-range piece
-	Bitboard intercardinalRays = getBishopAttacks(sq, occupied);
-	Bitboard cardinalRaysRays  = getRookAttacks(sq, occupied);
-
-	attackers |= intercardinalRays & (attackingBishops | attackingQueens);
-	attackers |= cardinalRaysRays & (attackingRooks | attackingQueens);
-
-
-    // return the list of all possible X-ray (long-range) attackers
-	return attackers;
+  // return the list of all possible X-ray (long-range) attackers
+  return attackers;
 }
-
-
 
 // minAttacker
 //
 // Reveal the next (least valuable) attacker in a capturing sequence.
-static inline Bitboard minAttacker(Bitboard attadef, int stm, int &attacker)
-{
-    // decide what pieces to look for, depending on the side to move
-    int start_piece = P, end_piece = K;
+static inline Bitboard minAttacker(Bitboard attadef, int stm, int &attacker) {
+  // decide what pieces to look for, depending on the side to move
+  int start_piece = P, end_piece = K;
 
-    if (stm == Black)
-    {
-        start_piece = p;
-        end_piece = k;
-    }
+  if (stm == Black) {
+    start_piece = p;
+    end_piece = k;
+  }
 
+  // loop through the pieces to find the next attacker
+  for (attacker = start_piece; attacker <= end_piece; attacker++) {
+    Bitboard subset = attadef & bitboards[attacker];
 
-    // loop through the pieces to find the next attacker
-    for (attacker = start_piece; attacker <= end_piece; attacker++)
-    {
-	    Bitboard subset = attadef & bitboards[attacker];
+    if (subset)
+      return (subset & -subset);
+  }
 
-        if (subset)
-            return (subset & -subset);
-    }
-
-
-    // return an empty Bitboard, if no attackers left
-    return 0;
+  // return an empty Bitboard, if no attackers left
+  return 0;
 }
 
-
-
-#endif  //  SEARCH_H
+#endif //  SEARCH_H

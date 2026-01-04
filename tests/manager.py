@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import subprocess
-import json
 import re
 import sys
 import os
@@ -51,23 +50,53 @@ def compile_engine(output_name, defines=[]):
     
     print(" Done")
 
-def run_match(engine1, engine2, games, tc, sprt=False, concurrency=1, book=None):
+def run_match(engine1, engine2, games, tc, sprt=False, concurrency=1, book=None, engine2_opts=None):
     """Runs a match between two engines."""
-    name1 = os.path.basename(engine1)
-    name2 = os.path.basename(engine2)
+    name1 = os.path.basename(engine1) + "_BASE"
+    name2 = os.path.basename(engine2) + "_NEW"
     
     print(f"Starting match: {name1} vs {name2}")
+    if engine2_opts:
+        print(f"Engine 2 Options: {engine2_opts}")
     print(f"Games: {games}, TC: {tc}, Threads: {concurrency}")
     
     cmd = [
         "cutechess-cli",
         "-engine", f"cmd={engine1}", f"name={name1}", "dir=.",
-        "-engine", f"cmd={engine2}", f"name={name2}", "dir=.",
+        "-engine", f"cmd={engine2}", f"name={name2}", "dir=."
+    ]
+    
+    # Add options for engine 2
+    if engine2_opts:
+        # cutechess syntax for options is usually option.Name=Value
+        # However, for specific engines, we might need to attach it to the -engine block.
+        # But 'cutechess-cli' parses separate -engine blocks.
+        # So we need to insert the options into the SECOND -engine block?
+        # NO, cmd list is sequential.
+        # The above logic creates ONE list.
+        # We need to insert options right after the second engine definition?
+        # Actually, `option.Name=Value` is a parameter of `-engine`.
+        pass
+
+    # Re-building command to properly insert options inside the engine block
+    cmd = ["cutechess-cli"]
+    
+    # Engine 1
+    cmd.extend(["-engine", f"cmd={engine1}", f"name={name1}", "dir=."])
+    
+    # Engine 2
+    engine2_args = ["-engine", f"cmd={engine2}", f"name={name2}", "dir=."]
+    if engine2_opts:
+        for k, v in engine2_opts.items():
+            engine2_args.extend([f"option.{k}={v}"])
+    cmd.extend(engine2_args)
+
+    cmd.extend([
         "-each", f"proto=uci", f"tc={tc}",
         "-concurrency", str(concurrency),
         "-games", str(games),
         "-repeat"
-    ]
+    ])
     
     if book:
          cmd.extend(["-openings", f"file={book}", "format=pgn", "order=random"])
@@ -90,7 +119,6 @@ def run_match(engine1, engine2, games, tc, sprt=False, concurrency=1, book=None)
                 break
             
             if line.startswith("Score of"):
-                # Parse score to track who is winning
                 match = score_re.search(line)
                 if match:
                     wins = int(match.group(1))
@@ -110,16 +138,14 @@ def run_match(engine1, engine2, games, tc, sprt=False, concurrency=1, book=None)
                         leader = name2
                         diff = score2 - score1
                     
-                    # Overwrite the line with a cleaner status
                     msg = f"\rScore: +{wins} -{losses} ={draws} | Leader: {leader} (+{diff}) | Games: {total}"
-                    sys.stdout.write(msg.ljust(80)) # Pad to clear previous line
+                    sys.stdout.write(msg.ljust(80)) 
                     sys.stdout.flush()
                 else:
                     sys.stdout.write("\r" + line.strip())
                     sys.stdout.flush()
 
             elif line.startswith("Started"):
-                 # Keep start messages on the same rolling line to avoid spam
                  sys.stdout.write("\r" + line.strip().ljust(80))
                  sys.stdout.flush()
                  
@@ -127,7 +153,6 @@ def run_match(engine1, engine2, games, tc, sprt=False, concurrency=1, book=None)
                 print("\n" + line.strip())
                 
             elif "Finished game" in line:
-                # Print finished game details on a new line so they are visible
                 print("\n" + line.strip())
                 
             elif "Disconnect" in line or "stall" in line or "connection" in line:
@@ -136,7 +161,6 @@ def run_match(engine1, engine2, games, tc, sprt=False, concurrency=1, book=None)
             elif "Finished match" in line:
                 print("\n" + line.strip())
                 
-                # Announce winner
                 print("\n" + "="*40)
                 if wins > losses:
                     print(f"🏆 WINNER: {name1.upper()} (Score: {wins + 0.5*draws} - {losses + 0.5*draws})")
@@ -158,6 +182,7 @@ def main():
     parser.add_argument("--match", action="store_true", help="Run a match")
     parser.add_argument("--base", type=str, help="Path to base engine executable")
     parser.add_argument("--new", type=str, help="Path to new engine executable (default: compiles from src)")
+    parser.add_argument("--options", type=str, help="Options for new engine (Key=Val,Key=Val)")
     parser.add_argument("--games", type=int, default=DEFAULT_GAMES, help="Number of games")
     parser.add_argument("--tc", type=str, default=DEFAULT_TC, help="Time control (e.g., 10+0.1)")
     parser.add_argument("--concurrency", type=int, default=4, help="Concurrency (threads)")
@@ -175,18 +200,28 @@ def main():
             
         base_engine = args.base
         if not base_engine:
-            print("Error: --base argument is required (path to base engine executable).")
+            print("Error: --base argument is required.")
             sys.exit(1)
 
         book = None
-        # Check for any pgn file in books dir
         if os.path.exists(BOOKS_DIR):
              for file in os.listdir(BOOKS_DIR):
                  if file.endswith(".pgn") or file.endswith(".epd"):
                      book = os.path.join(BOOKS_DIR, file)
                      break
-            
-        run_match(new_engine, base_engine, args.games, args.tc, args.sprt, args.concurrency, book)
+        
+        opts = {}
+        if args.options:
+            for pair in args.options.split(","):
+                if "=" in pair:
+                    k, v = pair.split("=", 1)
+                    opts[k] = v
+        
+        # If testing Syzygy, we want to run:
+        # Base: No Options (Syzygy Disabled by default if path empty)
+        # New: SyzygyPath set
+        
+        run_match(base_engine, new_engine, args.games, args.tc, args.sprt, args.concurrency, book, opts)
 
 if __name__ == "__main__":
     main()

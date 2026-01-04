@@ -1,3 +1,10 @@
+v2.0
+====
+- New NNUE architecture based on Stockfish SFNNv9 with dual network (small & large)
+- Support for Syzygy tablebases in endgame
+- New automated testing framework for self-improvement with incremental features
+
+
 v1.1
 ====
 - Fix Makefile to work in ARM64 and x86_64 environments regardless

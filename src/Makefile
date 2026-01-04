@@ -1,7 +1,7 @@
 # This file is part of Gargantua, a UCI chess engine with NNUE evaluation
 # derived from Chess0, and inspired by Code Monkey King's bbc-1.4.
 #     
-# Copyright (C) 2025 Claudio M. Camacho
+# Copyright (C) 2026 Claudio M. Camacho
 #
 # Gargantua is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ DBG = gargantua.dbg
 
 
 ### Compiler
-CC  := g++
+CC  := g++ -std=c++17
 WC  := x86_64-w64-mingw32-g++
 
 
@@ -46,28 +46,36 @@ ifeq ($(UNAME_M),x86_64)
 else ifeq ($(UNAME_M),arm64)
   # ARM64-specific compiler flags and defines
   ARCH_FLAGS += -mcpu=apple-m1
-  ARCH_DEFINES += -DUSE_ARM_NEON
+  ARCH_FLAGS += -mcpu=apple-m1
+  ARCH_DEFINES += -DUSE_NEON
 endif
 
 
 ### Source and objects files
-SOURCES   := $(wildcard *.cpp)
+# Wildcard for root sources
+SOURCES_ROOT  := $(wildcard *.cpp)
+
+# Wildcard for stockfish probe sources
+PROBE_SOURCES := $(wildcard stockfish_probe/*.cpp) \
+                 stockfish_probe/nnue/evaluate_nnue.cpp \
+                 stockfish_probe/nnue/features/half_ka_v2_hm.cpp
+
+SOURCES   := $(SOURCES_ROOT) $(PROBE_SOURCES)
 OBJECTS   := $(SOURCES:.cpp=.o)
 DOBJECTS  := $(SOURCES:.cpp=.dbo)
 WOBJECTS  := $(SOURCES:.cpp=.obj)
 DEPFILES  := $(SOURCES:.cpp=.d)
 
-
 ### Compilation flags
-CXXFLAGS := -Ofast -Wall -Wcast-qual -pedantic -std=c++20 -Wvla -fno-exceptions -fno-rtti -flto -pthread -DNDEBUG $(DEFINES) $(ARCH_DEFINES) $(ARCH_FLAGS)
-DFLAGS   := -Wall -O0 -g -DDEBUG -pthread -std=c++20 $(DEFINES) $(ARCH_DEFINES) $(ARCH_FLAGS)
-WINFLAGS := -DWIN64 -pthread -static -static-libgcc -static-libstdc++ -DNDEBUG $(DEFINES) $(ARCH_DEFINES) $(ARCH_FLAGS)
-LDFLAGS  += -lpthread
+CXXFLAGS      := -O3 -std=c++20 -DNDEBUG -pedantic -Wvla -fno-exceptions -fno-rtti -pthread -DUSE_NEW_NNUE $(DEFINES) $(ARCH_DEFINES) $(ARCH_FLAGS)
+DFLAGS   := -Wall -O0 -g -DDEBUG -pthread -std=c++20 -DUSE_NEW_NNUE $(DEFINES) $(ARCH_DEFINES) $(ARCH_FLAGS)
+WINFLAGS := -DWIN64 -pthread -static -static-libgcc -static-libstdc++ -DNDEBUG -DUSE_NEW_NNUE $(DEFINES) $(ARCH_DEFINES) $(ARCH_FLAGS)
+LDFLAGS  = -lpthread
 
 
 ### Suffixes
 .SUFFIXES:
-.SUFFIXES: .d .cpp .o .dbo .obj
+.SUFFIXES: .d .cpp .o .dbo .obj .c
 
 %.d: %.cpp
 	@echo ' Generating deps   $@' && $(CC) -MM $< | \
@@ -117,11 +125,12 @@ exe: $(EXE)
 help:
 	@echo 'User targets:'; \
 	echo ''; \
-	echo ' all        - Default target.  Alias for "gargantua".'; \
-	echo ' gargantua  - Build the binary.'; \
-	echo ' exe        - Build the binary for Win64 architecture.'; \
-	echo ' debug      - Build the debug binary.'; \
-	echo ' clean      - Remove objects, dependency files and binaries.'; \
+	echo ' all         - Default target.  Alias for "gargantua".'; \
+	echo ' gargantua   - Build the binary.'; \
+	echo ' v2          - Build the new binary (gargantua-v2).'; \
+	echo ' exe         - Build the binary for Win64 architecture.'; \
+	echo ' debug       - Build the debug binary.'; \
+	echo ' clean       - Remove objects, dependency files and binaries.'; \
 	echo ''
 
 # Generate dependencies except for these targets
@@ -130,4 +139,3 @@ NODEP_TARGETS := clean help
 ifeq ($(filter $(NODEP_TARGETS),$(MAKECMDGOALS)),)
 -include $(DEPFILES)
 endif
-
