@@ -1,141 +1,134 @@
-# This file is part of Gargantua, a UCI chess engine with NNUE evaluation
-# derived from Chess0, and inspired by Code Monkey King's bbc-1.4.
-#     
+# Gargantua Makefile
 # Copyright (C) 2026 Claudio M. Camacho
-#
-# Gargantua is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Gargantua is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.    If not, see <http://www.gnu.org/licenses/>.
 
+# --- 1. General Settings ---
+APP      = gargantua
+EXE      = gargantua.exe
 
-### Executable name
-APP = gargantua
-EXE = gargantua.exe
-DBG = gargantua.dbg
+# Compiler and Flags
+CXX      := g++
+# -O3: Max optimization
+# -flto: Link Time Optimization (cross-file optimization)
+# -funroll-loops: Unroll loops for speed (at cost of binary size)
+CXXFLAGS := -std=c++20 -O3 -flto -funroll-loops -DNDEBUG -pedantic -Wvla \
+            -fno-exceptions -fno-rtti -pthread -DUSE_NEW_NNUE
+LDFLAGS  := -lpthread -flto
 
-
-### Compiler
-CC  := g++ -std=c++17
-WC  := x86_64-w64-mingw32-g++
-
-
-### Detect architecture
+# OS and Arch Detection
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
-### Preprocessor defines
-DEFINES = -DIS_64BIT
+# Default ARCH if not specified
+ARCH ?= auto
 
-### Architecture-specific flags and defines
-ARCH_FLAGS =
-ARCH_DEFINES =
+# --- 2. Architecture Auto-Detection ---
+ifeq ($(ARCH),auto)
+    ifeq ($(UNAME_S),Darwin)
+        ifeq ($(UNAME_M),arm64)
+            ARCH = apple-silicon
+        else
+            ARCH = x86-64
+        endif
+    else ifeq ($(UNAME_S),Linux)
+        ifeq ($(UNAME_M),aarch64)
+            ARCH = armv8
+        else
+            ARCH = x86-64
+        endif
+    else ifneq (,$(findstring MINGW,$(UNAME_S)))
+        ARCH = win-x64
+    else ifneq (,$(findstring MSYS,$(UNAME_S)))
+        ARCH = win-x64
+    endif
+endif
 
-ifeq ($(UNAME_M),x86_64)
-  # x86_64-specific compiler flags and defines
-  ARCH_FLAGS += -mavx2 -mbmi -mlzcnt -mbmi2 -msse4.1 -msse3 -msse2 -msse -mpopcnt
-  ARCH_DEFINES += -DUSE_AVX2 -DUSE_BMI1 -DUSE_BMI2 -DUSE_SSE41 -DUSE_SSE3 -DUSE_SSE2 -DUSE_SSE -DUSE_POPCNT
-else ifeq ($(UNAME_M),arm64)
-  # ARM64-specific compiler flags and defines
-  ARCH_FLAGS += -mcpu=apple-m1
-  ARCH_FLAGS += -mcpu=apple-m1
-  ARCH_DEFINES += -DUSE_NEON
+# --- 3. Architecture Specific Flags ---
+# Note on Cross-Compilation:
+# You can cross-compile for any target (e.g., Linux -> Windows, macOS -> Linux)
+# *provided* you have the correct toolchain installed and accessible in your PATH.
+# For example, to build for Linux x86_64 from macOS, you need 'x86_64-linux-gnu-g++'.
+# You can override the compiler with: make ARCH=x86-64 CXX=x86_64-linux-gnu-g++
+
+# Apple Silicon (macOS)
+ifeq ($(ARCH),apple-silicon)
+    # Apple M1/M2/M3 supports NEON and DotProduct
+    CXXFLAGS += -mcpu=apple-m1 -DUSE_NEON -DUSE_NEON_DOTPROD -DUSE_POPCNT
+    LDFLAGS  += 
+
+# Linux / Generic x86-64 (Modern)
+else ifeq ($(ARCH),x86-64)
+    # Target Haswell+ (AVX2). Enables AVX2, BMI2, POPCNT, PEXT.
+    CXXFLAGS += -mavx2 -mbmi -mbmi2 -mlzcnt -mpopcnt -msse4.1 \
+                -DUSE_AVX2 -DUSE_BMI2 -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2 \
+                -DUSE_POPCNT -DUSE_PEXT
+
+# Linux ARM64
+else ifeq ($(ARCH),armv8)
+    CXXFLAGS += -march=armv8-a -DUSE_NEON -DUSE_POPCNT
+
+# Windows x64
+else ifeq ($(ARCH),win-x64)
+    CXX      := x86_64-w64-mingw32-g++
+    CXXFLAGS += -mavx2 -mbmi -mbmi2 -mlzcnt -mpopcnt -msse4.1 -DWIN64 \
+                -DUSE_AVX2 -DUSE_BMI2 -DUSE_SSE41 -DUSE_SSSE3 -DUSE_SSE2 \
+                -DUSE_POPCNT -DUSE_PEXT
+    LDFLAGS  += -static -static-libgcc -static-libstdc++ 
+    APP      := $(EXE)
+
+# Windows ARM64 (Experimental/Future)
+else ifeq ($(ARCH),win-arm64)
+    # Assumes a mingw-w64 toolchain for aarch64 exists on the system
+    CXX      := aarch64-w64-mingw32-g++
+    CXXFLAGS += -march=armv8-a -DWIN64
+    LDFLAGS  += -static -static-libgcc -static-libstdc++
+    APP      := $(EXE)
+
 endif
 
 
-### Source and objects files
-# Wildcard for root sources
+# --- 4. Sources and Objects ---
 SOURCES_ROOT  := $(wildcard *.cpp)
-
-# Wildcard for stockfish probe sources
 PROBE_SOURCES := $(wildcard stockfish_probe/*.cpp) \
                  stockfish_probe/nnue/evaluate_nnue.cpp \
                  stockfish_probe/nnue/features/half_ka_v2_hm.cpp
 
-SOURCES   := $(SOURCES_ROOT) $(PROBE_SOURCES)
-OBJECTS   := $(SOURCES:.cpp=.o)
-DOBJECTS  := $(SOURCES:.cpp=.dbo)
-WOBJECTS  := $(SOURCES:.cpp=.obj)
-DEPFILES  := $(SOURCES:.cpp=.d)
+SOURCES := $(SOURCES_ROOT) $(PROBE_SOURCES)
+OBJECTS := $(SOURCES:.cpp=.o)
+DEPS    := $(SOURCES:.cpp=.d)
 
-### Compilation flags
-CXXFLAGS      := -O3 -std=c++20 -DNDEBUG -pedantic -Wvla -fno-exceptions -fno-rtti -pthread -DUSE_NEW_NNUE $(DEFINES) $(ARCH_DEFINES) $(ARCH_FLAGS)
-DFLAGS   := -Wall -O0 -g -DDEBUG -pthread -std=c++20 -DUSE_NEW_NNUE $(DEFINES) $(ARCH_DEFINES) $(ARCH_FLAGS)
-WINFLAGS := -DWIN64 -pthread -static -static-libgcc -static-libstdc++ -DNDEBUG -DUSE_NEW_NNUE $(DEFINES) $(ARCH_DEFINES) $(ARCH_FLAGS)
-LDFLAGS  = -lpthread
+# --- 5. Build Rules ---
 
+.PHONY: all clean help
 
-### Suffixes
-.SUFFIXES:
-.SUFFIXES: .d .cpp .o .dbo .obj .c
-
-%.d: %.cpp
-	@echo ' Generating deps   $@' && $(CC) -MM $< | \
-	sed '1 s,^[^:]*,$@ $(@:.d=.o) $(@:.d=.dbo) $(@:.d=.obj),' > $@
-
-%.o: %.cpp
-	@echo ' Compiling         $@' && $(CC) $(CXXFLAGS) -c $< -o $@
-
-%.dbo: %.cpp
-	@echo ' Compiling [debug] $@' && $(CC) $(DFLAGS) -c $< -o $@
-
-%.obj: %.cpp
-	@echo ' Compiling [win64] $@' && $(WC) $(CXXFLAGS) $(WINFLAGS) -c $< -o $@ -lm
-
-%:: ;
-
-
-### Phony declarations
-.PHONY: clean help
-
-
-### Build targets
 all: $(APP)
-
-clean:
-	@echo -n 'Deleting object files: '
-	@rm -fr $(OBJECTS) $(DOBJECTS) $(WOBJECTS) $(DEPFILES)
-	@rm -fr gargantua gargantua.exe gargantua.dbg
-	@echo 'done.'
+	@echo "Build complete for ARCH=$(ARCH). Binary: $(APP)"
 
 $(APP): $(OBJECTS)
-	@echo ' Linking           $@'
-	$(CC) -o $@ $(OBJECTS) $(LDFLAGS)
+	@echo "Linking $@"
+	$(CXX) -o $@ $(OBJECTS) $(LDFLAGS)
 
-$(DBG): $(DOBJECTS)
-	@echo ' Linking   [debug] $@'
-	$(CC) -o $@ $(DOBJECTS) $(LDFLAGS)
+%.o: %.cpp
+	@echo "Compiling $<"
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
-debug: $(DBG)
+# Include dependencies
+-include $(DEPS)
 
-$(EXE): $(WOBJECTS)
-	@echo ' Linking   [win64] $@'
-	$(WC) -o $@ $(WOBJECTS) $(WINFLAGS) $(LDFLAGS)
-
-exe: $(EXE)
+clean:
+	@echo "Cleaning..."
+	rm -f $(OBJECTS) $(DEPS) $(APP) $(EXE) gargantua.dbg
 
 help:
-	@echo 'User targets:'; \
-	echo ''; \
-	echo ' all         - Default target.  Alias for "gargantua".'; \
-	echo ' gargantua   - Build the binary.'; \
-	echo ' v2          - Build the new binary (gargantua-v2).'; \
-	echo ' exe         - Build the binary for Win64 architecture.'; \
-	echo ' debug       - Build the debug binary.'; \
-	echo ' clean       - Remove objects, dependency files and binaries.'; \
-	echo ''
-
-# Generate dependencies except for these targets
-NODEP_TARGETS := clean help
-
-ifeq ($(filter $(NODEP_TARGETS),$(MAKECMDGOALS)),)
--include $(DEPFILES)
-endif
+	@echo "Gargantua Makefile Help"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make                 Builds for the detected host architecture: $(ARCH)"
+	@echo "  make ARCH=...        Builds for a specific architecture."
+	@echo ""
+	@echo "Supported Architectures:"
+	@echo "  apple-silicon        macOS on Apple Silicon (M1/M2/M3)"
+	@echo "  x86-64               Generic 64-bit x86 (AVX2)"
+	@echo "  armv8                Generic 64-bit ARM (Linux)"
+	@echo "  win-x64              Windows 64-bit (Cross-compile via MinGW)"
+	@echo "  win-arm64            Windows ARM64 (Cross-compile via MinGW)"
+	@echo ""

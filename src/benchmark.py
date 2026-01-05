@@ -4,7 +4,7 @@
 # This file is part of Gargantua, a UCI chess engine with NNUE evaluation
 # derived from Chess0, and inspired by Code Monkey King's bbc-1.4.
 #	 
-# Copyright (C) 2022 Claudio M. Camacho
+# Copyright (C) 2026 Claudio M. Camacho
 #
 # Gargantua is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -139,7 +139,7 @@ fen_positions = [ "r1bq1rk1/2p1bppp/p1np1n2/4p3/Pp2P3/1BN2N2/1PPP1PPP/R1BQR1K1 w
 
 
 # depth of each test: use 15-20 for really strong engines, 5-8 for slow/weak engines
-depthlimit = 10
+depthlimit = 15
 
 
 # data to collect throughout the tests

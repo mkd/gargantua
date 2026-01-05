@@ -67,7 +67,9 @@ typedef size_t map_t;
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+#define byte win_byte
 #include <windows.h>
+#undef byte
 #define SEP_CHAR ';'
 #define FD HANDLE
 #define FD_ERR INVALID_HANDLE_VALUE

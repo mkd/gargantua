@@ -183,6 +183,8 @@ int negamax(int alpha, int beta, int depth) {
   if (ply && (countBits(occupancies[Both]) <= TB_LARGEST) && !castle) {
     unsigned wdl = TB_RESULT_FAILED;
 
+    // Crash recovery (POSIX only)
+#ifndef _WIN32
     in_syzygy_probe = true;
     if (sigsetjmp(syzygy_jmp_buf, 1) == 0) {
       wdl =
@@ -193,6 +195,14 @@ int negamax(int alpha, int beta, int depth) {
                        (epsq == NoSq) ? 0 : epsq, sideToMove == White);
     }
     in_syzygy_probe = false;
+#else
+    // Windows: No signal/jmp recovery (SEH is complex). Just probe.
+    wdl = tb_probe_wdl(occupancies[White], occupancies[Black],
+                       bitboards[K] | bitboards[k], bitboards[Q] | bitboards[q],
+                       bitboards[R] | bitboards[r], bitboards[B] | bitboards[b],
+                       bitboards[N] | bitboards[n], bitboards[P] | bitboards[p],
+                       (epsq == NoSq) ? 0 : epsq, sideToMove == White);
+#endif
 
     if (wdl != TB_RESULT_FAILED) {
       // Fix PV bug: Reset PV length

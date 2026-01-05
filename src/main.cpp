@@ -15,11 +15,14 @@
 #include "tt.h"
 #include "uci.h"
 
+#ifndef _WIN32
 #include <csignal>
 #include <cstdio>
 #include <execinfo.h>
 #include <unistd.h>
+#endif
 
+#ifndef _WIN32
 void crash_handler(int sig) {
   // Check if we crashed inside Syzygy probe
   if (in_syzygy_probe) {
@@ -47,10 +50,13 @@ void crash_handler(int sig) {
 
   exit(1);
 }
+#endif
 int main(int argc, char *argv[]) {
+#ifndef _WIN32
   signal(SIGSEGV, crash_handler);
   signal(SIGABRT, crash_handler);
   signal(SIGBUS, crash_handler);
+#endif
 
   cout << EngineName << " " << EngineVersion << " by " << EngineAuthor << endl
        << flush;
