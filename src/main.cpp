@@ -68,6 +68,7 @@ int main(int argc, char *argv[]) {
   initBitboards();
   initRandomKeys();
   initSearch();
+  initLMR();
   TT::init(1024);
 
   // Initialize with the networks present in current directory

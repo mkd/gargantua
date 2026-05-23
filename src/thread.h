@@ -29,6 +29,8 @@ struct ThreadState {
     uint64_t node_count;
     int killers[2][MaxPly];
     int history[12][64];
+    int countermoves[12][64];
+    int current_move[MaxPly];
     int pv_length[MaxPly];
     int pv_table[MaxPly][MaxPly];
     bool followPV;
@@ -39,6 +41,8 @@ struct ThreadState {
         node_count = 0;
         memset(killers, 0, sizeof(killers));
         memset(history, 0, sizeof(history));
+        memset(countermoves, 0, sizeof(countermoves));
+        memset(current_move, 0, sizeof(current_move));
         memset(pv_table, 0, sizeof(pv_table));
         memset(pv_length, 0, sizeof(pv_length));
         followPV = false;
@@ -121,6 +125,8 @@ extern thread_local ThreadState* current_thread;
 #define nodes (current_thread->node_count)
 #define killers (current_thread->killers)
 #define history (current_thread->history)
+#define countermoves (current_thread->countermoves)
+#define current_move (current_thread->current_move)
 #define pv_length (current_thread->pv_length)
 #define pv_table (current_thread->pv_table)
 #define followPV (current_thread->followPV)

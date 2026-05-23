@@ -21,6 +21,10 @@
 #ifndef POSITION_H
 #define POSITION_H
 
+#include <iostream>
+#include <thread>
+#include <atomic>
+
 #include "bitboard.h"
 #include "thread.h"
 #include <iostream>
@@ -100,7 +104,8 @@ std::string getFEN();
 static inline int isRepetition() {
   // reliability checks
   if (ply <= 0) {
-      printf("CRITICAL ERROR in isRepetition: ply=%d, thread=%p\n", ply, pthread_self());
+      std::cerr << "CRITICAL ERROR in isRepetition: ply=" << ply 
+                << ", thread=" << std::this_thread::get_id() << std::endl;
       abort();
   }
 

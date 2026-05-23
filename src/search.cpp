@@ -39,7 +39,7 @@ std::map<string, int> Options;
 uint64_t starttime = getTimeInMilliseconds();
 uint64_t stoptime = starttime;
 uint64_t inc = 0;
-bool timedout = false;
+std::atomic<bool> timedout{false};
 bool timeset = true;
 
 
@@ -58,6 +58,17 @@ std::array<int, 13> PieceValues = {100,           300,           300, 500, 900,
 //
 // Intialize the search parameters to the default ones.
 void initSearch() { resetLimits(); }
+
+// Logarithmic LMR Table
+int LMRTable[MaxPly][256];
+
+void initLMR() {
+  for (int depth = 1; depth < MaxPly; depth++) {
+    for (int moves = 1; moves < 256; moves++) {
+      LMRTable[depth][moves] = (int)(0.75 + std::log(depth) * std::log(moves) / 2.25);
+    }
+  }
+}
 
 // resetLimits
 //
@@ -424,6 +435,9 @@ moves_loop:
     // increment repetition index & store hash key
     repetition_index++;
     repetition_table[repetition_index] = hash_key;
+    
+    // track the move we are making for countermove heuristics
+    current_move[ply] = MoveList.moves[count];
 
     // make the move and check if it is illegal - skip it if so
     // Incremental NNUE Update
@@ -521,14 +535,26 @@ moves_loop:
       //
       // @see https://www.chessprogramming.org/Late_Move_Reductions
 
-      if (ply && (legal >= LMRFullDepthMoves) && (depth >= LMRReductionLimit) &&
-          (countBits(occupancies[Both]) > 6) && !inCheck &&
-          !getMoveCapture(MoveList.moves[count]))
-        score = -negamax(-alpha - 1, -alpha, depth - 2);
-
-      // hack to ensure that full-depth search is done next
-      else
-        score = alpha + 1;
+      if (ply && depth >= 3 && legal > 1 && !inCheck &&
+          !getMoveCapture(MoveList.moves[count]) && 
+          !getPromo(MoveList.moves[count])) {
+          
+        int R = LMRTable[std::min(depth, MaxPly - 1)][std::min(legal, 255)];
+        
+        // Decrease reduction in PV nodes
+        if (pv_node) R--;
+        
+        // Decrease reduction for killer moves
+        if (killers[0][ply] == MoveList.moves[count] || killers[1][ply] == MoveList.moves[count])
+          R--;
+          
+        R = std::max(0, R);
+        int reduced_depth = std::max(1, depth - 1 - R);
+        
+        score = -negamax(-alpha - 1, -alpha, reduced_depth);
+      } else {
+        score = alpha + 1; // hack to ensure full depth search next
+      }
 
       ////////////////////////////////////////////////////////////////////
       //
@@ -600,10 +626,17 @@ moves_loop:
         // store hash entry with the score equal to beta, only if not null move
         TT::save(beta, bestmove, depth, hash_type_beta);
 
-        // store killer moves (only for quiet moves)
+        // store killer moves and countermoves (only for quiet moves)
         if (!getMoveCapture(MoveList.moves[count])) {
           killers[1][ply] = killers[0][ply];
           killers[0][ply] = MoveList.moves[count];
+          
+          if (ply > 1) {
+            int prev_move = current_move[ply - 1];
+            if (prev_move) {
+              countermoves[getMovePiece(prev_move)][getMoveTarget(prev_move)] = MoveList.moves[count];
+            }
+          }
         }
 
         // node (move) fails high
@@ -738,6 +771,8 @@ void search() {
   // reset data structures for a new search
   memset(killers, 0, sizeof(killers));
   memset(history, 0, sizeof(history));
+  memset(countermoves, 0, sizeof(countermoves));
+  memset(current_move, 0, sizeof(current_move));
   memset(pv_table, 0, sizeof(pv_table));
   memset(pv_length, 0, sizeof(pv_length));
 
@@ -749,6 +784,7 @@ void search() {
   // define initial alpha beta bounds
   int alpha = -ValueInfinite;
   int beta = ValueInfinite;
+  int delta = AspirationWindow;
 
   // reset nodes counter
   nodes = 0ULL;
@@ -770,22 +806,27 @@ void search() {
 
     ////////////////////////////////////////////////////////////////////////
     //
-    // Aspiration Window
+    // Advanced Aspiration Window
     //
-    // Search with a narrow window, keep narrowing it after each iteration.
-    // However, if the score falls outside the window, we must try again
-    // with a full-width window (and the same depth).
+    // Search with a narrow window, but keep widening it progressively on failures.
+    // This saves massive amounts of time compared to falling back to full-width.
 
     if ((score <= alpha) || (score >= beta)) {
-      alpha = -ValueInfinite;
-      beta = ValueInfinite;
-      current_depth--;
+      if (score <= alpha) {
+        alpha = std::max(-ValueInfinite, alpha - delta);
+      }
+      if (score >= beta) {
+        beta = std::min(ValueInfinite, beta + delta);
+      }
+      delta += delta / 2; // Progressive widening
+      current_depth--;    // search the same depth again
       continue;
     }
 
-    // set up the window for the next iteration
-    alpha = score - AspirationWindow;
-    beta = score + AspirationWindow;
+    // set up the window for the next iteration based on this depth's exact score
+    delta = AspirationWindow;
+    alpha = std::max(-ValueInfinite, score - delta);
+    beta = std::min(ValueInfinite, score + delta);
 
     // stop the timer and measure time elapsed
     auto finish = chrono::high_resolution_clock::now();
@@ -870,8 +911,8 @@ int qsearch(int alpha, int beta) {
   // loop over moves within a movelist
   for (int count = 0; count < MoveList.count; count++) {
     // don't search capture sequences that end up in losing material
-    // if (see(MoveList.moves[count]) < 0)
-    //   continue;
+    if (see(MoveList.moves[count]) < 0)
+      continue;
 
     // preserve board state
     saveBoard();

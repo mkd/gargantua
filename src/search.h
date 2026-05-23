@@ -21,6 +21,8 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
+#include <atomic>
+#include <cmath>
 #include <cassert>
 #include <chrono>
 #include <future>
@@ -109,7 +111,7 @@ extern std::map<std::string, int> Options;
 extern uint64_t starttime;
 extern uint64_t stoptime;
 extern uint64_t inc;
-extern bool timedout;
+extern std::atomic<bool> timedout;
 extern bool timeset;
 
 
@@ -184,6 +186,8 @@ void search();
 int qsearch(int, int);
 int see(int);
 void initSearch();
+void initLMR();
+extern int LMRTable[MaxPly][256];
 void sortMoves(MoveList_t &, int);
 void printMoveScores(MoveList_t &);
 void resetLimits();
@@ -302,6 +306,10 @@ static inline int scoreMove(int move) {
     // score 2nd killer move
     else if (killers[1][ply] == move)
       return 8000;
+
+    // score countermove
+    else if (ply > 0 && current_move[ply - 1] && countermoves[getMovePiece(current_move[ply - 1])][getMoveTarget(current_move[ply - 1])] == move)
+      return 7500;
 
     // score history move
     else
