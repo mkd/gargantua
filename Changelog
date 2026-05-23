@@ -1,3 +1,8 @@
+v2.1
+====
+- Add Lazy SMP with multi-threading
+
+
 v2.0
 ====
 - New NNUE architecture based on Stockfish SFNNv9 with dual network (small & large)

@@ -28,11 +28,6 @@
 #include "search.h"
 #include "tbprobe.h"
 
-// 'nodes' is a global variable holding the number of nodes analyzed
-// or searched. It is used by negamax() but also other performance test
-// functions such as perft().
-uint64_t nodes = 0ULL;
-
 // Limits holds the configuration of the search: time, search depth, etc.
 Limits_t Limits;
 
@@ -47,31 +42,7 @@ uint64_t inc = 0;
 bool timedout = false;
 bool timeset = true;
 
-// killers [id][ply]
-//
-// Killers is a table where the two best (quiet) moves are
-// systematically stored for later searches. This is based on the
-// fact that a move producing a beta cut-off must be a good one.
-// beta cut-offs, where a move killer moves [id][ply]
-//
-// Note: storing exactly 2 killer moves is best for efficiency/performance.
-int killers[2][MaxPly];
 
-// history heuristics [piece][square]
-int history[12][64];
-
-// PV length [ply]
-int pv_length[MaxPly];
-
-// PV table [ply][ply]
-int pv_table[MaxPly][MaxPly];
-
-// follow PV & score PV move
-bool followPV = false;
-bool scorePV = false;
-
-// allow Null move pruning
-bool allowNull = true;
 
 // Razoring and pruning margins
 std::array<int, 4> LateMovePruningMargins = {0, 8, 12, 24};
@@ -103,7 +74,7 @@ void resetLimits() {
   Limits.mate = 0;
   Limits.perft = 0;
   Limits.infinite = 0;
-  Limits.nodes = 0;
+  Limits.max_nodes = 0;
   Limits.ponder = false;
 }
 
@@ -383,23 +354,7 @@ int negamax(int alpha, int beta, int depth) {
     repetition_index--;
     ply--;
     takeBack(0); // Null move doesn't affect NNUE board state?
-    // Wait, NullMove in Gargantua switches side but doesn't move pieces.
-    // NNUE incremental needs to handle null move (side switch)?
-    // Stockfish do_null_move?
-    // My Incremental::do_move/undo_move doesn't support null move specifically?
-    // If I pass 0, my macros might crash or do nothing?
-    // encodeMove(0,0,0...) is 0?
-    // assert(move) in makeMove.
-    // But here we are undoing a null move. makeMove wasn't called.
-    // Null move logic in search.cpp uses manual state update (ply++, side^=1).
-    // It does NOT call makeMove.
-    // So I don't need to call NNUE_UNDO(null)?
-    // BUT my global_sf_pos must be updated (side to move inverted)?
-    // If global_sf_pos gets out of sync on null move, subsequent evals are
-    // wrong? Yes. I need to implement NullMove support in incremental logic.
-    // For now, I will assume Null Move prunning logic manually handles board.
-    // I should probably add NNUE_NULL_PC / NNUE_NULL_UNDO?
-    // Or just explicit call.
+    NNUE_UNDO_NULL
 
     // check if time is up
     if (timedout)
@@ -478,6 +433,7 @@ moves_loop:
       repetition_index--;
       ply--;
       takeBack(MoveList.moves[count]);
+      NNUE_UNDO(MoveList.moves[count]);
 
       continue;
     }
@@ -525,6 +481,7 @@ moves_loop:
           repetition_index--;
           ply--;
           takeBack(MoveList.moves[count]);
+          NNUE_UNDO(MoveList.moves[count]);
 
           continue;
         }
@@ -547,6 +504,7 @@ moves_loop:
         repetition_index--;
         ply--;
         takeBack(MoveList.moves[count]);
+        NNUE_UNDO(MoveList.moves[count]);
 
         continue;
       }
@@ -599,6 +557,7 @@ moves_loop:
     repetition_index--;
     ply--;
     takeBack(MoveList.moves[count]);
+    NNUE_UNDO(MoveList.moves[count]);
 
     // check if time is up
     if (timedout)
@@ -754,19 +713,21 @@ void search() {
         }
 
         if (best_move) {
-          // Print info
-          cout << "info depth " << Limits.depth;
-          int tb_score = 0;
-          if (wdl == TB_WIN)
-            tb_score = MateValue - dtz; // Estimate
-          else if (wdl == TB_LOSS)
-            tb_score = -MateValue + dtz;
+          if (current_thread == &Threads.main()->state) {
+            // Print info
+            cout << "info depth " << Limits.depth;
+            int tb_score = 0;
+            if (wdl == TB_WIN)
+              tb_score = MateValue - dtz; // Estimate
+            else if (wdl == TB_LOSS)
+              tb_score = -MateValue + dtz;
 
-          cout << " score mate "
-               << (tb_score > 0 ? (dtz + 1) / 2 : -(dtz + 1) / 2);
-          cout << " nodes " << 0 << " nps " << 0 << " time " << 0 << " pv "
-               << prettyMove(best_move) << endl;
-          cout << "bestmove " << prettyMove(best_move) << endl;
+            cout << " score mate "
+                 << (tb_score > 0 ? (dtz + 1) / 2 : -(dtz + 1) / 2);
+            cout << " nodes " << 0 << " nps " << 0 << " time " << 0 << " pv "
+                 << prettyMove(best_move) << endl;
+            cout << "bestmove " << prettyMove(best_move) << endl;
+          }
           timedout = true;
           return;
         }
@@ -835,31 +796,36 @@ void search() {
 
     // print bestmove and PV line
     if (pv_length[0]) {
-      cout << "info depth " << current_depth;
+      if (current_thread == &Threads.main()->state) {
+        cout << "info depth " << current_depth;
 
-      // report mating distance if available, otherwise print score
-      if ((score > -MateValue) && (score < -MateScore))
-        cout << " score mate " << -(score + MateValue) / 2 - 1;
-      else if ((score > MateScore) && (score < MateValue))
-        cout << " score mate " << (MateValue - score) / 2 + 1;
-      else
-        cout << " score cp " << score;
+        // report mating distance if available, otherwise print score
+        if ((score > -MateValue) && (score < -MateScore))
+          cout << " score mate " << -(score + MateValue) / 2 - 1;
+        else if ((score > MateScore) && (score < MateValue))
+          cout << " score mate " << (MateValue - score) / 2 + 1;
+        else
+          cout << " score cp " << score;
 
-      // other search information: nodes, nps, time, etc.
-      cout << " nodes " << nodes << " nps " << nodes * 1000000000 / ns
-           << " hashfull " << TT::hashfull() << " time " << ms << " pv ";
+        // other search information: nodes, nps, time, etc.
+        uint64_t total_nodes = Threads.nodes_searched();
+        cout << " nodes " << total_nodes << " nps " << total_nodes * 1000000000 / ns
+             << " hashfull " << TT::hashfull() << " time " << ms << " pv ";
 
-      // print PV line
-      for (int count = 0; count < pv_length[0]; count++)
-        cout << prettyMove(pv_table[0][count]) << " ";
+        // print PV line
+        for (int count = 0; count < pv_length[0]; count++)
+          cout << prettyMove(pv_table[0][count]) << " ";
 
-      // new line before next depth
-      cout << endl << flush;
+        // new line before next depth
+        cout << endl << flush;
+      }
     }
   }
 
   // print bestmove
-  cout << "bestmove " << prettyMove(pv_table[0][0]) << endl << flush;
+  if (current_thread == &Threads.main()->state) {
+    cout << "bestmove " << prettyMove(pv_table[0][0]) << endl << flush;
+  }
 
   // tell the engine that the search is ready
   timedout = true;
@@ -925,6 +891,7 @@ int qsearch(int alpha, int beta) {
       repetition_index--;
       ply--;
       takeBack(MoveList.moves[count]);
+      NNUE_UNDO(MoveList.moves[count]);
 
       continue;
     }
@@ -936,6 +903,7 @@ int qsearch(int alpha, int beta) {
     repetition_index--;
     ply--;
     takeBack(MoveList.moves[count]);
+    NNUE_UNDO(MoveList.moves[count]);
 
     // check if time is up
     if (timedout)
@@ -986,6 +954,7 @@ void dperft(int depth) {
     NNUE_DO(MoveList.moves[move_count]);
     if (!makeMove(MoveList.moves[move_count])) {
       takeBack(MoveList.moves[move_count]);
+      NNUE_UNDO(MoveList.moves[move_count]);
       continue;
     }
 
@@ -1000,6 +969,7 @@ void dperft(int depth) {
 
     // undo move
     takeBack(MoveList.moves[move_count]);
+    NNUE_UNDO(MoveList.moves[move_count]);
 
     // print move and nodes under that move
     cout << prettyMove(MoveList.moves[move_count]) << ": " << PrevNodes << endl;

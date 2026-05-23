@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-VERSION="2.0"
+VERSION="2.1"
 DIST_DIR="../dist"
 mkdir -p "$DIST_DIR"
 

@@ -51,9 +51,11 @@ endif
 
 # Apple Silicon (macOS)
 ifeq ($(ARCH),apple-silicon)
-    # Apple M1/M2/M3 supports NEON and DotProduct
+    CXXFLAGS := -std=c++20 -O3 -flto -DNDEBUG -pedantic -Wvla \
+        -Wno-deprecated-declarations -DUSE_NEW_NNUE
     CXXFLAGS += -mcpu=apple-m1 -DUSE_NEON -DUSE_NEON_DOTPROD -DUSE_POPCNT
     LDFLAGS  += 
+
 
 # Linux / Generic x86-64 (Modern)
 else ifeq ($(ARCH),x86-64)

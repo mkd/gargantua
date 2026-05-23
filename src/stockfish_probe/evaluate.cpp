@@ -155,6 +155,11 @@ int Eval::simple_eval(const Position &pos, Color c) {
 }
 
 Value Eval::evaluate(const Position &pos) {
+  if (pos.state() == nullptr) {
+      fprintf(stderr, "CRITICAL ERROR: pos.state() is nullptr in evaluate! pos=%p\n", (const void*)&pos);
+      fflush(stderr);
+      abort();
+  }
 
   int simpleEval = simple_eval(pos, pos.side_to_move());
   bool smallNet = std::abs(simpleEval) > 1050;

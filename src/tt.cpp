@@ -44,10 +44,7 @@ Bitboard side_key;
 // current no. of total hash table entries
 uint64_t hash_total_entries = 0ULL;
 
-// no. of hash entries used
-uint64_t hash_used = 0ULL;
-
-
+// (hash_used removed to avoid false sharing)
 
 // Global TT data structure
 TTEntry_t *hash_table = nullptr;
@@ -156,8 +153,7 @@ void TT::clear()
     }
 
 
-    // reset the hash usage counter
-    hash_used = 0ULL;
+    // NOTE: hash_used has been removed to avoid SMP false sharing.
 }
 
 
@@ -277,12 +273,7 @@ void TT::save(int score, int best_move, int depth, int hash_type)
         score += ply;
 
 
-    // if no collision, increment the counter of hash used
-    if (hash_entry->depth == 0)
-        hash_used++;
-
-
-    // write hash entry data 
+    // write hash entry data
     hash_entry->key       = hash_key;
     hash_entry->value     = score;
     hash_entry->type      = hash_type;

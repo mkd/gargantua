@@ -21,9 +21,9 @@
 #include <iostream>
 #include <cassert>
 
+#include "movgen.h"
 #include "bitboard.h"
 #include "position.h"
-#include "movgen.h"
 
 
 

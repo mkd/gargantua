@@ -47,7 +47,7 @@ extern Bitboard side_key;
 extern uint64_t hash_total_entries;
 
 // no. of hash entries used
-extern uint64_t hash_used;
+// (removed to avoid false sharing)
 
 // Constant returned when no hash entry is found in TT
 #define no_hash_found 100000
@@ -105,11 +105,15 @@ void save(int, int, int, int);
 // hash is x permill full, as per UCI protocol.
 static inline int hashfull()
 {
-    // reliability checks
-    assert(hash_total_entries > 0);
-
-
-    return (hash_used * 1000) / hash_total_entries;
+    if (hash_total_entries == 0) return 0;
+    int cnt = 0;
+    int max_entries = (hash_total_entries > 1000) ? 1000 : hash_total_entries;
+    for (int i = 0; i < max_entries; i++) {
+        if (hash_table[i].depth != 0) {
+            cnt++;
+        }
+    }
+    return (cnt * 1000) / max_entries;
 }
 
 

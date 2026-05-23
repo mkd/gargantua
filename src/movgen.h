@@ -25,24 +25,32 @@
 #include <iostream>
 #include <sstream>
 
-#include "bitboard.h"
-#include "position.h"
-#include "tt.h"
-
 #ifdef USE_NEW_NNUE
+#pragma push_macro("ply")
+#pragma push_macro("sideToMove")
+#undef ply
+#undef sideToMove
 #include "stockfish_probe/nnue_incremental.h"
+#pragma pop_macro("sideToMove")
+#pragma pop_macro("ply")
 #include <cstring>
 #include <memory>
 #define NNUE_SAVE
 #define NNUE_DO(m) Stockfish::Incremental::push_state(m);
 #define NNUE_DO_NULL Stockfish::Incremental::push_null_state();
 #define NNUE_UNDO(m) Stockfish::Incremental::pop_state(m);
+#define NNUE_UNDO_NULL Stockfish::Incremental::pop_state(0);
 #else
 #define NNUE_SAVE
 #define NNUE_DO(m)
 #define NNUE_DO_NULL
 #define NNUE_UNDO(m)
+#define NNUE_UNDO_NULL
 #endif
+
+#include "bitboard.h"
+#include "position.h"
+#include "tt.h"
 
 // MoveList_t is a structure holding a list of moves (up to 256, which is
 // enough for any legal chess position), and a pointer to the last element,
@@ -261,8 +269,7 @@ constexpr bool isSquareAttacked(int square, int side) {
   memcpy(occupancies, occupancies_copy, sizeof(occupancies));                  \
   sideToMove = side_copy, epsq = enpassant_copy, castle = castle_copy;         \
   fifty = fifty_copy;                                                          \
-  hash_key = hash_key_copy;                                                    \
-  NNUE_UNDO(move)
+  hash_key = hash_key_copy;
 
 // makeMove
 //

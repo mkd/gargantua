@@ -76,12 +76,17 @@ moves.
 - **Null Move Reductions:** 
   https://en.wikipedia.org/wiki/Null-move_heuristic
 
+- **Lazy SMP (Multi-Threading):** 
+  Utilizes a lockless shared Transposition Table for highly scalable and efficient multi-threading.
 
-## Key Features in v2.0
+
+## Key Features in v2+ versions
 - **New NNUE Architecture**: Shifted to a robust Stockfish-based probe implementation (`src/stockfish_probe`) for state-of-the-art evaluation.
+- **Lazy SMP**: Fully thread-safe engine supporting highly scalable multi-threaded searches.
 - **Syzygy Tablebase Support**: precise endgame play with support for 3-4-5-6-7 piece tablebases.
 - **Crash Recovery System**: Implemented a dedicated signal handling mechanism to ensure maximum stability even during intensive tablebase probes.
 - **Simplified Build**: A clean and standardized build process.
+- **Lazy SMP (Multi-Threading)**
 
 
 ## Files
@@ -94,7 +99,7 @@ moves.
 To build the engine, simply run:
 ```bash
 cd src
-make
+make -j ARCH=apple-silicon
 ```
 This produces the `gargantua` binary.
 
@@ -121,6 +126,7 @@ list:
 
 
 ### UCI Options
+- **Threads**: Number of threads for the engine to use during search (default 1).
 - **Hash**: Size of the transposition table in MB.
 - **SyzygyPath**: Absolute path to your Syzygy tablebase files (`.rtbw`, `.rtbz`).
   - Example: `SyzygyPath=/path/to/syzygy/3-4-5`

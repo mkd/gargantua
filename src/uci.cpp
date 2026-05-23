@@ -31,6 +31,12 @@
 #include "search.h"
 #include "tbprobe.h"
 #include "tt.h"
+#include "thread.h"
+
+#include "tbprobe.h"
+#include "tt.h"
+#include "thread.h"
+
 #include "uci.h"
 
 using namespace std;
@@ -128,15 +134,8 @@ void UCI::position(istringstream &is) {
   if (!setPosition(fen)) {
     // If parsing failed (e.g. invalid FEN), revert to startpos to avoid crash.
     setPosition(FenPosStartpos);
-#ifdef USE_NEW_NNUE
-    Stockfish::Incremental::setup_reset(FenPosStartpos);
-#endif
     return;
   }
-
-#ifdef USE_NEW_NNUE
-  Stockfish::Incremental::setup_reset(fen);
-#endif
 
 #ifdef USE_NEW_NNUE
 #undef NNUE_SAVE
@@ -164,6 +163,7 @@ void UCI::position(istringstream &is) {
     if (!makeMove(m)) {
       // undo move, if not legal
       takeBack(m);
+      NNUE_UNDO(m);
 
       // decrement repetition index
       repetition_index--;
@@ -243,7 +243,7 @@ void UCI::go(istringstream &is) {
 
     // "nodes": search up to a given no. of nodes, regardless of time/depth
     else if (token == "nodes") {
-      is >> Limits.nodes;
+      is >> Limits.max_nodes;
       timeset = false;
     }
 
@@ -303,8 +303,9 @@ void UCI::go(istringstream &is) {
   // constaintly watch the clock and other limits that will stop the search
   auto io = async(launch::async, watchClockAndInput);
 
-  // start the search
-  search();
+  // start the search using the thread pool
+  Threads.start_thinking();
+  Threads.main()->wait_for_search_finished();
 }
 
 // UCI::setOption
@@ -366,6 +367,15 @@ void UCI::setOption(istringstream &is) {
   // option name SyzygyPath type string
   else if (name == "SyzygyPath") {
     tb_init(value.c_str());
+  }
+
+  // option name Threads type spin
+  else if (name == "Threads") {
+    int num_threads = stoi(value);
+    if (num_threads < 1) num_threads = 1;
+    if (num_threads > 128) num_threads = 128;
+    Options["Threads"] = num_threads;
+    Threads.set(num_threads);
   }
 
   // unknown option
@@ -442,6 +452,7 @@ void UCI::loop(int argc, char *argv[]) {
 
       cout << "option name Hash type spin default 1024 min 16 max 1024" << endl;
       cout << "option name Clear Hash type button" << endl;
+      cout << "option name Threads type spin default 1 min 1 max 128" << endl;
       cout << "option name Contempt type spin default 25 min 0 max 200" << endl;
       cout << "option name SyzygyPath type string default <empty>" << endl;
 

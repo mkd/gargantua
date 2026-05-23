@@ -13,6 +13,7 @@
 #include "search.h"
 #include "tbprobe.h"
 #include "tt.h"
+#include "thread.h"
 #include "uci.h"
 
 #ifndef _WIN32
@@ -60,6 +61,9 @@ int main(int argc, char *argv[]) {
 
   cout << EngineName << " " << EngineVersion << " by " << EngineAuthor << endl
        << flush;
+
+  Threads.set(1);
+  current_thread = &Threads.main()->state;
 
   initBitboards();
   initRandomKeys();

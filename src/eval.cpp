@@ -2,10 +2,11 @@
   This file is part of Gargantua...
 */
 
-#include "eval.h"
-#include "position.h"
 #include "stockfish_probe/nnue_incremental.h"
 #include "stockfish_probe/probe.h"
+
+#include "eval.h"
+#include "position.h"
 
 // Mapping from Gargantua pieces (P=0...k=11) to Stockfish Probe pieces
 // (1..6, 9..14)

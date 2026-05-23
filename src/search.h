@@ -35,6 +35,7 @@
 #endif
 
 #include "movgen.h"
+#include "thread.h"
 
 using namespace std;
 
@@ -71,10 +72,7 @@ using namespace std;
 // @see scoreMove() and sortMoves()
 #define MoveScorePromoQuiet 10000
 
-// 'nodes' is a global variable holding the number of nodes analyzed
-// or searched. It is used by negamax() but also other performance test
-// functions such as perft().
-extern uint64_t nodes;
+
 
 // Limits_t is a structure that holds the configuration of the search.
 // This includes search depth, time to search, etc.
@@ -94,7 +92,7 @@ typedef struct {
   bool infinite;
   bool ponder;
   uint64_t movetime;
-  uint64_t nodes;
+  uint64_t max_nodes;
 } Limits_t;
 
 extern Limits_t Limits;
@@ -114,25 +112,7 @@ extern uint64_t inc;
 extern bool timedout;
 extern bool timeset;
 
-// killers [id][ply]
-//
-// Killers is a table where the two best (quiet) moves are
-// systematically stored for later searches. This is based on the
-// fact that a move producing a beta cut-off must be a good one.
-// beta cut-offs, where a move killer moves [id][ply]
-//
-// Note: storing exactly 2 killer moves is best for efficiency/performance.
-//
-// @see https://www.chessprogramming.org/Killer_Heuristic
-extern int killers[2][MaxPly];
 
-// history [piece][square]
-//
-// History is a table where to store moves that have produced an improvement in
-// the score of previous searches. In other words, they have raised alpha.
-//
-// @see https://www.chessprogramming.org/History_Heuristic
-extern int history[12][64];
 
 /*
       ================================
@@ -156,24 +136,7 @@ extern int history[12][64];
       5    0    0    0    0    0    m6
 */
 
-// PV length [ply]
-//
-// An array of Principal Variations indexed by ply (distance to root). This is
-// employed to collect the principal variation of best moves inside the
-// alpha-beta or principal variation search, with the best score moves
-// propagated up to the root.
-//
-// @see https://www.chessprogramming.org/Triangular_PV-Table
-extern int pv_length[MaxPly];
 
-// PV table [ply][ply]
-extern int pv_table[MaxPly][MaxPly];
-
-// follow PV & score PV move
-extern bool followPV, scorePV;
-
-// flag to control whether we allow null move pruning or not
-extern bool allowNull;
 
 // Most Valuable Victim / Less Valuable Attacker (MVV/LVA) lookup table
 /*
@@ -257,6 +220,7 @@ static inline void perft(int depth) {
     NNUE_DO(MoveList.moves[move_count]);
     if (!makeMove(MoveList.moves[move_count])) {
       takeBack(MoveList.moves[move_count]);
+      NNUE_UNDO(MoveList.moves[move_count]);
       continue;
     }
 
@@ -265,6 +229,7 @@ static inline void perft(int depth) {
 
     // undo move
     takeBack(MoveList.moves[move_count]);
+    NNUE_UNDO(MoveList.moves[move_count]);
   }
 }
 
@@ -444,8 +409,8 @@ static inline void watchClockAndInput() {
         timedout = true;
     }
 
-    // check for nodes limitation
-    else if ((Limits.nodes > 0) && (nodes > Limits.nodes))
+    // check for nodes    // Nodes
+    else if ((Limits.max_nodes > 0) && (nodes > Limits.max_nodes))
       timedout = true;
 
     // update interval
@@ -485,13 +450,13 @@ static inline int contempt() {
 
 // mate_in
 //
-// Detect the distance from the root at which we can mate the opponent.
-constexpr int mate_in(int ply) { return MateValue - ply; }
+// Determine whether a mate has been found from root to leaf node.
+constexpr int mate_in(int p) { return MateValue - p; }
 
 // mated_in
 //
-// Detect the distance from the root at which we are mated by our opponent.
-constexpr int mated_in(int ply) { return -MateValue + ply; }
+// Determine whether a mate has been found from leaf node up to the root.
+constexpr int mated_in(int p) { return -MateValue + p; }
 
 // futility_margin
 //

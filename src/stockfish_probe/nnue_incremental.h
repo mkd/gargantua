@@ -31,6 +31,11 @@ void pop_state(int g_move);
 // Get the evaluation of the current position.
 int evaluate();
 
+// Thread synchronization
+const Position& get_global_pos();
+const std::deque<StateInfo>& get_setup_states();
+void sync_from_main_thread(const Position& main_pos, const std::deque<StateInfo>& main_setup);
+
 } // namespace Incremental
 } // namespace Stockfish
 

@@ -21,7 +21,8 @@
 #ifndef POSITION_H
 #define POSITION_H
 
-#include <cstring>
+#include "bitboard.h"
+#include "thread.h"
 #include <iostream>
 #include <map>
 
@@ -62,27 +63,7 @@ static std::map<int, unsigned char> PromoPieces = {{Q, 'q'}, {R, 'r'}, {B, 'b'},
                                                    {N, 'n'}, {q, 'q'}, {r, 'r'},
                                                    {b, 'b'}, {n, 'n'}};
 
-// A chess position is defined by the following elements:
-//
-// 1. A set of 12 bitboards with all the piece occupancies
-// 2. The side to move
-// 3. The enpassant capture square
-// 4. The castling rights
-// 5. The 50-move rule counter
-extern Bitboard bitboards[12];
-extern Bitboard occupancies[3];
-extern int sideToMove;
-extern int epsq;
-extern int castle;
-extern int fifty;
-extern int ply;
 
-// Every chess position has its own (almost) unique hash key:
-extern uint64_t hash_key;
-
-// Flag to indicate whether the board should be displayed from White's
-// perspective (false) or Black's perspective (true).
-extern bool flip;
 
 // Castling rights binary encoding
 /*
@@ -102,12 +83,7 @@ extern bool flip;
 */
 enum castling { wk = 1, wq = 2, bk = 4, bq = 8 };
 
-// Structures to detect 3-fold repetitions within the game:
-//
-// repetition_table stores a number of positions "played" during the search
-// repetition_index tells the size of the repetition_table (pointer to last)
-extern Bitboard repetition_table[1024];
-extern int repetition_index;
+
 
 // Functionality to handle a position on the chess board, including
 // resting the board to its initial status, printing the board and
@@ -123,7 +99,10 @@ std::string getFEN();
 // of repetitions, i.e., a return value >= 3 means it's a draw.
 static inline int isRepetition() {
   // reliability checks
-  assert(ply > 0);
+  if (ply <= 0) {
+      printf("CRITICAL ERROR in isRepetition: ply=%d, thread=%p\n", ply, pthread_self());
+      abort();
+  }
 
   // if we found the hash key same with a current
   for (int index = repetition_index; index > 0; index--)

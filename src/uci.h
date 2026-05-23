@@ -27,7 +27,7 @@
 
 // Engine information 
 #define EngineName     "Gargantua"
-#define EngineVersion  "2.0"
+#define EngineVersion  "2.1"
 #define EngineAuthor   "Claudio M. Camacho <claudiomkd@gmail.com>"
 #define EngineURL      "http://github.com/mkd/gargantua"
 

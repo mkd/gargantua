@@ -38,8 +38,8 @@
 namespace Stockfish {
 namespace Incremental {
 
-Position global_pos;
-StateInfo global_si; // Root state info
+thread_local Position global_pos;
+thread_local StateInfo global_si; // Root state info
 
 // Mapping arrays
 // Gargantua pieces (0-11) to Stockfish pieces
@@ -61,8 +61,8 @@ Piece map_piece(int g_piece) {
 // target square. Stockfish Position has piece_on(sq).
 
 // Global Stack for Search
-static std::vector<StateInfo> search_stack;
-static int stack_ptr = 0;
+thread_local std::vector<StateInfo> search_stack;
+thread_local size_t stack_ptr = 0;
 
 void init() {
   // Initialize with startpos
@@ -177,6 +177,13 @@ void do_move(int move, StateInfo *new_si) {
     dp.from[dp.dirty_num] = sf_to;
     dp.to[dp.dirty_num] = SQ_NONE;
     dp.dirty_num++;
+  }
+
+  if (global_pos.piece_on(sf_from) == NO_PIECE) {
+      std::cout << "CRITICAL ERROR: trying to remove NO_PIECE from " << sf_from << " (move: " << move << ")" << std::endl;
+      std::cout << "from=" << from << ", MAP_SQ(from)=" << MAP_SQ(from) << ", sf_from=" << (int)sf_from << std::endl;
+      std::cout << "board state at from: " << global_pos.piece_on(sf_from) << std::endl;
+      abort();
   }
 
   // Remove moving piece from 'from'
@@ -348,14 +355,16 @@ int evaluate() {
 namespace Stockfish {
 namespace Incremental {
 
-static std::deque<StateInfo> setup_states;
+thread_local std::deque<StateInfo> setup_states;
 
 void setup_reset(const std::string &fen) {
   setup_states.clear();
   // Emplace root state
   setup_states.emplace_back();
+  setup_states.back().previous = nullptr;
   // Initialize position with this root state
   global_pos.set(fen, &setup_states.back());
+  stack_ptr = 0;
 }
 
 void setup_move(int move) {
@@ -373,6 +382,41 @@ void setup_undo(int move) {
   undo_move(move);
   // Remove the state we just invalidates
   setup_states.pop_back();
+}
+
+const Position& get_global_pos() {
+    return global_pos;
+}
+
+const std::deque<StateInfo>& get_setup_states() {
+    return setup_states;
+}
+
+void sync_from_main_thread(const Position& main_pos, const std::deque<StateInfo>& main_setup) {
+    setup_states = main_setup;
+    
+    // Copy the Position by value using memcpy
+    std::memcpy(&global_pos, &main_pos, sizeof(Position));
+    
+    // Fix pointer
+    if (!setup_states.empty()) {
+        global_pos.st = &setup_states.back();
+    } else {
+        global_pos.st = nullptr;
+    }
+
+    if (global_pos.st == nullptr) {
+        fprintf(stderr, "CRITICAL ERROR: global_pos.st is nullptr in sync_from_main_thread! main_setup.size()=%zu\n", main_setup.size());
+    }
+
+    int pc = global_pos.piece_on(Square(4));
+    if (pc == 0) {
+        std::cout << "[sync_from_main_thread] CRITICAL: piece at E1 (4) is NO_PIECE in worker thread! main_pos piece was: " << main_pos.piece_on(Square(4)) << std::endl;
+    }
+    
+    // Also reset the search stack
+    search_stack.resize(2048);
+    stack_ptr = 0;
 }
 
 } // namespace Incremental

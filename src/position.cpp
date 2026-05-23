@@ -28,35 +28,13 @@
 #include "position.h"
 #include "search.h"
 #include "tt.h"
+#ifdef USE_NEW_NNUE
+#include "stockfish_probe/nnue_incremental.h"
+#endif
 
 using namespace std;
 
-// A position is defined by the following elements:
-//
-// 1. A set of 12 bitboards with all the piece occupancies
-// 2. The side to move
-// 3. The enpassant capture square
-// 4. The castling rights
-// 5. The 50-move rule (50 moves without captures, pawn moves nor promotions)
-// 6. A ply counter (to separate root moves from the rest)
-Bitboard bitboards[12];
-Bitboard occupancies[3];
-int sideToMove = White;
-int epsq = NoSq;
-int castle;
-int fifty = 0;
-int ply = 0;
 
-// Chess position's (almost) unique hash key
-uint64_t hash_key = 0ULL;
-
-// Flag to indicate whether the board should be displayed from White's
-// perspective (false) or Black's perspective (true).
-bool flip = false;
-
-// Structures to detect 3-fold repetitions within the game:
-Bitboard repetition_table[1024];
-int repetition_index;
 
 // resetBoard
 //
@@ -225,6 +203,10 @@ bool setPosition(const string &fenStr) {
     std::cout << "Error: Invalid FEN parsed. Missing King(s)." << std::endl;
     return false;
   }
+
+#ifdef USE_NEW_NNUE
+  Stockfish::Incremental::setup_reset(fenStr);
+#endif
 
   return true;
 }
