@@ -2,4 +2,3 @@ TODO
 ====
 - pondering 
     - https://web.archive.org/web/20071027053527/http://www.brucemo.com/compchess/programming/pondering.htm
-- lazy SMP: try with thread_local (minimum modifications). Otherwise:
