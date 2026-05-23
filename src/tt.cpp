@@ -164,7 +164,7 @@ void TT::clear()
 void TT::init(uint32_t mb)
 {
     // init hash size
-    int hash_size = mb * 1024 * 1024;
+    uint64_t hash_size = (uint64_t)mb * 1024ULL * 1024ULL;
 
     
     // init number of hash entries
