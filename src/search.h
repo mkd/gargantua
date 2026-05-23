@@ -43,36 +43,36 @@ using namespace std;
 
 // Default settings and configuration for the search, as well as
 // tuning parameters for search extensions and reductions:
-#define DefaultSearchDepth 12
-#define MaxSearchDepth 256
-#define DefaultMovetime 5000
-#define LMRFullDepthMoves 4
-#define LMRReductionLimit 3
-#define AspirationWindow 70
-#define WatchIntervalMs 10
+constexpr int DefaultSearchDepth = 12;
+constexpr int MaxSearchDepth = 256;
+constexpr int DefaultMovetime = 5000;
+constexpr int LMRFullDepthMoves = 4;
+constexpr int LMRReductionLimit = 3;
+constexpr int AspirationWindow = 70;
+constexpr int WatchIntervalMs = 10;
 
-#define MaxSearchTime 0xFFFFFFFFFFFFFFFFULL
+constexpr uint64_t MaxSearchTime = 0xFFFFFFFFFFFFFFFFULL;
 
 // Search definitions, including alpha-beta bounds, mating scores, etc.
-#define DrawScore 0
-#define MateValue 49000
-#define MateScore 48000
-#define ValueInfinite 50000
+constexpr int DrawScore = 0;
+constexpr int MateValue = 49000;
+constexpr int MateScore = 48000;
+constexpr int ValueInfinite = 50000;
 
 // Default options (settings) at startup
-#define OptionsDefaultHashSize 1024
-#define OptionsDefaultContempt 25
-#define OptionsContemptMin 0
-#define OptionsContemptMax 200
+constexpr int OptionsDefaultHashSize = 1024;
+constexpr int OptionsDefaultContempt = 25;
+constexpr int OptionsContemptMin = 0;
+constexpr int OptionsContemptMax = 200;
 
 // Maximum depth at which we try to search
-#define MaxPly 256
+
 
 // Score assigned to non-capture promotions. This is used for
 // sorting moves based on their likeliness to be good.
 //
 // @see scoreMove() and sortMoves()
-#define MoveScorePromoQuiet 10000
+constexpr int MoveScorePromoQuiet = 10000;
 
 
 
@@ -382,7 +382,7 @@ static inline int inputWaiting() {
   }
 
   if (pipe) {
-    if (!PeekNamedPipe(inh, NULL, 0, NULL, &dw, NULL))
+    if (!PeekNamedPipe(inh, nullptr, 0, nullptr, &dw, nullptr))
       return 1;
     return dw;
   }
@@ -418,7 +418,7 @@ static inline void watchClockAndInput() {
     }
 
     // check for nodes    // Nodes
-    else if ((Limits.max_nodes > 0) && (nodes > Limits.max_nodes))
+    else if ((Limits.max_nodes > 0) && (Threads.nodes_searched() > Limits.max_nodes))
       timedout = true;
 
     // update interval

@@ -28,6 +28,11 @@
 #include "search.h"
 #include "tbprobe.h"
 
+#include <algorithm>
+#include <ranges>
+#include <span>
+
+
 // Limits holds the configuration of the search: time, search depth, etc.
 Limits_t Limits;
 
@@ -1102,7 +1107,7 @@ void sortMoves(MoveList_t &MoveList, int bestmove) {
   }
 
   // sort the associative array based on the move score
-  sort(pairt, pairt + MoveList.count, greater<pair<int, int>>());
+  std::ranges::sort(std::span{pairt, static_cast<size_t>(MoveList.count)}, std::greater<pair<int, int>>());
 
   // re-write the MoveList ordered by move score in descending order
   for (int i = 0; i < MoveList.count; i++)

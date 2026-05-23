@@ -9,7 +9,7 @@
 #include <vector>
 #include <atomic>
 
-#define MaxPly 256
+constexpr int MaxPly = 256;
 
 struct ThreadState {
     // Board state
