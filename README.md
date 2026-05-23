@@ -38,7 +38,8 @@ moves.
   network trained with millions of games played by Stockfish 11 at a
   moderate depth. More here: https://www.chessprogramming.org/NNUE
 
-- **Aspiration Windows:**
+- **Aspiration Windows (Advanced):**
+  Uses dynamic widening margins to quickly prove fail-highs and fail-lows near the root.
   https://www.chessprogramming.org/Aspiration_Windows
 
 - **Mate Distance Pruning (MDP):**
@@ -49,11 +50,22 @@ moves.
 
 - **Check Extension:**
 
+- **Singular Extensions:**
+  Explores forced tactical variations deeper by extending search depth if a TT move is strictly better than all alternatives by a calculated margin.
+  https://www.chessprogramming.org/Singular_Extension
+
 - **Quiescence search:**
   https://en.wikipedia.org/wiki/Quiescence_search
 
-- **Late Move Reductions (LMR):** 
+- **Late Move Reductions (Logarithmic LMR):** 
+  Reduces search depth for late quiet moves using a `ln(depth) * ln(moves)` formula, optimized with history scores.
   https://www.chessprogramming.org/Late_Move_Reductions
+
+- **Move Ordering Heuristics:**
+  - **MVV-LVA (Most Valuable Victim - Least Valuable Attacker)**
+  - **Countermove Heuristic:** Uses the previous move to index and prioritize specific response moves.
+  - **Killer Move Heuristic:** Prioritizes moves that caused beta cutoffs in sibling nodes at the same ply.
+  - **History Gravity:** Dynamically rewards quiet moves causing cutoffs with a depth-squared bonus globally, penalizing those that fail to cause cutoffs.
 
 - **Razoring:**
   https://www.chessprogramming.org/Razoring

@@ -409,11 +409,6 @@ void sync_from_main_thread(const Position& main_pos, const std::deque<StateInfo>
         fprintf(stderr, "CRITICAL ERROR: global_pos.st is nullptr in sync_from_main_thread! main_setup.size()=%zu\n", main_setup.size());
     }
 
-    int pc = global_pos.piece_on(Square(4));
-    if (pc == 0) {
-        std::cout << "[sync_from_main_thread] CRITICAL: piece at E1 (4) is NO_PIECE in worker thread! main_pos piece was: " << main_pos.piece_on(Square(4)) << std::endl;
-    }
-    
     // Also reset the search stack
     search_stack.resize(2048);
     stack_ptr = 0;

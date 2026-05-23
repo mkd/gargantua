@@ -94,7 +94,7 @@ void resetLimits() {
 // Main alphabeta algorithm (Negamax) which relies on a Principal Variation
 // search.
 //
-int negamax(int alpha, int beta, int depth) {
+int negamax(int alpha, int beta, int depth, int excludedMove = 0) {
   // reliability checks
   // assert(depth >= 0);
 
@@ -426,6 +426,29 @@ moves_loop:
   // through the moves available and search the score for each of them.
 
   for (int count = 0; count < MoveList.count; count++) {
+    // skip the excluded move for singular extensions
+    if (MoveList.moves[count] == excludedMove) continue;
+
+    // Singular Extension Search
+    int extension = 0;
+    if (depth >= 8 && MoveList.moves[count] == bestmove && excludedMove == 0 && hash_total_entries > 0) {
+        TTEntry_t *tt_entry = &hash_table[hash_key % hash_total_entries];
+        if (tt_entry->key == hash_key && (tt_entry->type == hash_type_exact || tt_entry->type == hash_type_beta)) {
+            int ttValue = tt_entry->value;
+            if (ttValue < -MateScore) ttValue += ply;
+            else if (ttValue > MateScore) ttValue -= ply;
+            
+            if (std::abs(ttValue) < MateScore) {
+                int singularBeta = ttValue - depth * 2;
+                int singularScore = negamax(singularBeta - 1, singularBeta, depth / 2, bestmove);
+                
+                if (singularScore < singularBeta) {
+                    extension = 1; // It is a singular move!
+                }
+            }
+        }
+    }
+
     // preserve board state
     saveBoard();
 
@@ -566,7 +589,7 @@ moves_loop:
       // a search that worries that one of the remaining moves might be good.
 
       if (score > alpha) {
-        score = -negamax(-alpha - 1, -alpha, depth - 1);
+        score = -negamax(-alpha - 1, -alpha, depth - 1 + extension);
 
         // If the algorithm finds out that it was wrong, and that one of
         // the subsequent moves was better than the first PV move, it
@@ -575,7 +598,7 @@ moves_loop:
         // not often enough to counteract the savings gained from doing
         // the "bad move proof" search referred to earlier.
         if ((score > alpha) && (score < beta))
-          score = -negamax(-beta, -alpha, depth - 1);
+          score = -negamax(-beta, -alpha, depth - 1 + extension);
       }
     }
 
@@ -599,11 +622,6 @@ moves_loop:
 
       // store the best move in the TT
       bestmove = MoveList.moves[count];
-
-      // store history moves (only for quiet moves)
-      if (!getMoveCapture(MoveList.moves[count]))
-        history[getMovePiece(MoveList.moves[count])]
-               [getMoveTarget(MoveList.moves[count])] += depth;
 
       // PV node (move)
       alpha = score;
@@ -635,6 +653,23 @@ moves_loop:
             int prev_move = current_move[ply - 1];
             if (prev_move) {
               countermoves[getMovePiece(prev_move)][getMoveTarget(prev_move)] = MoveList.moves[count];
+            }
+          }
+
+          // History Gravity for cutoff move
+          int bonus = depth * depth;
+          if (bonus > 1200) bonus = 1200; // Cap the bonus
+          
+          int p = getMovePiece(MoveList.moves[count]);
+          int t = getMoveTarget(MoveList.moves[count]);
+          history[p][t] += bonus - history[p][t] * std::abs(bonus) / 32768;
+
+          // History Gravity penalty for previously searched quiet moves
+          for (int i = 0; i < count; i++) {
+            if (!getMoveCapture(MoveList.moves[i])) {
+              int p2 = getMovePiece(MoveList.moves[i]);
+              int t2 = getMoveTarget(MoveList.moves[i]);
+              history[p2][t2] += -bonus - history[p2][t2] * std::abs(-bonus) / 32768;
             }
           }
         }
