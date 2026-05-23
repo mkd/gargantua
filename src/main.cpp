@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
   initRandomKeys();
   initSearch();
   initLMR();
-  TT::init(1024);
+  TT::init(4096);
 
   // Initialize with the networks present in current directory
   Stockfish::Probe::init("nn-b1a57edbea57.nnue", "nn-baff1ede1f90.nnue");
