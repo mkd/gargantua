@@ -98,6 +98,7 @@ public:
 class ThreadPool {
 public:
     void start_thinking();
+    void wait_for_search_finished();
     void clear();
     void set(size_t n);
     uint64_t nodes_searched() const;

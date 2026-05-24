@@ -159,3 +159,9 @@ uint64_t ThreadPool::nodes_searched() const {
     }
     return sum;
 }
+
+void ThreadPool::wait_for_search_finished() {
+    for (Thread* th : threads) {
+        th->wait_for_search_finished();
+    }
+}

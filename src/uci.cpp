@@ -305,7 +305,7 @@ void UCI::go(istringstream &is) {
 
   // start the search using the thread pool
   Threads.start_thinking();
-  Threads.main()->wait_for_search_finished();
+  Threads.wait_for_search_finished();
 }
 
 // UCI::setOption

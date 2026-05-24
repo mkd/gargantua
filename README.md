@@ -57,9 +57,16 @@ moves.
 - **Quiescence search:**
   https://en.wikipedia.org/wiki/Quiescence_search
 
+- **Internal Iterative Deepening (IID):**
+  Explores unhashed PV nodes at shallow depths to find a good move for TT-ordering before a full-depth search.
+
 - **Late Move Reductions (Logarithmic LMR):** 
   Reduces search depth for late quiet moves using a `ln(depth) * ln(moves)` formula, optimized with history scores.
   https://www.chessprogramming.org/Late_Move_Reductions
+
+- **ProbCut:**
+  Performs shallow, wide-margin searches to quickly prune branches that are highly likely to fail-high without searching them to full depth.
+  https://www.chessprogramming.org/ProbCut
 
 - **Move Ordering Heuristics:**
   - **MVV-LVA (Most Valuable Victim - Least Valuable Attacker)**
@@ -72,6 +79,10 @@ moves.
 
 - **Futility Pruning**
   https://www.chessprogramming.org/Futility_Pruning
+
+- **Delta Pruning:**
+  Prunes capture sequences in Quiescence Search if the captured piece's material gain cannot raise the static evaluation above alpha.
+  https://www.chessprogramming.org/Delta_Pruning
 
 - **Reverse Futility Pruning (i.e., Static Null Move Pruning):**
   https://www.chessprogramming.org/Reverse_Futility_Pruning
@@ -94,7 +105,7 @@ moves.
 
 ## Key Features in v2+ versions
 - **New NNUE Architecture**: Shifted to a robust Stockfish-based probe implementation (`src/stockfish_probe`) for state-of-the-art evaluation.
-- **Lazy SMP**: Fully thread-safe engine supporting highly scalable multi-threaded searches.
+- **Lazy SMP & Thread Safety**: Fully thread-safe engine supporting highly scalable multi-threaded searches. Includes synchronized clock boundaries to prevent infinite searches and memory-safe UCI command polling across helper threads.
 - **Syzygy Tablebase Support**: precise endgame play with support for 3-4-5-6-7 piece tablebases.
 - **Crash Recovery System**: Implemented a dedicated signal handling mechanism to ensure maximum stability even during intensive tablebase probes.
 - **Simplified Build**: A clean and standardized build process.

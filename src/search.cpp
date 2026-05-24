@@ -103,6 +103,14 @@ int negamax(int alpha, int beta, int depth, int excludedMove = 0) {
   // reliability checks
   // assert(depth >= 0);
 
+  // init PV length
+  if (ply < MaxPly)
+    pv_length[ply] = ply;
+
+  // escape condition for max ply reached
+  if (ply >= MaxPly - 1)
+    return evaluate();
+
   // variables holding the calculatd score from negamax(), static evaluation
   // and margin for deciding whether to due forward pruning or not
   int score = 0, StaticEval = 0, EvalMargin = 0;
@@ -219,9 +227,6 @@ int negamax(int alpha, int beta, int depth, int excludedMove = 0) {
   //
   // Also, verify if the current position is in check to detect mate and
   // decide whether to search deeper (check extension).
-
-  // init PV length
-  pv_length[ply] = ply;
 
   // number of legal moves found
   int legal = 0;
@@ -380,23 +385,6 @@ int negamax(int alpha, int beta, int depth, int excludedMove = 0) {
     // fail-hard beta cutoff
     if (score >= beta)
       return beta;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////
-  //
-  // Step 8.5. ProbCut
-  //
-  // If we are not in check, not in a PV node, and have a high enough depth,
-  // perform a shallow search with a large margin to see if it will fail high.
-  if (!pv_node && !inCheck && (depth >= 5) && std::abs(beta) < MateScore - MaxPly) {
-      int probBeta = beta + 200;
-      int probScore = negamax(probBeta - 1, probBeta, depth - 4, 0);
-      
-      if (timedout) return 0;
-      
-      if (probScore >= probBeta) {
-          return probBeta;
-      }
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -792,7 +780,7 @@ void search() {
   assert(Limits.depth >= 0);
 
   // set the flag for the engine to know the search is started
-  timedout = false;
+  // timedout = false; // Reset in UCI::go to prevent race conditions
 
   // define best score
   int score;
@@ -898,7 +886,7 @@ void search() {
   nodes = 0ULL;
 
   // reset "time is up" flag
-  timedout = false;
+  // timedout = false; // Reset in UCI::go to prevent race conditions
 
   // iterative deepening framework
   for (int current_depth = 1; current_depth <= Limits.depth; current_depth++) {
@@ -977,7 +965,9 @@ void search() {
   }
 
   // tell the engine that the search is ready
-  timedout = true;
+  if (current_thread == &Threads.main()->state) {
+    timedout = true;
+  }
 }
 
 // qsearch
