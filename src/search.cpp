@@ -363,6 +363,7 @@ int negamax(int alpha, int beta, int depth, int excludedMove = 0) {
     // search moves with reduced depth to find beta cutoffs
     score = -negamax(-beta, -beta + 1, depth - R - 1);
 
+
     // restore allowNull
     allowNull = true;
 
@@ -380,6 +381,41 @@ int negamax(int alpha, int beta, int depth, int excludedMove = 0) {
     if (score >= beta)
       return beta;
   }
+
+  ///////////////////////////////////////////////////////////////////////////
+  //
+  // Step 8.5. ProbCut
+  //
+  // If we are not in check, not in a PV node, and have a high enough depth,
+  // perform a shallow search with a large margin to see if it will fail high.
+  if (!pv_node && !inCheck && (depth >= 5) && std::abs(beta) < MateScore - MaxPly) {
+      int probBeta = beta + 200;
+      int probScore = negamax(probBeta - 1, probBeta, depth - 4, 0);
+      
+      if (timedout) return 0;
+      
+      if (probScore >= probBeta) {
+          return probBeta;
+      }
+  }
+
+  ///////////////////////////////////////////////////////////////////////////
+  //
+  // Step 8.5. ProbCut
+  //
+  // If we are not in check, not in a PV node, and have a high enough depth,
+  // perform a shallow search with a large margin to see if it will fail high.
+  if (!pv_node && !inCheck && (depth >= 5) && std::abs(beta) < MateScore - MaxPly) {
+      int probBeta = beta + 200;
+      int probScore = negamax(probBeta - 1, probBeta, depth - 4, 0);
+      
+      if (timedout) return 0;
+      
+      if (probScore >= probBeta) {
+          return probBeta;
+      }
+  }
+
 
   //////////////////////////////////////////////////////////////////////////
   //
@@ -405,7 +441,39 @@ int negamax(int alpha, int beta, int depth, int excludedMove = 0) {
   if (pv_node && (depth >= 3) && !bestmove)
     depth--;
 
+
+  //////////////////////////////////////////////////////////////////////////
+  //
+  // Step 10. Internal Iterative Deepening (IID)
+  //
+  // If we are at a PV node and we don't have a hash move from the
+  // Transposition Table, we do a shallower search to get one to improve
+  // move ordering.
+  if (pv_node && (depth >= 5) && !bestmove) {
+    int iidDepth = depth - 2;
+    negamax(alpha, beta, iidDepth, 0);
+    // After searching, probe the TT again to populate bestmove
+    TT::probe(alpha, beta, bestmove, depth);
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////
+  //
+  // Step 10. Internal Iterative Deepening (IID)
+  //
+  // If we are at a PV node and we don't have a hash move from the
+  // Transposition Table, we do a shallower search to get one to improve
+  // move ordering.
+  if (pv_node && (depth >= 5) && !bestmove) {
+    int iidDepth = depth - 2;
+    negamax(alpha, beta, iidDepth, 0);
+    // After searching, probe the TT again to populate bestmove
+    TT::probe(alpha, beta, bestmove, depth);
+  }
+
 // All-moves search begins here when in check, or after all forward
+
+
 // pruning techniques
 moves_loop:
 
@@ -950,8 +1018,12 @@ int qsearch(int alpha, int beta) {
 
   // loop over moves within a movelist
   for (int count = 0; count < MoveList.count; count++) {
-    // don't search capture sequences that end up in losing material
-    if (see(MoveList.moves[count]) < 0)
+    // Delta Pruning & SEE Pruning
+    // 1. Don't search capture sequences that end up in losing material.
+    // 2. If the maximum material gain from this capture plus a 200 centipawn margin
+    //    does not raise the static evaluation (val) above alpha, prune it safely!
+    int gain = see(MoveList.moves[count]);
+    if (gain < 0 || val + gain + 200 < alpha)
       continue;
 
     // preserve board state
